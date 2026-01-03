@@ -65,7 +65,7 @@ const Install = () => {
             </div>
             <CardTitle className="text-2xl">App Installed!</CardTitle>
             <CardDescription>
-              Tharwa Net | ثروة نت is now installed on your device
+              Your Wealth Advisor is now installed on your device
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
