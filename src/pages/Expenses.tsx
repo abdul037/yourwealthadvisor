@@ -42,9 +42,9 @@ const Expenses = () => {
     <div className="min-h-screen bg-background">
       <WealthHeader />
       
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
         {/* Monthly Overview */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="lg:col-span-2">
             <MonthlyOverview expenses={expenses} budgets={budgets} />
           </div>
@@ -59,7 +59,7 @@ const Expenses = () => {
         </div>
         
         {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <SpendingChart expenses={expenses} />
           <CategoryBreakdown expenses={expenses} month={currentMonth} year={currentYear} />
         </div>
@@ -72,7 +72,7 @@ const Expenses = () => {
         />
         
         {/* Footer */}
-        <footer className="mt-12 pt-8 border-t border-border text-center">
+        <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
             WealthTrack • Family of 4 Expense Tracking
           </p>
