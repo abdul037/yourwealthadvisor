@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Trash2, Upload, Download, RefreshCw, Palette, Building2, Users, Droplets } from 'lucide-react';
+import { Plus, Trash2, Upload, Download, RefreshCw, Palette, Building2, Users, Droplets, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,7 @@ import { ConnectedAccounts } from '@/components/ConnectedAccounts';
 import { ImportedTransactions } from '@/components/ImportedTransactions';
 import { PartnerManagement } from '@/components/PartnerManagement';
 import { LiquiditySettings } from '@/components/LiquiditySettings';
+import { ComprehensiveBulkUpload } from '@/components/ComprehensiveBulkUpload';
 import { BankAccount, BankTransaction, DEMO_TRANSACTIONS } from '@/lib/mockBankingData';
 const AVAILABLE_ICONS = [
   'UtensilsCrossed', 'Car', 'Zap', 'Gamepad2', 'ShoppingBag', 'Heart', 'GraduationCap',
@@ -442,105 +443,7 @@ const AdminPortal = () => {
           </TabsContent>
           
           <TabsContent value="import" className="space-y-6">
-            <div className="wealth-card">
-              <h3 className="font-semibold mb-4">Bulk Data Import</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                Upload a CSV file to import multiple transactions at once. Download the template to see the required format.
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-6 border-2 border-dashed border-border rounded-xl text-center">
-                  <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <h4 className="font-medium mb-2">Upload CSV File</h4>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Drag and drop or click to browse
-                  </p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <Button onClick={() => fileInputRef.current?.click()}>
-                    Choose File
-                  </Button>
-                </div>
-                
-                <div className="p-6 bg-muted/50 rounded-xl">
-                  <Download className="w-12 h-12 mx-auto mb-4 text-primary" />
-                  <h4 className="font-medium mb-2 text-center">Download Template</h4>
-                  <p className="text-sm text-muted-foreground mb-4 text-center">
-                    Get the CSV template with correct column headers
-                  </p>
-                  <Button variant="outline" onClick={downloadTemplate} className="w-full">
-                    Download Template
-                  </Button>
-                </div>
-              </div>
-              
-              <Alert className="mt-6">
-                <AlertDescription>
-                  <strong>CSV Format:</strong> date, type, category, description, amount, currency
-                  <br />
-                  <span className="text-muted-foreground">
-                    Example: 2025-01-01, expense, Food & Dining, Grocery shopping, 500, AED
-                  </span>
-                </AlertDescription>
-              </Alert>
-            </div>
-            
-            {/* Bulk Upload Preview Dialog */}
-            <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Preview Import Data</DialogTitle>
-                </DialogHeader>
-                <div className="max-h-[400px] overflow-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted sticky top-0">
-                      <tr>
-                        <th className="p-2 text-left">Date</th>
-                        <th className="p-2 text-left">Type</th>
-                        <th className="p-2 text-left">Category</th>
-                        <th className="p-2 text-left">Description</th>
-                        <th className="p-2 text-right">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {bulkData.map((row, index) => (
-                        <tr key={index} className="border-b border-border">
-                          <td className="p-2">{row.date}</td>
-                          <td className="p-2">
-                            <span className={`px-2 py-0.5 rounded text-xs ${
-                              row.type === 'income' ? 'bg-wealth-positive/20 text-wealth-positive' : 'bg-wealth-negative/20 text-wealth-negative'
-                            }`}>
-                              {row.type}
-                            </span>
-                          </td>
-                          <td className="p-2">{row.category}</td>
-                          <td className="p-2">{row.description}</td>
-                          <td className="p-2 text-right font-mono">{row.currency} {row.amount}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="flex justify-between items-center pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    {bulkData.length} transactions to import
-                  </p>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleBulkImport}>
-                      Import All
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <ComprehensiveBulkUpload />
           </TabsContent>
         </Tabs>
         
