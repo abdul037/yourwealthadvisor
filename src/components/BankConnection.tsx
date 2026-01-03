@@ -1,11 +1,21 @@
 import { useState } from 'react';
-import { Building2, Link, Shield, CheckCircle2, Loader2, Smartphone, X } from 'lucide-react';
+import { Building2, Link, Shield, CheckCircle2, Loader2, Smartphone, X, TrendingUp, Coins, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DEMO_BANKS, Bank, simulateApiCall, DEMO_ACCOUNTS, BankAccount } from '@/lib/mockBankingData';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  DEMO_BANKS, 
+  DEMO_INVESTMENT_PLATFORMS,
+  DEMO_CRYPTO_PLATFORMS,
+  DEMO_UTILITY_PLATFORMS,
+  Bank, 
+  simulateApiCall, 
+  getDemoAccountsForPlatform,
+  BankAccount 
+} from '@/lib/mockBankingData';
 import { toast } from '@/hooks/use-toast';
 
 interface BankConnectionProps {
@@ -13,18 +23,18 @@ interface BankConnectionProps {
   connectedAccounts: BankAccount[];
 }
 
-type ConnectionStep = 'select-bank' | 'consent' | 'otp' | 'success';
+type ConnectionStep = 'select-platform' | 'consent' | 'otp' | 'success';
 
 export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankConnectionProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState<ConnectionStep>('select-bank');
-  const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
+  const [step, setStep] = useState<ConnectionStep>('select-platform');
+  const [selectedPlatform, setSelectedPlatform] = useState<Bank | null>(null);
   const [otpValue, setOtpValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
 
-  const handleBankSelect = (bank: Bank) => {
-    setSelectedBank(bank);
+  const handlePlatformSelect = (platform: Bank) => {
+    setSelectedPlatform(platform);
     setStep('consent');
   };
 
@@ -36,7 +46,7 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
     setOtpSent(true);
     toast({
       title: 'OTP Sent',
-      description: 'A verification code has been sent to your registered mobile number.',
+      description: `A verification code has been sent to your registered ${selectedPlatform?.category === 'utility' ? 'email' : 'mobile number'}.`,
     });
   };
 
@@ -51,24 +61,10 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
     }
 
     setIsLoading(true);
-    
-    // Simulate OTP verification (any 6-digit code works in demo)
     await simulateApiCall(null, 2000);
     
-    // Filter accounts for selected bank
-    const bankAccounts = DEMO_ACCOUNTS.filter(
-      acc => acc.bankName === selectedBank?.name
-    );
-    
-    // If no accounts for this bank, use first 2 demo accounts with modified bank name
-    const accountsToAdd = bankAccounts.length > 0 
-      ? bankAccounts 
-      : DEMO_ACCOUNTS.slice(0, 2).map(acc => ({
-          ...acc,
-          id: `${acc.id}-${selectedBank?.id}`,
-          bankName: selectedBank?.name || acc.bankName,
-          bankLogo: selectedBank?.logo || acc.bankLogo,
-        }));
+    // Get demo accounts for the selected platform
+    const accountsToAdd = getDemoAccountsForPlatform(selectedPlatform?.id || '');
 
     setIsLoading(false);
     setStep('success');
@@ -77,71 +73,150 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
       onConnectionSuccess(accountsToAdd);
       handleClose();
       toast({
-        title: 'Bank Connected!',
-        description: `${accountsToAdd.length} account(s) from ${selectedBank?.name} have been linked.`,
+        title: 'Connected Successfully!',
+        description: `${selectedPlatform?.name} has been linked to your account.`,
       });
     }, 2000);
   };
 
   const handleClose = () => {
     setIsOpen(false);
-    setStep('select-bank');
-    setSelectedBank(null);
+    setStep('select-platform');
+    setSelectedPlatform(null);
     setOtpValue('');
     setOtpSent(false);
   };
 
+  const getConsentItems = () => {
+    switch (selectedPlatform?.category) {
+      case 'investment':
+      case 'real-estate':
+        return {
+          access: ['Portfolio holdings', 'Investment performance', 'Transaction history'],
+          notAccess: ['Execute trades', 'Withdraw funds', 'Modify orders'],
+        };
+      case 'crypto':
+        return {
+          access: ['Wallet balances', 'Transaction history', 'Asset allocation'],
+          notAccess: ['Execute trades', 'Transfer crypto', 'Access private keys'],
+        };
+      case 'utility':
+        return {
+          access: ['Bill amounts', 'Payment history', 'Account status'],
+          notAccess: ['Make payments', 'Change settings', 'Access personal data'],
+        };
+      default:
+        return {
+          access: ['Account balances', 'Transaction history (last 12 months)', 'Account holder name'],
+          notAccess: ['Store your credentials', 'Make any transactions', 'Share data with third parties'],
+        };
+    }
+  };
+
+  const renderPlatformGrid = (platforms: Bank[]) => (
+    <div className="grid grid-cols-2 gap-3">
+      {platforms.map((platform) => {
+        const isConnected = connectedAccounts.some(acc => 
+          acc.bankName.toLowerCase() === platform.name.toLowerCase()
+        );
+        return (
+          <button
+            key={platform.id}
+            onClick={() => !isConnected && handlePlatformSelect(platform)}
+            disabled={isConnected}
+            className={`flex items-center gap-3 p-4 rounded-lg border transition-all text-left ${
+              isConnected 
+                ? 'border-green-500/30 bg-green-500/5 cursor-not-allowed' 
+                : 'border-border hover:border-primary hover:bg-primary/5'
+            }`}
+          >
+            <span className="text-2xl">{platform.logo}</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm truncate">{platform.name}</p>
+              <p className="text-xs text-muted-foreground">{platform.country}</p>
+            </div>
+            {isConnected && (
+              <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+
   const renderStep = () => {
     switch (step) {
-      case 'select-bank':
+      case 'select-platform':
         return (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Select your bank to securely connect your account. This is a demo mode - no real bank connection will be made.
-            </p>
             <Alert className="bg-primary/10 border-primary/20">
               <Shield className="h-4 w-4 text-primary" />
               <AlertDescription className="text-sm">
                 <strong>Demo Mode:</strong> Use any 6-digit OTP to test the connection flow.
               </AlertDescription>
             </Alert>
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              {DEMO_BANKS.map((bank) => (
-                <button
-                  key={bank.id}
-                  onClick={() => handleBankSelect(bank)}
-                  className="flex items-center gap-3 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
-                >
-                  <span className="text-2xl">{bank.logo}</span>
-                  <div>
-                    <p className="font-medium text-sm">{bank.name}</p>
-                    <p className="text-xs text-muted-foreground">{bank.country}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+            
+            <Tabs defaultValue="banks" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 h-auto">
+                <TabsTrigger value="banks" className="text-xs py-2 px-1">
+                  <Building2 className="w-3 h-3 mr-1" />
+                  Banks
+                </TabsTrigger>
+                <TabsTrigger value="investments" className="text-xs py-2 px-1">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  Invest
+                </TabsTrigger>
+                <TabsTrigger value="crypto" className="text-xs py-2 px-1">
+                  <Coins className="w-3 h-3 mr-1" />
+                  Crypto
+                </TabsTrigger>
+                <TabsTrigger value="utilities" className="text-xs py-2 px-1">
+                  <Zap className="w-3 h-3 mr-1" />
+                  Utilities
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="banks" className="mt-4 max-h-[300px] overflow-y-auto">
+                <p className="text-xs text-muted-foreground mb-3">UAE Banks - Open Banking</p>
+                {renderPlatformGrid(DEMO_BANKS)}
+              </TabsContent>
+              
+              <TabsContent value="investments" className="mt-4 max-h-[300px] overflow-y-auto">
+                <p className="text-xs text-muted-foreground mb-3">Investment & Trading Platforms</p>
+                {renderPlatformGrid(DEMO_INVESTMENT_PLATFORMS)}
+              </TabsContent>
+              
+              <TabsContent value="crypto" className="mt-4 max-h-[300px] overflow-y-auto">
+                <p className="text-xs text-muted-foreground mb-3">Cryptocurrency Exchanges</p>
+                {renderPlatformGrid(DEMO_CRYPTO_PLATFORMS)}
+              </TabsContent>
+              
+              <TabsContent value="utilities" className="mt-4 max-h-[300px] overflow-y-auto">
+                <p className="text-xs text-muted-foreground mb-3">UAE Utility Services</p>
+                {renderPlatformGrid(DEMO_UTILITY_PLATFORMS)}
+              </TabsContent>
+            </Tabs>
           </div>
         );
 
       case 'consent':
+        const consentItems = getConsentItems();
         return (
           <div className="space-y-6">
             <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
-              <span className="text-3xl">{selectedBank?.logo}</span>
+              <span className="text-3xl">{selectedPlatform?.logo}</span>
               <div>
-                <p className="font-semibold">{selectedBank?.name}</p>
-                <p className="text-sm text-muted-foreground">Open Banking Connection</p>
+                <p className="font-semibold">{selectedPlatform?.name}</p>
+                <p className="text-sm text-muted-foreground capitalize">
+                  {selectedPlatform?.category === 'real-estate' ? 'Real Estate Platform' : `${selectedPlatform?.category} Connection`}
+                </p>
               </div>
             </div>
 
             <div className="space-y-4">
               <h4 className="font-medium">WealthTrack will access:</h4>
               <div className="space-y-2">
-                {[
-                  'Account balances',
-                  'Transaction history (last 12 months)',
-                  'Account holder name',
-                ].map((item, i) => (
+                {consentItems.access.map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="w-4 h-4 text-green-500" />
                     <span>{item}</span>
@@ -151,11 +226,7 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
               
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">WealthTrack will NOT:</h4>
-                {[
-                  'Store your bank credentials',
-                  'Make any transactions',
-                  'Share data with third parties',
-                ].map((item, i) => (
+                {consentItems.notAccess.map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
                     <X className="w-4 h-4 text-red-400" />
                     <span>{item}</span>
@@ -165,7 +236,7 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep('select-bank')} className="flex-1">
+              <Button variant="outline" onClick={() => setStep('select-platform')} className="flex-1">
                 Back
               </Button>
               <Button onClick={handleConsent} disabled={isLoading} className="flex-1">
@@ -175,7 +246,7 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
                     Connecting...
                   </>
                 ) : (
-                  'Continue'
+                  'Authorize'
                 )}
               </Button>
             </div>
@@ -191,7 +262,7 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
               </div>
               <h3 className="font-semibold mb-2">Enter Verification Code</h3>
               <p className="text-sm text-muted-foreground">
-                {selectedBank?.name} has sent a 6-digit OTP to your registered mobile number.
+                {selectedPlatform?.name} has sent a 6-digit OTP to your registered {selectedPlatform?.category === 'utility' ? 'email' : 'mobile'}.
               </p>
             </div>
 
@@ -244,13 +315,13 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
               <CheckCircle2 className="w-10 h-10 text-green-500" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-2">Bank Connected Successfully!</h3>
+              <h3 className="font-semibold text-lg mb-2">Connected Successfully!</h3>
               <p className="text-sm text-muted-foreground">
-                Your {selectedBank?.name} accounts are now linked. Transactions will be imported automatically.
+                Your {selectedPlatform?.name} account is now linked. Data will be synced automatically.
               </p>
             </div>
             <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
-            <p className="text-sm text-muted-foreground">Importing transactions...</p>
+            <p className="text-sm text-muted-foreground">Importing data...</p>
           </div>
         );
     }
@@ -260,22 +331,22 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
     <>
       <Button onClick={() => setIsOpen(true)} className="gap-2">
         <Link className="w-4 h-4" />
-        Connect Bank Account
+        Connect Platform
       </Button>
 
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Building2 className="w-5 h-5" />
-              {step === 'select-bank' && 'Connect Bank Account'}
+              {step === 'select-platform' && 'Connect Account'}
               {step === 'consent' && 'Authorize Access'}
               {step === 'otp' && 'Verify Identity'}
               {step === 'success' && 'Connection Complete'}
             </DialogTitle>
-            {step === 'select-bank' && (
+            {step === 'select-platform' && (
               <DialogDescription>
-                Securely link your bank for automatic transaction imports
+                Connect banks, investments, crypto, or utility accounts
               </DialogDescription>
             )}
           </DialogHeader>

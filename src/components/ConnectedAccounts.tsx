@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RefreshCw, Trash2, CreditCard, Wallet, PiggyBank, AlertCircle, CheckCircle } from 'lucide-react';
+import { RefreshCw, Trash2, CreditCard, Wallet, PiggyBank, AlertCircle, CheckCircle, TrendingUp, Coins, Zap, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BankAccount, simulateApiCall, DEMO_TRANSACTIONS, BankTransaction } from '@/lib/mockBankingData';
 import { toast } from '@/hooks/use-toast';
@@ -40,6 +40,33 @@ export function ConnectedAccounts({
         return <PiggyBank className="w-5 h-5" />;
       case 'credit_card':
         return <CreditCard className="w-5 h-5" />;
+      case 'investment':
+        return <TrendingUp className="w-5 h-5" />;
+      case 'crypto':
+        return <Coins className="w-5 h-5" />;
+      case 'utility':
+        return <Zap className="w-5 h-5" />;
+      default:
+        return <Building className="w-5 h-5" />;
+    }
+  };
+
+  const getAccountTypeLabel = (type: BankAccount['accountType']) => {
+    switch (type) {
+      case 'current':
+        return 'Current Account';
+      case 'savings':
+        return 'Savings Account';
+      case 'credit_card':
+        return 'Credit Card';
+      case 'investment':
+        return 'Investment Portfolio';
+      case 'crypto':
+        return 'Crypto Wallet';
+      case 'utility':
+        return 'Utility Account';
+      default:
+        return type;
     }
   };
 
@@ -95,8 +122,8 @@ export function ConnectedAccounts({
     return (
       <div className="text-center py-8 text-muted-foreground">
         <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-        <p className="font-medium">No bank accounts connected</p>
-        <p className="text-sm">Connect your bank to automatically import transactions</p>
+        <p className="font-medium">No accounts connected</p>
+        <p className="text-sm">Connect banks, investments, or utilities to sync data</p>
       </div>
     );
   }
@@ -113,17 +140,17 @@ export function ConnectedAccounts({
               <div className="w-12 h-12 rounded-lg bg-background flex items-center justify-center text-2xl">
                 {account.bankLogo}
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium">{account.bankName}</p>
-                  <span className="text-xs text-muted-foreground">{account.accountNumber}</span>
+                  <p className="font-medium truncate">{account.bankName}</p>
+                  <span className="text-xs text-muted-foreground flex-shrink-0">{account.accountNumber}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   {getAccountIcon(account.accountType)}
-                  <span className="capitalize">{account.accountType.replace('_', ' ')}</span>
+                  <span>{getAccountTypeLabel(account.accountType)}</span>
                   <span>•</span>
                   <CheckCircle className="w-3 h-3 text-green-500" />
-                  <span>
+                  <span className="truncate">
                     Synced {formatDistanceToNow(new Date(account.lastSynced), { addSuffix: true })}
                   </span>
                 </div>
