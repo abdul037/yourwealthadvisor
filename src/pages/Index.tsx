@@ -90,7 +90,7 @@ const Index = () => {
         {/* Footer */}
         <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            WealthTrack • Family of 4 in Dubai (Kids: 5 & 7 yrs)
+            ثروة نت • Tharwa Net • Family of 4 in Dubai (Kids: 5 & 7 yrs)
           </p>
         </footer>
       </main>
