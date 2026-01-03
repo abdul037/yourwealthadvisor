@@ -12,8 +12,8 @@ import DebtTracker from "./pages/DebtTracker";
 import Trends from "./pages/Trends";
 import AdminPortal from "./pages/AdminPortal";
 import Auth from "./pages/Auth";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -32,6 +32,7 @@ const App = () => (
             <Route path="/trends" element={<Trends />} />
             <Route path="/admin" element={<AdminPortal />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/install" element={<Install />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
