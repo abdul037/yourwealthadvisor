@@ -1,6 +1,7 @@
 import { TrendingUp, Bell, LayoutDashboard, Receipt, DollarSign, LineChart, Shield, Wallet, Settings, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
+import { CurrencyConverter } from '@/components/CurrencyConverter';
 
 export function WealthHeader() {
   const location = useLocation();
@@ -45,6 +46,7 @@ export function WealthHeader() {
           </nav>
           
           <div className="flex items-center gap-2">
+            <CurrencyConverter />
             <Button variant="ghost" size="icon" className="text-muted-foreground">
               <Bell className="w-5 h-5" />
             </Button>

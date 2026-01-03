@@ -9,6 +9,7 @@ import { RecentTransactions } from '@/components/RecentTransactions';
 import { QuickStats } from '@/components/QuickStats';
 import { PortfolioAggregation } from '@/components/PortfolioAggregation';
 import { IncomeLiquidityChart } from '@/components/IncomeLiquidityChart';
+import { EmergencyFundCalculator } from '@/components/EmergencyFundCalculator';
 import { initialPortfolio, Transaction, Asset } from '@/lib/portfolioData';
 
 const Index = () => {
@@ -54,9 +55,10 @@ const Index = () => {
           <PortfolioAggregation />
         </div>
         
-        {/* Income Liquidity Analysis */}
-        <div className="mb-8">
+        {/* Income Liquidity & Emergency Fund */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <IncomeLiquidityChart />
+          <EmergencyFundCalculator />
         </div>
         
         {/* Quick Stats */}
