@@ -43,10 +43,10 @@ const EXTENDED_RATES: Record<string, number> = {
 type ExtendedCurrency = 'AED' | 'USD' | 'INR' | 'PKR';
 
 const CURRENCIES: { code: ExtendedCurrency; name: string; symbol: string; flag: string }[] = [
-  { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ', flag: '🇦🇪' },
+  { code: 'AED', name: 'UAE Dirham', symbol: 'AED ', flag: '🇦🇪' },
   { code: 'USD', name: 'US Dollar', symbol: '$', flag: '🇺🇸' },
   { code: 'INR', name: 'Indian Rupee', symbol: '₹', flag: '🇮🇳' },
-  { code: 'PKR', name: 'Pakistani Rupee', symbol: '₨', flag: '🇵🇰' },
+  { code: 'PKR', name: 'Pakistani Rupee', symbol: 'PKR ', flag: '🇵🇰' },
 ];
 
 function convertExtended(amount: number, from: ExtendedCurrency, to: ExtendedCurrency): number {
