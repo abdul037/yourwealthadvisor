@@ -1,10 +1,35 @@
-import { TrendingUp, Bell, LayoutDashboard, Receipt, DollarSign, LineChart, Shield, Wallet, Settings, TrendingDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { TrendingUp, Bell, LayoutDashboard, Receipt, DollarSign, LineChart, Shield, Wallet, Settings, TrendingDown, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Link, useLocation } from 'react-router-dom';
-import { CurrencyConverter } from '@/components/CurrencyConverter';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { CurrencyConverter, CurrencySelector } from '@/components/CurrencyConverter';
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
+import { useToast } from '@/hooks/use-toast';
 
 export function WealthHeader() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
+  
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({ title: 'Signed out', description: 'You have been signed out.' });
+    navigate('/auth');
+  };
   
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -46,6 +71,7 @@ export function WealthHeader() {
           </nav>
           
           <div className="flex items-center gap-2">
+            <CurrencySelector />
             <CurrencyConverter />
             <Button variant="ghost" size="icon" className="text-muted-foreground">
               <Bell className="w-5 h-5" />
@@ -55,9 +81,24 @@ export function WealthHeader() {
                 <Settings className="w-5 h-5" />
               </Button>
             </Link>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-sm font-semibold text-primary-foreground">
-              A
-            </div>
+            
+            {user ? (
+              <>
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-sm font-semibold text-primary-foreground">
+                  {user.email?.[0].toUpperCase() || 'U'}
+                </div>
+                <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground">
+                  <LogOut className="w-5 h-5" />
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>

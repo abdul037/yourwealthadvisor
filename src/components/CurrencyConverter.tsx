@@ -40,18 +40,13 @@ const EXTENDED_RATES: Record<string, number> = {
   'SAR_USD': 0.27,
 };
 
-type ExtendedCurrency = 'AED' | 'USD' | 'INR' | 'EUR' | 'GBP' | 'SAR' | 'PKR' | 'PHP' | 'EGP';
+type ExtendedCurrency = 'AED' | 'USD' | 'INR' | 'PKR';
 
 const CURRENCIES: { code: ExtendedCurrency; name: string; symbol: string; flag: string }[] = [
   { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ', flag: '🇦🇪' },
   { code: 'USD', name: 'US Dollar', symbol: '$', flag: '🇺🇸' },
-  { code: 'EUR', name: 'Euro', symbol: '€', flag: '🇪🇺' },
-  { code: 'GBP', name: 'British Pound', symbol: '£', flag: '🇬🇧' },
   { code: 'INR', name: 'Indian Rupee', symbol: '₹', flag: '🇮🇳' },
-  { code: 'SAR', name: 'Saudi Riyal', symbol: '﷼', flag: '🇸🇦' },
   { code: 'PKR', name: 'Pakistani Rupee', symbol: '₨', flag: '🇵🇰' },
-  { code: 'PHP', name: 'Philippine Peso', symbol: '₱', flag: '🇵🇭' },
-  { code: 'EGP', name: 'Egyptian Pound', symbol: 'E£', flag: '🇪🇬' },
 ];
 
 function convertExtended(amount: number, from: ExtendedCurrency, to: ExtendedCurrency): number {
