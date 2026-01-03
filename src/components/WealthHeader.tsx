@@ -1,7 +1,15 @@
-import { TrendingUp, Wallet, Settings, Bell } from 'lucide-react';
+import { TrendingUp, Wallet, Settings, Bell, LayoutDashboard, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link, useLocation } from 'react-router-dom';
 
 export function WealthHeader() {
+  const location = useLocation();
+  
+  const navItems = [
+    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/expenses', label: 'Expenses', icon: Receipt },
+  ];
+  
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4">
@@ -17,18 +25,18 @@ export function WealthHeader() {
           </div>
           
           <nav className="hidden md:flex items-center gap-1">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              Dashboard
-            </Button>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              Portfolio
-            </Button>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              Transactions
-            </Button>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              Analytics
-            </Button>
+            {navItems.map(item => (
+              <Link key={item.path} to={item.path}>
+                <Button 
+                  variant={location.pathname === item.path ? "secondary" : "ghost"} 
+                  size="sm" 
+                  className={`gap-2 ${location.pathname === item.path ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.label}
+                </Button>
+              </Link>
+            ))}
           </nav>
           
           <div className="flex items-center gap-2">
