@@ -49,29 +49,53 @@ export const LIQUIDITY_LABELS: Record<LiquidityLevel, string> = {
   'NL': 'Non-Liquid',
 };
 
+// Dubai Family of 4: 2 earning partners, kids aged 5 & 7
+// Combined household income ~AED 55,000/month
 export const initialPortfolio: Asset[] = [
-  { id: '1', name: 'Current ENBD', category: 'Cash', amount: 13706, unit: 'AED', aedValue: 13706, usdValue: 3701, inrValue: 334975, liquidityLevel: 'L1', isCash: true },
-  { id: '2', name: 'ENBD Securities', category: 'Stocks', amount: 2061, unit: 'AED', aedValue: 2061, usdValue: 556, inrValue: 50371, liquidityLevel: 'L2', isCash: false },
-  { id: '3', name: 'National Bonds', category: 'Bonds', amount: 23900, unit: 'AED', aedValue: 23900, usdValue: 6453, inrValue: 584116, liquidityLevel: 'L2', isCash: false },
-  { id: '4', name: 'Etoro', category: 'Stocks', amount: 4931, unit: 'USD', aedValue: 18097, usdValue: 4931, inrValue: 443100, liquidityLevel: 'L2', isCash: false },
-  { id: '5', name: 'Sarwa', category: 'Stocks', amount: 7424, unit: 'USD', aedValue: 27246, usdValue: 7424, inrValue: 667121, liquidityLevel: 'L2', isCash: false },
-  { id: '6', name: 'SMCWD', category: 'TokenRE', amount: 4000, unit: 'AED', aedValue: 4000, usdValue: 1080, inrValue: 97760, liquidityLevel: 'L2', isCash: false },
-  { id: '7', name: 'KITE', category: 'Stocks', amount: 432000, unit: 'INR', aedValue: 17712, usdValue: 4752, inrValue: 432000, liquidityLevel: 'L2', isCash: false },
-  { id: '8', name: 'MF', category: 'Stocks', amount: 258000, unit: 'INR', aedValue: 10578, usdValue: 2838, inrValue: 258000, liquidityLevel: 'L2', isCash: false },
-  { id: '9', name: 'Gold', category: 'Gold', amount: 5900, unit: 'AED', aedValue: 5900, usdValue: 1593, inrValue: 144196, liquidityLevel: 'L3', isCash: false },
-  { id: '10', name: 'PF', category: 'PF', amount: 75000, unit: 'INR', aedValue: 3075, usdValue: 825, inrValue: 75000, liquidityLevel: 'NL', isCash: false },
-  { id: '11', name: 'LND', category: 'Land Asset', amount: 3000000, unit: 'INR', aedValue: 123000, usdValue: 33000, inrValue: 3000000, liquidityLevel: 'NL', isCash: false },
-  { id: '12', name: 'ARSHD', category: 'Cash', amount: 225000, unit: 'INR', aedValue: 9225, usdValue: 2475, inrValue: 225000, liquidityLevel: 'NL', isCash: true },
-  { id: '13', name: 'BB', category: 'Cash', amount: 150000, unit: 'INR', aedValue: 6150, usdValue: 1650, inrValue: 150000, liquidityLevel: 'NL', isCash: true },
-  { id: '14', name: 'WZRX', category: 'Crypto', amount: 20000, unit: 'INR', aedValue: 820, usdValue: 220, inrValue: 20000, liquidityLevel: 'L2', isCash: false },
-  { id: '15', name: 'Car', category: 'Car', amount: 40000, unit: 'AED', aedValue: 40000, usdValue: 10800, inrValue: 977600, liquidityLevel: 'NL', isCash: false },
-  { id: '16', name: 'Cash AED (bag)', category: 'Cash', amount: 9625, unit: 'AED', aedValue: 9625, usdValue: 2599, inrValue: 235235, liquidityLevel: 'L1', isCash: true },
-  { id: '17', name: 'Cash Pounds (Bag)', category: 'Cash', amount: 185, unit: 'PND', aedValue: 917, usdValue: 250, inrValue: 22401, liquidityLevel: 'L3', isCash: true },
-  { id: '18', name: 'ENBD SAVE', category: 'Cash', amount: 2990, unit: 'AED', aedValue: 2990, usdValue: 807, inrValue: 73076, liquidityLevel: 'L1', isCash: true },
-  { id: '19', name: 'Etoro Cash', category: 'Cash', amount: 412, unit: 'USD', aedValue: 1512, usdValue: 412, inrValue: 36954, liquidityLevel: 'L1', isCash: true },
-  { id: '20', name: 'Insurance', category: 'Insurance', amount: 5505, unit: 'AED', aedValue: 5505, usdValue: 1500, inrValue: 134542, liquidityLevel: 'L3', isCash: false },
-  { id: '21', name: 'TokenRE Additional', category: 'TokenRE', amount: 12378, unit: 'AED', aedValue: 12378, usdValue: 3342, inrValue: 302518, liquidityLevel: 'L2', isCash: false },
-  { id: '22', name: 'DigiGold', category: 'DigiGold', amount: 1007, unit: 'AED', aedValue: 1007, usdValue: 275, inrValue: 24622, liquidityLevel: 'L2', isCash: false },
+  // Cash & Savings - Emergency Fund + Daily Operations
+  { id: '1', name: 'ENBD Joint Account', category: 'Cash', amount: 45000, unit: 'AED', aedValue: 45000, usdValue: 12150, inrValue: 1099800, liquidityLevel: 'L1', isCash: true },
+  { id: '2', name: 'Partner 1 Salary Account', category: 'Cash', amount: 28500, unit: 'AED', aedValue: 28500, usdValue: 7695, inrValue: 696540, liquidityLevel: 'L1', isCash: true },
+  { id: '3', name: 'Partner 2 Salary Account', category: 'Cash', amount: 22000, unit: 'AED', aedValue: 22000, usdValue: 5940, inrValue: 537680, liquidityLevel: 'L1', isCash: true },
+  { id: '4', name: 'Kids Education Fund', category: 'Cash', amount: 85000, unit: 'AED', aedValue: 85000, usdValue: 22950, inrValue: 2077400, liquidityLevel: 'L2', isCash: true },
+  { id: '5', name: 'Emergency Fund (6 months)', category: 'Cash', amount: 150000, unit: 'AED', aedValue: 150000, usdValue: 40500, inrValue: 3666000, liquidityLevel: 'L2', isCash: true },
+  
+  // Investments - Stocks & ETFs
+  { id: '6', name: 'Sarwa Portfolio', category: 'Stocks', amount: 18500, unit: 'USD', aedValue: 67895, usdValue: 18500, inrValue: 1662410, liquidityLevel: 'L2', isCash: false },
+  { id: '7', name: 'Interactive Brokers', category: 'Stocks', amount: 12800, unit: 'USD', aedValue: 46976, usdValue: 12800, inrValue: 1150208, liquidityLevel: 'L2', isCash: false },
+  { id: '8', name: 'ENBD Securities (DFM)', category: 'Stocks', amount: 35000, unit: 'AED', aedValue: 35000, usdValue: 9450, inrValue: 855400, liquidityLevel: 'L2', isCash: false },
+  { id: '9', name: 'India MF (Partner 1)', category: 'Stocks', amount: 850000, unit: 'INR', aedValue: 34850, usdValue: 9410, inrValue: 850000, liquidityLevel: 'L2', isCash: false },
+  { id: '10', name: 'India MF (Partner 2)', category: 'Stocks', amount: 620000, unit: 'INR', aedValue: 25420, usdValue: 6863, inrValue: 620000, liquidityLevel: 'L2', isCash: false },
+  
+  // Bonds & Fixed Income
+  { id: '11', name: 'National Bonds UAE', category: 'Bonds', amount: 75000, unit: 'AED', aedValue: 75000, usdValue: 20250, inrValue: 1833000, liquidityLevel: 'L2', isCash: false },
+  { id: '12', name: 'Sukuk Fund', category: 'Bonds', amount: 40000, unit: 'AED', aedValue: 40000, usdValue: 10800, inrValue: 977600, liquidityLevel: 'L2', isCash: false },
+  
+  // Real Estate
+  { id: '13', name: 'Family Home (Apartment)', category: 'Land Asset', amount: 1800000, unit: 'AED', aedValue: 1800000, usdValue: 486000, inrValue: 43992000, liquidityLevel: 'NL', isCash: false },
+  { id: '14', name: 'Plot in India', category: 'Land Asset', amount: 4500000, unit: 'INR', aedValue: 184500, usdValue: 49815, inrValue: 4500000, liquidityLevel: 'NL', isCash: false },
+  { id: '15', name: 'Stake (Rental REIT)', category: 'TokenRE', amount: 25000, unit: 'AED', aedValue: 25000, usdValue: 6750, inrValue: 611000, liquidityLevel: 'L2', isCash: false },
+  
+  // Gold & Precious Metals
+  { id: '16', name: 'Physical Gold (Wife)', category: 'Gold', amount: 65000, unit: 'AED', aedValue: 65000, usdValue: 17550, inrValue: 1588600, liquidityLevel: 'L3', isCash: false },
+  { id: '17', name: 'Digital Gold', category: 'DigiGold', amount: 8500, unit: 'AED', aedValue: 8500, usdValue: 2295, inrValue: 207740, liquidityLevel: 'L2', isCash: false },
+  
+  // Retirement & Long-term
+  { id: '18', name: 'Partner 1 PF India', category: 'PF', amount: 450000, unit: 'INR', aedValue: 18450, usdValue: 4982, inrValue: 450000, liquidityLevel: 'NL', isCash: false },
+  { id: '19', name: 'Partner 2 PF India', category: 'PF', amount: 280000, unit: 'INR', aedValue: 11480, usdValue: 3099, inrValue: 280000, liquidityLevel: 'NL', isCash: false },
+  { id: '20', name: 'GRATUITY Accrued', category: 'PF', amount: 95000, unit: 'AED', aedValue: 95000, usdValue: 25650, inrValue: 2321800, liquidityLevel: 'NL', isCash: false },
+  
+  // Insurance & Protection
+  { id: '21', name: 'Term Life (Partner 1)', category: 'Insurance', amount: 15000, unit: 'AED', aedValue: 15000, usdValue: 4050, inrValue: 366600, liquidityLevel: 'L3', isCash: false },
+  { id: '22', name: 'Term Life (Partner 2)', category: 'Insurance', amount: 12000, unit: 'AED', aedValue: 12000, usdValue: 3240, inrValue: 293280, liquidityLevel: 'L3', isCash: false },
+  { id: '23', name: 'Endowment Policy', category: 'Insurance', amount: 85000, unit: 'AED', aedValue: 85000, usdValue: 22950, inrValue: 2077400, liquidityLevel: 'L3', isCash: false },
+  
+  // Vehicles
+  { id: '24', name: 'Family SUV (Nissan Patrol)', category: 'Car', amount: 85000, unit: 'AED', aedValue: 85000, usdValue: 22950, inrValue: 2077400, liquidityLevel: 'NL', isCash: false },
+  { id: '25', name: 'Second Car (Honda)', category: 'Car', amount: 35000, unit: 'AED', aedValue: 35000, usdValue: 9450, inrValue: 855400, liquidityLevel: 'NL', isCash: false },
+  
+  // Crypto (Small Allocation)
+  { id: '26', name: 'Bitcoin', category: 'Crypto', amount: 2500, unit: 'USD', aedValue: 9175, usdValue: 2500, inrValue: 224650, liquidityLevel: 'L2', isCash: false },
+  { id: '27', name: 'Ethereum', category: 'Crypto', amount: 1200, unit: 'USD', aedValue: 4404, usdValue: 1200, inrValue: 107832, liquidityLevel: 'L2', isCash: false },
 ];
 
 export interface Transaction {
