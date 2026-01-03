@@ -7,6 +7,7 @@ import { AssetList } from '@/components/AssetList';
 import { TransactionForm } from '@/components/TransactionForm';
 import { RecentTransactions } from '@/components/RecentTransactions';
 import { QuickStats } from '@/components/QuickStats';
+import { PortfolioAggregation } from '@/components/PortfolioAggregation';
 import { initialPortfolio, Transaction, Asset } from '@/lib/portfolioData';
 
 const Index = () => {
@@ -26,24 +27,30 @@ const Index = () => {
       <WealthHeader />
       
       <main className="container mx-auto px-6 py-8">
-        {/* Top section - Net Worth & Actions */}
-        <div className="flex flex-col md:flex-row gap-6 mb-8">
+        {/* Hero Section - Net Worth & Quick Actions */}
+        <div className="flex flex-col lg:flex-row gap-6 mb-8">
           <div className="flex-1">
             <NetWorthCard assets={assets} />
           </div>
-          <div className="md:w-80 flex flex-col gap-4">
+          <div className="lg:w-80 flex flex-col gap-4">
             <div className="wealth-card flex-1">
               <p className="wealth-label mb-2">Quick Actions</p>
               <div className="space-y-2">
                 <TransactionForm onAddTransaction={handleAddTransaction} />
               </div>
             </div>
-          <div className="wealth-card">
+            <div className="wealth-card">
               <p className="wealth-label mb-1">Combined Income</p>
               <p className="text-xl font-bold font-mono text-wealth-positive">AED 55,000/mo</p>
               <p className="text-xs text-muted-foreground mt-1">2 earning partners</p>
             </div>
           </div>
+        </div>
+        
+        {/* Portfolio Aggregation - Connected Platforms */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Investment Portfolio Overview</h2>
+          <PortfolioAggregation />
         </div>
         
         {/* Quick Stats */}
