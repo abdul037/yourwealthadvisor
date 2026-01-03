@@ -6,80 +6,76 @@
 
 @layer base {
   :root {
-    /* UAE/GCC Theme - Desert Gold & Emerald */
-    --background: 30 20% 6%;
-    --foreground: 40 20% 96%;
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
 
-    --card: 30 18% 10%;
-    --card-foreground: 40 20% 96%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 30 18% 10%;
-    --popover-foreground: 40 20% 96%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
 
-    /* UAE Flag Emerald Green */
-    --primary: 160 84% 39%;
-    --primary-foreground: 30 20% 6%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 222 47% 5%;
 
-    --secondary: 30 15% 18%;
-    --secondary-foreground: 40 20% 96%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 30 12% 15%;
-    --muted-foreground: 35 15% 55%;
+    --muted: 217 33% 14%;
+    --muted-foreground: 215 20% 55%;
 
-    /* Royal Gold Accent */
-    --accent: 43 96% 56%;
-    --accent-foreground: 30 20% 6%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 222 47% 5%;
 
-    /* UAE Flag Red */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 40 20% 96%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 30 15% 20%;
-    --input: 30 15% 18%;
-    --ring: 160 84% 39%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 142 71% 45%;
 
     --radius: 0.75rem;
 
-    /* Custom wealth management colors - GCC Theme */
-    --wealth-positive: 160 84% 39%;
-    --wealth-negative: 0 72% 51%;
-    --wealth-neutral: 35 15% 55%;
+    /* Custom wealth management colors */
+    --wealth-positive: 142 71% 45%;
+    --wealth-negative: 0 84% 60%;
+    --wealth-neutral: 215 20% 55%;
     
-    /* Asset category colors - Desert palette */
-    --asset-land: 35 80% 45%;
-    --asset-stocks: 160 84% 39%;
-    --asset-cash: 43 96% 56%;
-    --asset-bonds: 200 60% 50%;
-    --asset-crypto: 28 90% 50%;
-    --asset-gold: 43 96% 56%;
-    --asset-real-estate: 15 70% 50%;
-    --asset-insurance: 340 65% 50%;
-    --asset-car: 200 60% 45%;
-    --asset-pf: 280 55% 55%;
+    /* Asset category colors */
+    --asset-land: 38 92% 50%;
+    --asset-stocks: 217 91% 60%;
+    --asset-cash: 142 71% 45%;
+    --asset-bonds: 280 65% 60%;
+    --asset-crypto: 32 95% 55%;
+    --asset-gold: 45 93% 50%;
+    --asset-real-estate: 173 80% 40%;
+    --asset-insurance: 340 75% 55%;
+    --asset-car: 200 70% 50%;
+    --asset-pf: 262 83% 58%;
     
-    /* Gradients - Desert & Gulf inspired */
-    --gradient-wealth: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(43 96% 56%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(30 18% 12%) 0%, hsl(30 18% 10%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(43 96% 56%) 0%, hsl(35 80% 45%) 100%);
+    /* Gradients */
+    --gradient-wealth: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(173 80% 40%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(222 47% 10%) 0%, hsl(222 47% 8%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(45 93% 50%) 0%, hsl(38 92% 50%) 100%);
     
-    /* Shadows - Warm golden glow */
-    --shadow-glow: 0 0 40px -10px hsl(43 96% 56% / 0.25);
-    --shadow-card: 0 4px 24px -8px hsl(0 0% 0% / 0.6);
+    /* Shadows */
+    --shadow-glow: 0 0 40px -10px hsl(142 71% 45% / 0.3);
+    --shadow-card: 0 4px 24px -8px hsl(0 0% 0% / 0.5);
 
-    --sidebar-background: 30 18% 8%;
-    --sidebar-foreground: 40 20% 96%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 30 20% 6%;
-    --sidebar-accent: 30 12% 15%;
-    --sidebar-accent-foreground: 40 20% 96%;
-    --sidebar-border: 30 15% 20%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-background: 222 47% 6%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 142 71% 45%;
+    --sidebar-primary-foreground: 222 47% 5%;
+    --sidebar-accent: 217 33% 14%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 142 71% 45%;
 
-    --chart-1: 160 84% 39%;
-    --chart-2: 43 96% 56%;
-    --chart-3: 35 80% 45%;
-    --chart-4: 200 60% 50%;
-    --chart-5: 0 72% 51%;
+    --chart-1: 142 71% 45%;
+    --chart-2: 217 91% 60%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 32 95% 55%;
   }
 }
 
