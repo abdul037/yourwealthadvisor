@@ -17,9 +17,9 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
       manifest: {
-        name: "Your Wealth Advisor",
-        short_name: "WealthAdvisor",
-        description: "Track your income, expenses, and build wealth",
+        name: "Tharwa Net - Your Personalized Wealth Manager",
+        short_name: "Tharwa Net",
+        description: "Your personalized wealth manager - Track income, expenses, and build wealth",
         theme_color: "#10b981",
         background_color: "#0f172a",
         display: "standalone",
