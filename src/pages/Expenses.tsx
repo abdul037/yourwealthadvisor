@@ -74,7 +74,7 @@ const Expenses = () => {
         {/* Footer */}
         <footer className="mt-12 pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            WealthTrack • Expense Tracking
+            WealthTrack • Family of 4 Expense Tracking
           </p>
         </footer>
       </main>

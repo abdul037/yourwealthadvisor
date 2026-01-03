@@ -38,10 +38,10 @@ const Index = () => {
                 <TransactionForm onAddTransaction={handleAddTransaction} />
               </div>
             </div>
-            <div className="wealth-card">
-              <p className="wealth-label mb-1">Debt Remaining</p>
-              <p className="text-xl font-bold font-mono text-destructive">AED 42,801</p>
-              <p className="text-xs text-muted-foreground mt-1">$11,556 USD</p>
+          <div className="wealth-card">
+              <p className="wealth-label mb-1">Combined Income</p>
+              <p className="text-xl font-bold font-mono text-wealth-positive">AED 55,000/mo</p>
+              <p className="text-xs text-muted-foreground mt-1">2 earning partners</p>
             </div>
           </div>
         </div>
@@ -69,7 +69,7 @@ const Index = () => {
         {/* Footer */}
         <footer className="mt-12 pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            WealthTrack • Portfolio data as of December 26, 2025
+            WealthTrack • Family of 4 in Dubai (Kids: 5 & 7 yrs)
           </p>
         </footer>
       </main>
