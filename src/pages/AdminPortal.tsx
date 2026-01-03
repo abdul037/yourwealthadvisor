@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Trash2, Upload, Download, RefreshCw, Palette, Building2, Users } from 'lucide-react';
+import { Plus, Trash2, Upload, Download, RefreshCw, Palette, Building2, Users, Droplets } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { BankConnection } from '@/components/BankConnection';
 import { ConnectedAccounts } from '@/components/ConnectedAccounts';
 import { ImportedTransactions } from '@/components/ImportedTransactions';
 import { PartnerManagement } from '@/components/PartnerManagement';
+import { LiquiditySettings } from '@/components/LiquiditySettings';
 import { BankAccount, BankTransaction, DEMO_TRANSACTIONS } from '@/lib/mockBankingData';
 const AVAILABLE_ICONS = [
   'UtensilsCrossed', 'Car', 'Zap', 'Gamepad2', 'ShoppingBag', 'Heart', 'GraduationCap',
@@ -203,21 +204,29 @@ const AdminPortal = () => {
         </div>
         
         <Tabs defaultValue="partners" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5">
             <TabsTrigger value="partners" className="gap-2">
               <Users className="w-4 h-4" />
               Partners
+            </TabsTrigger>
+            <TabsTrigger value="liquidity" className="gap-2">
+              <Droplets className="w-4 h-4" />
+              Liquidity
             </TabsTrigger>
             <TabsTrigger value="banking" className="gap-2">
               <Building2 className="w-4 h-4" />
               Banking
             </TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="import">Bulk Import</TabsTrigger>
+            <TabsTrigger value="import">Import</TabsTrigger>
           </TabsList>
           
           <TabsContent value="partners" className="space-y-6">
             <PartnerManagement />
+          </TabsContent>
+          
+          <TabsContent value="liquidity" className="space-y-6">
+            <LiquiditySettings />
           </TabsContent>
           
           <TabsContent value="banking" className="space-y-6">

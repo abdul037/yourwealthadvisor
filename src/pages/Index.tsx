@@ -8,6 +8,7 @@ import { TransactionForm } from '@/components/TransactionForm';
 import { RecentTransactions } from '@/components/RecentTransactions';
 import { QuickStats } from '@/components/QuickStats';
 import { PortfolioAggregation } from '@/components/PortfolioAggregation';
+import { IncomeLiquidityChart } from '@/components/IncomeLiquidityChart';
 import { initialPortfolio, Transaction, Asset } from '@/lib/portfolioData';
 
 const Index = () => {
@@ -51,6 +52,11 @@ const Index = () => {
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-4">Investment Portfolio Overview</h2>
           <PortfolioAggregation />
+        </div>
+        
+        {/* Income Liquidity Analysis */}
+        <div className="mb-8">
+          <IncomeLiquidityChart />
         </div>
         
         {/* Quick Stats */}
