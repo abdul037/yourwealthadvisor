@@ -10,6 +10,7 @@ import { QuickStats } from '@/components/QuickStats';
 import { PortfolioAggregation } from '@/components/PortfolioAggregation';
 import { IncomeLiquidityChart } from '@/components/IncomeLiquidityChart';
 import { EmergencyFundCalculator } from '@/components/EmergencyFundCalculator';
+import { CashFlowForecast } from '@/components/CashFlowForecast';
 import { initialPortfolio, Transaction, Asset } from '@/lib/portfolioData';
 
 const Index = () => {
@@ -59,6 +60,11 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <IncomeLiquidityChart />
           <EmergencyFundCalculator />
+        </div>
+        
+        {/* Cash Flow Forecast */}
+        <div className="mb-8">
+          <CashFlowForecast />
         </div>
         
         {/* Quick Stats */}
