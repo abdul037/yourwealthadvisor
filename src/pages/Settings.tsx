@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Trash2, Upload, Download, RefreshCw, Palette } from 'lucide-react';
+import { Plus, Trash2, Upload, Download, RefreshCw, Palette, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { WealthHeader } from '@/components/WealthHeader';
 import { Category, DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, parseCSVData, BulkUploadRow } from '@/lib/categoryData';
 import { toast } from '@/hooks/use-toast';
-
+import { BankConnection } from '@/components/BankConnection';
+import { ConnectedAccounts } from '@/components/ConnectedAccounts';
+import { ImportedTransactions } from '@/components/ImportedTransactions';
+import { BankAccount, BankTransaction, DEMO_TRANSACTIONS } from '@/lib/mockBankingData';
 const AVAILABLE_ICONS = [
   'UtensilsCrossed', 'Car', 'Zap', 'Gamepad2', 'ShoppingBag', 'Heart', 'GraduationCap',
   'CreditCard', 'Home', 'Baby', 'Briefcase', 'Gift', 'Laptop', 'TrendingUp', 'Coins',
@@ -34,11 +37,46 @@ const Settings = () => {
   const [categoryType, setCategoryType] = useState<'income' | 'expense'>('expense');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Bank connection state
+  const [connectedAccounts, setConnectedAccounts] = useState<BankAccount[]>([]);
+  const [importedTransactions, setImportedTransactions] = useState<BankTransaction[]>([]);
+  
   const [newCategory, setNewCategory] = useState({
     name: '',
     icon: 'MoreHorizontal',
     color: 'hsl(215, 20%, 55%)',
   });
+
+  const handleBankConnectionSuccess = (accounts: BankAccount[]) => {
+    setConnectedAccounts(prev => [...prev, ...accounts]);
+    // Import transactions for the connected accounts
+    const newTransactions = DEMO_TRANSACTIONS.filter(t => 
+      accounts.some(acc => acc.id === t.accountId || acc.id.includes('acc-'))
+    );
+    setImportedTransactions(prev => [...prev, ...newTransactions]);
+  };
+
+  const handleAccountRefresh = (accountId: string) => {
+    setConnectedAccounts(prev => 
+      prev.map(acc => 
+        acc.id === accountId 
+          ? { ...acc, lastSynced: new Date().toISOString() }
+          : acc
+      )
+    );
+  };
+
+  const handleAccountRemove = (accountId: string) => {
+    setConnectedAccounts(prev => prev.filter(acc => acc.id !== accountId));
+  };
+
+  const handleTransactionsImported = (transactions: BankTransaction[]) => {
+    setImportedTransactions(prev => {
+      const existingIds = new Set(prev.map(t => t.id));
+      const newTxns = transactions.filter(t => !existingIds.has(t.id));
+      return [...prev, ...newTxns];
+    });
+  };
 
   const handleAddCategory = (type: 'income' | 'expense') => {
     const category: Category = {
@@ -163,11 +201,63 @@ const Settings = () => {
           <p className="text-muted-foreground">Manage categories, import data, and customize your experience</p>
         </div>
         
-        <Tabs defaultValue="categories" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+        <Tabs defaultValue="banking" className="space-y-6">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
+            <TabsTrigger value="banking" className="gap-2">
+              <Building2 className="w-4 h-4" />
+              Bank Connections
+            </TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="import">Bulk Import</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="banking" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Connected Banks */}
+              <div className="wealth-card">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold">Connected Bank Accounts</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Link your bank for automatic transaction imports
+                    </p>
+                  </div>
+                  <BankConnection 
+                    onConnectionSuccess={handleBankConnectionSuccess}
+                    connectedAccounts={connectedAccounts}
+                  />
+                </div>
+                <ConnectedAccounts 
+                  accounts={connectedAccounts}
+                  onRefresh={handleAccountRefresh}
+                  onRemove={handleAccountRemove}
+                  onTransactionsImported={handleTransactionsImported}
+                />
+              </div>
+              
+              {/* Imported Transactions */}
+              <div className="wealth-card">
+                <div className="mb-4">
+                  <h3 className="font-semibold">Imported Transactions</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Transactions synced from your connected banks
+                  </p>
+                </div>
+                <ImportedTransactions 
+                  transactions={importedTransactions}
+                />
+              </div>
+            </div>
+            
+            <Alert className="bg-primary/5 border-primary/20">
+              <Building2 className="h-4 w-4 text-primary" />
+              <AlertDescription>
+                <strong>Demo Mode Active:</strong> This is a simulated Open Banking integration. 
+                Connect any bank and use any 6-digit OTP to test the flow. Real Lean Technologies 
+                integration requires API credentials.
+              </AlertDescription>
+            </Alert>
+          </TabsContent>
           
           <TabsContent value="categories" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
