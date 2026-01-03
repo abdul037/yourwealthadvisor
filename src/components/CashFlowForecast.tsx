@@ -2,10 +2,13 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { sampleIncomeSources } from '@/lib/incomeData';
 import { sampleBudgets } from '@/lib/expenseData';
 import { sampleDebts } from '@/lib/debtData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface ForecastMonth {
   month: string;
@@ -19,20 +22,20 @@ interface ForecastMonth {
 const INR_TO_AED = 0.044;
 
 export const CashFlowForecast = () => {
+  const { formatAmount, displayCurrency, symbol } = useFormattedCurrency();
+
   const forecastData = useMemo(() => {
     const months: ForecastMonth[] = [];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentDate = new Date();
     let cumulativeLiquidity = 0;
 
-    // Calculate monthly income from all sources
     const monthlyIncome = sampleIncomeSources.reduce((total, source) => {
       let amount = source.amount;
       if (source.currency === 'INR') {
         amount *= INR_TO_AED;
       }
       
-      // Convert to monthly if needed
       if (source.frequency === 'annual') {
         amount /= 12;
       } else if (source.frequency === 'quarterly') {
@@ -42,17 +45,14 @@ export const CashFlowForecast = () => {
       return total + amount;
     }, 0);
 
-    // Calculate monthly expenses from budgets
     const monthlyExpenses = sampleBudgets.reduce((total, budget) => {
       return total + budget.limit;
     }, 0);
 
-    // Calculate monthly debt payments
     const monthlyDebtPayments = sampleDebts.reduce((total, debt) => {
       return total + debt.minimumPayment;
     }, 0);
 
-    // Generate 12 months forecast
     for (let i = 0; i < 12; i++) {
       const forecastDate = new Date(currentDate);
       forecastDate.setMonth(currentDate.getMonth() + i);
@@ -60,7 +60,6 @@ export const CashFlowForecast = () => {
       const monthName = monthNames[forecastDate.getMonth()];
       const year = forecastDate.getFullYear().toString().slice(-2);
       
-      // Add some variance for realism (±5%)
       const variance = 0.95 + Math.random() * 0.1;
       const incomeWithVariance = monthlyIncome * variance;
       const expensesWithVariance = monthlyExpenses * (1.1 - Math.random() * 0.2);
@@ -98,9 +97,16 @@ export const CashFlowForecast = () => {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">12-Month Cash Flow Forecast</CardTitle>
-          <div className={`flex items-center gap-1 text-sm ${isPositiveTrend ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
-            {isPositiveTrend ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-            <span className="font-mono">AED {Math.abs(avgMonthlyCashFlow).toLocaleString()}/mo</span>
+          <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-1 text-sm ${isPositiveTrend ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
+              {isPositiveTrend ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+              <span className="font-mono">{formatAmount(Math.abs(avgMonthlyCashFlow))}/mo</span>
+            </div>
+            <Link to="/budget">
+              <Button variant="ghost" size="icon" className="w-8 h-8">
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </CardHeader>
@@ -110,19 +116,19 @@ export const CashFlowForecast = () => {
           <div className="bg-muted/30 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground mb-1">Avg Monthly Income</p>
             <p className="text-sm font-mono font-semibold text-wealth-positive">
-              AED {Math.round(forecastData.reduce((s, m) => s + m.income, 0) / 12).toLocaleString()}
+              {formatAmount(Math.round(forecastData.reduce((s, m) => s + m.income, 0) / 12))}
             </p>
           </div>
           <div className="bg-muted/30 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground mb-1">Avg Monthly Outflow</p>
             <p className="text-sm font-mono font-semibold text-wealth-negative">
-              AED {Math.round(forecastData.reduce((s, m) => s + m.expenses + m.debtPayments, 0) / 12).toLocaleString()}
+              {formatAmount(Math.round(forecastData.reduce((s, m) => s + m.expenses + m.debtPayments, 0) / 12))}
             </p>
           </div>
           <div className="bg-muted/30 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground mb-1">12-Month Projection</p>
             <p className={`text-sm font-mono font-semibold ${endingLiquidity >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
-              AED {endingLiquidity.toLocaleString()}
+              {formatAmount(endingLiquidity)}
             </p>
           </div>
         </div>
@@ -156,7 +162,7 @@ export const CashFlowForecast = () => {
               <ChartTooltip 
                 content={<ChartTooltipContent />}
                 formatter={(value: number, name: string) => [
-                  `AED ${value.toLocaleString()}`,
+                  formatAmount(value),
                   chartConfig[name as keyof typeof chartConfig]?.label || name
                 ]}
               />
@@ -187,7 +193,6 @@ export const CashFlowForecast = () => {
                 <th className="text-left py-1 text-muted-foreground font-medium">Month</th>
                 <th className="text-right py-1 text-muted-foreground font-medium">Income</th>
                 <th className="text-right py-1 text-muted-foreground font-medium">Expenses</th>
-                <th className="text-right py-1 text-muted-foreground font-medium">Debt</th>
                 <th className="text-right py-1 text-muted-foreground font-medium">Net</th>
               </tr>
             </thead>
@@ -195,11 +200,10 @@ export const CashFlowForecast = () => {
               {forecastData.map((month, idx) => (
                 <tr key={idx} className="border-b border-border/50">
                   <td className="py-1.5 font-medium">{month.month}</td>
-                  <td className="text-right font-mono text-wealth-positive">{month.income.toLocaleString()}</td>
-                  <td className="text-right font-mono text-wealth-negative">{month.expenses.toLocaleString()}</td>
-                  <td className="text-right font-mono text-muted-foreground">{month.debtPayments.toLocaleString()}</td>
+                  <td className="text-right font-mono text-wealth-positive">{formatAmount(month.income)}</td>
+                  <td className="text-right font-mono text-wealth-negative">{formatAmount(month.expenses)}</td>
                   <td className={`text-right font-mono font-semibold ${month.netCashFlow >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
-                    {month.netCashFlow >= 0 ? '+' : ''}{month.netCashFlow.toLocaleString()}
+                    {month.netCashFlow >= 0 ? '+' : ''}{formatAmount(month.netCashFlow)}
                   </td>
                 </tr>
               ))}

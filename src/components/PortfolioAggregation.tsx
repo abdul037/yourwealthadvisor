@@ -1,8 +1,9 @@
-import { TrendingUp, TrendingDown, Building2, Coins, BarChart3, Zap, RefreshCw } from 'lucide-react';
+import { TrendingUp, TrendingDown, Building2, Coins, BarChart3, Zap, RefreshCw, ExternalLink } from 'lucide-react';
 import { BankAccount, DEMO_INVESTMENT_ACCOUNTS, DEMO_CRYPTO_ACCOUNTS, DEMO_UTILITY_ACCOUNTS } from '@/lib/mockBankingData';
-import { formatCurrency } from '@/lib/portfolioData';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface PortfolioAggregationProps {
   connectedAccounts?: BankAccount[];
@@ -19,6 +20,7 @@ interface PlatformSummary {
 
 export function PortfolioAggregation({ connectedAccounts = [] }: PortfolioAggregationProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { formatAmount } = useFormattedCurrency();
   
   // Combine demo accounts with any connected accounts for display
   const allInvestmentAccounts = [...DEMO_INVESTMENT_ACCOUNTS, ...connectedAccounts.filter(a => a.accountType === 'investment')];
@@ -92,7 +94,7 @@ export function PortfolioAggregation({ connectedAccounts = [] }: PortfolioAggreg
           </div>
           
           <div className="flex items-end gap-4">
-            <p className="text-4xl font-bold font-mono">{formatCurrency(totalPortfolioValue)}</p>
+            <p className="text-3xl sm:text-4xl font-bold font-mono">{formatAmount(totalPortfolioValue)}</p>
             <div className="flex items-center gap-1 text-wealth-positive mb-1">
               <TrendingUp className="w-4 h-4" />
               <span className="text-sm font-medium">+5.2%</span>
@@ -106,14 +108,21 @@ export function PortfolioAggregation({ connectedAccounts = [] }: PortfolioAggreg
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Investments */}
         <div className="wealth-card">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-asset-stocks/20 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-asset-stocks" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-asset-stocks/20 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-asset-stocks" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Investments</p>
+                <p className="text-lg font-bold font-mono">{formatAmount(investmentTotalAED)}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Investments</p>
-              <p className="text-lg font-bold font-mono">{formatCurrency(investmentTotalAED)}</p>
-            </div>
+            <Link to="/trends">
+              <Button variant="ghost" size="icon" className="w-8 h-8">
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
           <div className="space-y-2">
             {investmentSummaries.slice(0, 4).map((platform, i) => (
@@ -123,7 +132,7 @@ export function PortfolioAggregation({ connectedAccounts = [] }: PortfolioAggreg
                   <span className="text-sm">{platform.name}</span>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-mono">{formatCurrency(platform.value)}</p>
+                  <p className="text-sm font-mono">{formatAmount(platform.value)}</p>
                   <p className={`text-xs ${platform.change && platform.change >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
                     {platform.change && platform.change >= 0 ? '+' : ''}{platform.change?.toFixed(1)}%
                   </p>
@@ -141,7 +150,7 @@ export function PortfolioAggregation({ connectedAccounts = [] }: PortfolioAggreg
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Crypto Assets</p>
-              <p className="text-lg font-bold font-mono">{formatCurrency(cryptoTotalAED)}</p>
+              <p className="text-lg font-bold font-mono">{formatAmount(cryptoTotalAED)}</p>
             </div>
           </div>
           <div className="space-y-2">
@@ -155,7 +164,7 @@ export function PortfolioAggregation({ connectedAccounts = [] }: PortfolioAggreg
                   <p className="text-sm font-mono">
                     {acc.currency === 'BTC' 
                       ? `${acc.balance} BTC`
-                      : formatCurrency(acc.balance)
+                      : formatAmount(acc.balance)
                     }
                   </p>
                 </div>
@@ -166,14 +175,21 @@ export function PortfolioAggregation({ connectedAccounts = [] }: PortfolioAggreg
         
         {/* Utilities Due */}
         <div className="wealth-card">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
-              <Zap className="w-4 h-4 text-accent" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
+                <Zap className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Utilities Due</p>
+                <p className="text-lg font-bold font-mono text-accent">{formatAmount(utilityDueAED)}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Utilities Due</p>
-              <p className="text-lg font-bold font-mono text-accent">{formatCurrency(utilityDueAED)}</p>
-            </div>
+            <Link to="/expenses">
+              <Button variant="ghost" size="icon" className="w-8 h-8">
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
           <div className="space-y-2">
             {allUtilityAccounts.filter(a => a.balance < 0).map((acc, i) => (
@@ -183,7 +199,7 @@ export function PortfolioAggregation({ connectedAccounts = [] }: PortfolioAggreg
                   <span className="text-sm">{acc.bankName}</span>
                 </div>
                 <p className="text-sm font-mono text-wealth-negative">
-                  {formatCurrency(Math.abs(acc.balance))}
+                  {formatAmount(Math.abs(acc.balance))}
                 </p>
               </div>
             ))}

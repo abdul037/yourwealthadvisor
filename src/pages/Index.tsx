@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { DollarSign, Receipt, Wallet, TrendingDown, LineChart, Shield, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { NetWorthCard } from '@/components/NetWorthCard';
 import { AllocationChart } from '@/components/AllocationChart';
 import { LiquidityBreakdown } from '@/components/LiquidityBreakdown';
@@ -11,10 +14,19 @@ import { IncomeLiquidityChart } from '@/components/IncomeLiquidityChart';
 import { EmergencyFundCalculator } from '@/components/EmergencyFundCalculator';
 import { CashFlowForecast } from '@/components/CashFlowForecast';
 import { initialPortfolio, Transaction, Asset } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
+
+const quickNavItems = [
+  { path: '/income', label: 'Income', icon: DollarSign, color: 'bg-wealth-positive/20 text-wealth-positive' },
+  { path: '/expenses', label: 'Expenses', icon: Receipt, color: 'bg-wealth-negative/20 text-wealth-negative' },
+  { path: '/budget', label: 'Budget', icon: Wallet, color: 'bg-chart-2/20 text-chart-2' },
+  { path: '/debt', label: 'Debt', icon: TrendingDown, color: 'bg-accent/20 text-accent' },
+];
 
 const Index = () => {
   const [assets] = useState<Asset[]>(initialPortfolio);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { formatAmount } = useFormattedCurrency();
   
   const handleAddTransaction = (transaction: Omit<Transaction, 'id'>) => {
     const newTransaction: Transaction = {
@@ -23,6 +35,9 @@ const Index = () => {
     };
     setTransactions(prev => [newTransaction, ...prev]);
   };
+
+  // Calculate combined monthly income (AED value)
+  const combinedIncome = 55000; // This would come from actual income sources
 
   return (
     <div className="min-h-screen bg-background">
@@ -34,16 +49,38 @@ const Index = () => {
           </div>
           <div className="lg:w-80 flex flex-col gap-4">
             <div className="wealth-card flex-1">
-              <p className="wealth-label mb-2">Quick Actions</p>
+              <p className="wealth-label mb-3">Quick Actions</p>
               <div className="space-y-2">
                 <TransactionForm onAddTransaction={handleAddTransaction} />
               </div>
+              
+              {/* Quick Nav Grid */}
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                {quickNavItems.map(item => (
+                  <Link key={item.path} to={item.path}>
+                    <Button 
+                      variant="ghost" 
+                      className={`w-full h-auto flex flex-col items-center gap-1 py-3 ${item.color} hover:opacity-80`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span className="text-xs font-medium">{item.label}</span>
+                    </Button>
+                  </Link>
+                ))}
+              </div>
             </div>
-            <div className="wealth-card">
-              <p className="wealth-label mb-1">Combined Income</p>
-              <p className="text-lg sm:text-xl font-bold font-mono text-wealth-positive">AED 55,000/mo</p>
-              <p className="text-xs text-muted-foreground mt-1">2 earning partners</p>
-            </div>
+            <Link to="/income" className="block">
+              <div className="wealth-card hover:border-primary/50 transition-colors cursor-pointer group">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="wealth-label mb-1">Combined Income</p>
+                    <p className="text-lg sm:text-xl font-bold font-mono text-wealth-positive">{formatAmount(combinedIncome)}/mo</p>
+                    <p className="text-xs text-muted-foreground mt-1">2 earning partners</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
         
