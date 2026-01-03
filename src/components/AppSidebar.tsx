@@ -55,8 +55,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <h1 className="text-base font-bold tracking-tight truncate">WealthTrack</h1>
-              <p className="text-[10px] text-muted-foreground">Portfolio Manager</p>
+              <h1 className="text-base font-bold tracking-tight truncate">Tharwa Net</h1>
+              <p className="text-[10px] text-muted-foreground">Your Personalized Wealth Manager</p>
             </div>
           )}
         </div>
