@@ -3,10 +3,10 @@ import { BudgetAllocation } from '@/components/BudgetAllocation';
 import { BudgetTracker } from '@/components/BudgetTracker';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { BudgetVsActualChart } from '@/components/BudgetVsActualChart';
+import { VacationPlanner } from '@/components/VacationPlanner';
 import { useBudgetAlerts, BudgetAlert } from '@/hooks/useBudgetAlerts';
 import { Budget, Expense, sampleExpenses, sampleBudgets } from '@/lib/expenseData';
 import { sampleIncomeSources, getMonthlyIncomeData } from '@/lib/incomeData';
-
 const BudgetPlanner = () => {
   const [budgets, setBudgets] = useState<Budget[]>(sampleBudgets);
   const [expenses] = useState<Expense[]>(sampleExpenses);
@@ -87,10 +87,15 @@ const BudgetPlanner = () => {
           <BudgetVsActualChart budgets={budgets} expenses={expenses} />
         </div>
         
+        {/* Vacation Planner */}
+        <div className="mb-6 sm:mb-8">
+          <VacationPlanner />
+        </div>
+        
         {/* Footer */}
         <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            WealthTrack • Monthly Budget Planner
+            Tharwa Net • Monthly Budget Planner
           </p>
         </footer>
       </main>
