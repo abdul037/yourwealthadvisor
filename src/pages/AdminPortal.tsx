@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Trash2, Upload, Download, RefreshCw, Palette, Building2 } from 'lucide-react';
+import { Plus, Trash2, Upload, Download, RefreshCw, Palette, Building2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { BankConnection } from '@/components/BankConnection';
 import { ConnectedAccounts } from '@/components/ConnectedAccounts';
 import { ImportedTransactions } from '@/components/ImportedTransactions';
+import { PartnerManagement } from '@/components/PartnerManagement';
 import { BankAccount, BankTransaction, DEMO_TRANSACTIONS } from '@/lib/mockBankingData';
 const AVAILABLE_ICONS = [
   'UtensilsCrossed', 'Car', 'Zap', 'Gamepad2', 'ShoppingBag', 'Heart', 'GraduationCap',
@@ -201,15 +202,23 @@ const AdminPortal = () => {
           <p className="text-muted-foreground">Manage categories, bank connections, and customize your experience</p>
         </div>
         
-        <Tabs defaultValue="banking" className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+        <Tabs defaultValue="partners" className="space-y-6">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+            <TabsTrigger value="partners" className="gap-2">
+              <Users className="w-4 h-4" />
+              Partners
+            </TabsTrigger>
             <TabsTrigger value="banking" className="gap-2">
               <Building2 className="w-4 h-4" />
-              Bank Connections
+              Banking
             </TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="import">Bulk Import</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="partners" className="space-y-6">
+            <PartnerManagement />
+          </TabsContent>
           
           <TabsContent value="banking" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

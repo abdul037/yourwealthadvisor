@@ -14,7 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      income_sources: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          frequency: string | null
+          id: string
+          is_active: boolean | null
+          liquidity_level: Database["public"]["Enums"]["liquidity_level"] | null
+          notes: string | null
+          partner_id: string
+          source_name: string
+          source_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          frequency?: string | null
+          id?: string
+          is_active?: boolean | null
+          liquidity_level?:
+            | Database["public"]["Enums"]["liquidity_level"]
+            | null
+          notes?: string | null
+          partner_id: string
+          source_name: string
+          source_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          frequency?: string | null
+          id?: string
+          is_active?: boolean | null
+          liquidity_level?:
+            | Database["public"]["Enums"]["liquidity_level"]
+            | null
+          notes?: string | null
+          partner_id?: string
+          source_name?: string
+          source_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "income_sources_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +112,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      liquidity_level: "L1" | "L2" | "L3" | "NL"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +239,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      liquidity_level: ["L1", "L2", "L3", "NL"],
+    },
   },
 } as const
