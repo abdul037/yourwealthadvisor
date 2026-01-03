@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
 import BudgetPlanner from "./pages/BudgetPlanner";
+import DebtTracker from "./pages/DebtTracker";
 import Trends from "./pages/Trends";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/income" element={<Income />} />
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/budget" element={<BudgetPlanner />} />
+          <Route path="/debt" element={<DebtTracker />} />
           <Route path="/trends" element={<Trends />} />
           <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
