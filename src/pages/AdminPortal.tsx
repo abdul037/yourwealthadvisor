@@ -28,7 +28,7 @@ const AVAILABLE_COLORS = [
   'hsl(173, 80%, 40%)', 'hsl(215, 20%, 55%)'
 ];
 
-const Settings = () => {
+const AdminPortal = () => {
   const [expenseCategories, setExpenseCategories] = useState<Category[]>(DEFAULT_EXPENSE_CATEGORIES);
   const [incomeCategories, setIncomeCategories] = useState<Category[]>(DEFAULT_INCOME_CATEGORIES);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -197,8 +197,8 @@ const Settings = () => {
       
       <main className="container mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Settings & Administration</h1>
-          <p className="text-muted-foreground">Manage categories, import data, and customize your experience</p>
+          <h1 className="text-2xl font-bold mb-2">Admin Portal</h1>
+          <p className="text-muted-foreground">Manage categories, bank connections, and customize your experience</p>
         </div>
         
         <Tabs defaultValue="banking" className="space-y-6">
@@ -529,7 +529,7 @@ const Settings = () => {
         {/* Footer */}
         <footer className="mt-12 pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            WealthTrack • Settings & Administration
+            WealthTrack • Admin Portal
           </p>
         </footer>
       </main>
@@ -537,4 +537,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default AdminPortal;

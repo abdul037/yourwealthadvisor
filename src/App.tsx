@@ -9,7 +9,7 @@ import Expenses from "./pages/Expenses";
 import BudgetPlanner from "./pages/BudgetPlanner";
 import DebtTracker from "./pages/DebtTracker";
 import Trends from "./pages/Trends";
-import Settings from "./pages/Settings";
+import AdminPortal from "./pages/AdminPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,7 +27,7 @@ const App = () => (
           <Route path="/budget" element={<BudgetPlanner />} />
           <Route path="/debt" element={<DebtTracker />} />
           <Route path="/trends" element={<Trends />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/admin" element={<AdminPortal />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

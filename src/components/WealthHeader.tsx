@@ -1,4 +1,4 @@
-import { TrendingUp, Bell, LayoutDashboard, Receipt, DollarSign, LineChart, Cog, Wallet, Settings, TrendingDown } from 'lucide-react';
+import { TrendingUp, Bell, LayoutDashboard, Receipt, DollarSign, LineChart, Shield, Wallet, Settings, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -12,7 +12,7 @@ export function WealthHeader() {
     { path: '/budget', label: 'Budget', icon: Wallet },
     { path: '/debt', label: 'Debt', icon: TrendingDown },
     { path: '/trends', label: 'Trends', icon: LineChart },
-    { path: '/settings', label: 'Settings', icon: Cog },
+    { path: '/admin', label: 'Admin', icon: Shield },
   ];
   
   return (
@@ -48,9 +48,11 @@ export function WealthHeader() {
             <Button variant="ghost" size="icon" className="text-muted-foreground">
               <Bell className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground">
-              <Settings className="w-5 h-5" />
-            </Button>
+            <Link to="/admin">
+              <Button variant="ghost" size="icon" className="text-muted-foreground">
+                <Settings className="w-5 h-5" />
+              </Button>
+            </Link>
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-sm font-semibold text-primary-foreground">
               A
             </div>
