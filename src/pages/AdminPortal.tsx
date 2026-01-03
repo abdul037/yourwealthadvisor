@@ -198,28 +198,31 @@ const AdminPortal = () => {
     <div className="min-h-screen bg-background">
       <WealthHeader />
       
-      <main className="container mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Admin Portal</h1>
-          <p className="text-muted-foreground">Manage categories, bank connections, and customize your experience</p>
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold mb-2">Admin Portal</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage categories, bank connections, and customize your experience</p>
         </div>
         
-        <Tabs defaultValue="partners" className="space-y-6">
-          <TabsList className="grid w-full max-w-3xl grid-cols-5">
-            <TabsTrigger value="partners" className="gap-2">
-              <Users className="w-4 h-4" />
-              Partners
+        <Tabs defaultValue="partners" className="space-y-4 sm:space-y-6">
+          <TabsList className="w-full overflow-x-auto flex flex-nowrap">
+            <TabsTrigger value="partners" className="gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Partners</span>
+              <span className="sm:hidden">Partners</span>
             </TabsTrigger>
-            <TabsTrigger value="liquidity" className="gap-2">
-              <Droplets className="w-4 h-4" />
-              Liquidity
+            <TabsTrigger value="liquidity" className="gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0">
+              <Droplets className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Liquidity</span>
+              <span className="sm:hidden">Liquid</span>
             </TabsTrigger>
-            <TabsTrigger value="banking" className="gap-2">
-              <Building2 className="w-4 h-4" />
-              Banking
+            <TabsTrigger value="banking" className="gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0">
+              <Building2 className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Banking</span>
+              <span className="sm:hidden">Bank</span>
             </TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="import">Import</TabsTrigger>
+            <TabsTrigger value="categories" className="text-xs sm:text-sm flex-shrink-0">Categories</TabsTrigger>
+            <TabsTrigger value="import" className="text-xs sm:text-sm flex-shrink-0">Import</TabsTrigger>
           </TabsList>
           
           <TabsContent value="partners" className="space-y-6">

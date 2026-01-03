@@ -72,9 +72,9 @@ const Trends = () => {
     <div className="min-h-screen bg-background">
       <WealthHeader />
       
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
         {/* Wealth Stats */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <WealthStats 
             currentNetWorth={currentNetWorth}
             monthlyChange={monthlyChange}
@@ -85,7 +85,7 @@ const Trends = () => {
         </div>
         
         {/* Net Worth Chart */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <NetWorthChart 
             history={history}
             projections={projections}
@@ -94,7 +94,7 @@ const Trends = () => {
         </div>
         
         {/* Milestones & Income Sources */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <MilestoneTracker 
             milestones={milestones}
             currentNetWorth={currentNetWorth}
@@ -110,7 +110,7 @@ const Trends = () => {
         </div>
         
         {/* Footer */}
-        <footer className="mt-12 pt-8 border-t border-border text-center">
+        <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
             WealthTrack • Net Worth Trends & Projections
           </p>

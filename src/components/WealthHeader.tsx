@@ -43,19 +43,19 @@ export function WealthHeader() {
   
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center glow-effect">
-              <TrendingUp className="w-5 h-5 text-primary" />
+      <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 max-w-full">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/20 flex items-center justify-center glow-effect flex-shrink-0">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">WealthTrack</h1>
-              <p className="text-xs text-muted-foreground">Portfolio & Expense Manager</p>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-bold tracking-tight truncate">WealthTrack</h1>
+              <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Portfolio & Expense Manager</p>
             </div>
           </div>
           
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             {navItems.map(item => (
               <Link key={item.path} to={item.path}>
                 <Button 
@@ -70,13 +70,15 @@ export function WealthHeader() {
             ))}
           </nav>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <CurrencySelector />
-            <CurrencyConverter />
-            <Button variant="ghost" size="icon" className="text-muted-foreground">
-              <Bell className="w-5 h-5" />
+            <div className="hidden sm:block">
+              <CurrencyConverter />
+            </div>
+            <Button variant="ghost" size="icon" className="text-muted-foreground w-8 h-8 sm:w-9 sm:h-9">
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
-            <Link to="/admin">
+            <Link to="/admin" className="hidden sm:block">
               <Button variant="ghost" size="icon" className="text-muted-foreground">
                 <Settings className="w-5 h-5" />
               </Button>
@@ -84,23 +86,39 @@ export function WealthHeader() {
             
             {user ? (
               <>
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-sm font-semibold text-primary-foreground">
+                <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xs sm:text-sm font-semibold text-primary-foreground flex-shrink-0">
                   {user.email?.[0].toUpperCase() || 'U'}
                 </div>
-                <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground">
-                  <LogOut className="w-5 h-5" />
+                <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground w-8 h-8 sm:w-9 sm:h-9">
+                  <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
               </>
             ) : (
               <Link to="/auth">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <LogIn className="w-4 h-4" />
-                  Sign In
+                <Button variant="outline" size="sm" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <LogIn className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Sign In</span>
                 </Button>
               </Link>
             )}
           </div>
         </div>
+        
+        {/* Mobile Navigation */}
+        <nav className="lg:hidden flex items-center gap-1 mt-3 overflow-x-auto pb-1 -mx-4 px-4">
+          {navItems.map(item => (
+            <Link key={item.path} to={item.path}>
+              <Button 
+                variant={location.pathname === item.path ? "secondary" : "ghost"} 
+                size="sm" 
+                className={`gap-1 text-xs flex-shrink-0 px-2 ${location.pathname === item.path ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <item.icon className="w-3 h-3" />
+                {item.label}
+              </Button>
+            </Link>
+          ))}
+        </nav>
       </div>
     </header>
   );

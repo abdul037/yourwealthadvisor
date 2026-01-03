@@ -57,16 +57,16 @@ const BudgetPlanner = () => {
     <div className="min-h-screen bg-background">
       <WealthHeader />
       
-      <main className="container mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Monthly Budget Planner</h1>
-          <p className="text-muted-foreground">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold mb-2">Monthly Budget Planner</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Allocate your income, track spending, and get alerts when approaching budget limits
           </p>
         </div>
         
         {/* Budget Allocation & Notifications */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="lg:col-span-2">
             <BudgetAllocation 
               monthlyIncome={currentMonthIncome}
@@ -85,13 +85,13 @@ const BudgetPlanner = () => {
         </div>
         
         {/* Budget Tracking */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <BudgetTracker budgets={budgets} expenses={expenses} />
           <BudgetVsActualChart budgets={budgets} expenses={expenses} />
         </div>
         
         {/* Footer */}
-        <footer className="mt-12 pt-8 border-t border-border text-center">
+        <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
             WealthTrack • Monthly Budget Planner
           </p>
