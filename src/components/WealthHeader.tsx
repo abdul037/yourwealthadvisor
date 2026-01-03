@@ -1,4 +1,4 @@
-import { TrendingUp, Settings, Bell, LayoutDashboard, Receipt, DollarSign, LineChart, Cog } from 'lucide-react';
+import { TrendingUp, Bell, LayoutDashboard, Receipt, DollarSign, LineChart, Cog, Wallet, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -9,6 +9,7 @@ export function WealthHeader() {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/income', label: 'Income', icon: DollarSign },
     { path: '/expenses', label: 'Expenses', icon: Receipt },
+    { path: '/budget', label: 'Budget', icon: Wallet },
     { path: '/trends', label: 'Trends', icon: LineChart },
     { path: '/settings', label: 'Settings', icon: Cog },
   ];
