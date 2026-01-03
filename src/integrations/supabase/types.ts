@@ -14,6 +14,43 @@ export type Database = {
   }
   public: {
     Tables: {
+      category_liquidity_settings: {
+        Row: {
+          category_name: string
+          category_type: string
+          created_at: string | null
+          id: string
+          liquidity_level: Database["public"]["Enums"]["liquidity_level"] | null
+          liquidity_percentage: number | null
+          notes: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category_name: string
+          category_type: string
+          created_at?: string | null
+          id?: string
+          liquidity_level?:
+            | Database["public"]["Enums"]["liquidity_level"]
+            | null
+          liquidity_percentage?: number | null
+          notes?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category_name?: string
+          category_type?: string
+          created_at?: string | null
+          id?: string
+          liquidity_level?:
+            | Database["public"]["Enums"]["liquidity_level"]
+            | null
+          liquidity_percentage?: number | null
+          notes?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       income_sources: {
         Row: {
           amount: number
