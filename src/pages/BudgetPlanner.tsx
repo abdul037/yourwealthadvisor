@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
-import { WealthHeader } from '@/components/WealthHeader';
+import { useState, useCallback } from 'react';
 import { BudgetAllocation } from '@/components/BudgetAllocation';
 import { BudgetTracker } from '@/components/BudgetTracker';
 import { NotificationCenter } from '@/components/NotificationCenter';
@@ -55,8 +54,6 @@ const BudgetPlanner = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <WealthHeader />
-      
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-xl sm:text-2xl font-bold mb-2">Monthly Budget Planner</h1>

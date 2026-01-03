@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { WealthHeader } from '@/components/WealthHeader';
 import { Category, DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, parseCSVData, BulkUploadRow } from '@/lib/categoryData';
 import { toast } from '@/hooks/use-toast';
 import { BankConnection } from '@/components/BankConnection';
@@ -196,8 +195,6 @@ const AdminPortal = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <WealthHeader />
-      
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-xl sm:text-2xl font-bold mb-2">Admin Portal</h1>

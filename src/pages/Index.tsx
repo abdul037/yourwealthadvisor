@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { WealthHeader } from '@/components/WealthHeader';
 import { NetWorthCard } from '@/components/NetWorthCard';
 import { AllocationChart } from '@/components/AllocationChart';
 import { LiquidityBreakdown } from '@/components/LiquidityBreakdown';
@@ -27,8 +26,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <WealthHeader />
-      
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
         {/* Hero Section - Net Worth & Quick Actions */}
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 mb-6 sm:mb-8">

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { WealthHeader } from '@/components/WealthHeader';
 import { IncomeOverview } from '@/components/IncomeOverview';
 import { IncomeChart } from '@/components/IncomeChart';
 import { IncomeBreakdown } from '@/components/IncomeBreakdown';
@@ -28,8 +27,6 @@ const Income = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <WealthHeader />
-      
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
         {/* Income Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
