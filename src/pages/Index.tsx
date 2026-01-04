@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { DollarSign, Receipt, Wallet, TrendingDown, LineChart, Shield, ArrowRight } from 'lucide-react';
+import { DollarSign, Receipt, Wallet, TrendingDown, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NetWorthCard } from '@/components/NetWorthCard';
 import { AllocationChart } from '@/components/AllocationChart';
@@ -13,8 +13,11 @@ import { PortfolioAggregation } from '@/components/PortfolioAggregation';
 import { IncomeLiquidityChart } from '@/components/IncomeLiquidityChart';
 import { EmergencyFundCalculator } from '@/components/EmergencyFundCalculator';
 import { CashFlowForecast } from '@/components/CashFlowForecast';
+import { WelcomeBanner } from '@/components/WelcomeBanner';
+import { SetupWizard } from '@/components/SetupWizard';
 import { initialPortfolio, Transaction, Asset } from '@/lib/portfolioData';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 const quickNavItems = [
   { path: '/income', label: 'Income', icon: DollarSign, color: 'bg-wealth-positive/20 text-wealth-positive' },
@@ -27,6 +30,17 @@ const Index = () => {
   const [assets] = useState<Asset[]>(initialPortfolio);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const { formatAmount } = useFormattedCurrency();
+  const { isAuthenticated, profile, loading } = useUserProfile();
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
+  
+  // Show setup wizard for new authenticated users who haven't completed onboarding
+  useEffect(() => {
+    if (!loading && isAuthenticated && profile && !profile.onboarding_completed) {
+      // Delay slightly to let the page render first
+      const timer = setTimeout(() => setShowSetupWizard(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isAuthenticated, profile]);
   
   const handleAddTransaction = (transaction: Omit<Transaction, 'id'>) => {
     const newTransaction: Transaction = {
@@ -41,7 +55,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SetupWizard open={showSetupWizard} onOpenChange={setShowSetupWizard} />
+      
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
+        {/* Welcome Banner */}
+        <div className="mb-6">
+          <WelcomeBanner />
+        </div>
+        
         {/* Hero Section - Net Worth & Quick Actions */}
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="flex-1 min-w-0" data-tour="net-worth">

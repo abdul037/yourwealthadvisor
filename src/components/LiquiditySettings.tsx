@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { LIQUIDITY_LABELS } from '@/lib/portfolioData';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface LiquiditySetting {
   id: string;
@@ -35,20 +36,28 @@ const LIQUIDITY_BG: Record<string, string> = {
 };
 
 export function LiquiditySettings() {
+  const { user, isAuthenticated } = useUserProfile();
   const [settings, setSettings] = useState<LiquiditySetting[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    if (isAuthenticated && user) {
+      fetchSettings();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, user]);
 
   const fetchSettings = async () => {
+    if (!user) return;
+    
     setLoading(true);
     const { data, error } = await supabase
       .from('category_liquidity_settings')
       .select('*')
+      .eq('user_id', user.id)
       .order('category_type')
       .order('category_name');
 

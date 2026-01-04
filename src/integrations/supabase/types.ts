@@ -24,6 +24,7 @@ export type Database = {
           liquidity_percentage: number | null
           notes: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           category_name: string
@@ -36,6 +37,7 @@ export type Database = {
           liquidity_percentage?: number | null
           notes?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           category_name?: string
@@ -48,6 +50,7 @@ export type Database = {
           liquidity_percentage?: number | null
           notes?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -65,6 +68,7 @@ export type Database = {
           source_name: string
           source_type: string
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -81,6 +85,7 @@ export type Database = {
           source_name: string
           source_type: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -97,6 +102,7 @@ export type Database = {
           source_name?: string
           source_type?: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -118,6 +124,7 @@ export type Database = {
           name: string
           role: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -128,6 +135,7 @@ export type Database = {
           name: string
           role?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -137,6 +145,34 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          onboarding_completed: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          onboarding_completed?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
           updated_at?: string | null
         }
         Relationships: []

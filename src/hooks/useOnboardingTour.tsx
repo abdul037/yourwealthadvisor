@@ -6,9 +6,20 @@ export interface TourStep {
   title: string;
   description: string;
   position?: 'top' | 'bottom' | 'left' | 'right';
+  action?: {
+    label: string;
+    path: string;
+  };
 }
 
 const TOUR_STEPS: TourStep[] = [
+  {
+    id: 'welcome',
+    target: '[data-tour="welcome"]',
+    title: 'Welcome to WealthTrack!',
+    description: 'This is your personalized financial dashboard. Let\'s take a quick tour!',
+    position: 'bottom',
+  },
   {
     id: 'sidebar',
     target: '[data-tour="sidebar"]',
@@ -24,13 +35,6 @@ const TOUR_STEPS: TourStep[] = [
     position: 'bottom',
   },
   {
-    id: 'notifications',
-    target: '[data-tour="notifications"]',
-    title: 'Notifications',
-    description: 'View alerts about budget limits, upcoming bills, and important financial updates.',
-    position: 'bottom',
-  },
-  {
     id: 'net-worth',
     target: '[data-tour="net-worth"]',
     title: 'Net Worth Overview',
@@ -40,9 +44,10 @@ const TOUR_STEPS: TourStep[] = [
   {
     id: 'quick-nav',
     target: '[data-tour="quick-nav"]',
-    title: 'Quick Actions',
+    title: 'Quick Navigation',
     description: 'Jump directly to Income, Expenses, Budget, or Debt sections with one click.',
     position: 'top',
+    action: { label: 'Go to Income', path: '/income' },
   },
   {
     id: 'add-transaction',
@@ -50,6 +55,14 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Add Transactions',
     description: 'Quickly log new income or expenses. Keep your finances up to date!',
     position: 'top',
+  },
+  {
+    id: 'admin-portal',
+    target: '[data-tour="admin-portal"]',
+    title: 'Admin Portal',
+    description: 'Manage partners, income sources, expense categories, and bulk import data here.',
+    position: 'right',
+    action: { label: 'Open Admin Portal', path: '/admin' },
   },
 ];
 
