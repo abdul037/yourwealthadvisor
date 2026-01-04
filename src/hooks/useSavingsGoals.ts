@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export interface SavingsGoal {
   id: string;
@@ -26,10 +27,14 @@ export interface CreateSavingsGoal {
   notes?: string;
 }
 
+const MILESTONE_THRESHOLDS = [25, 50, 75, 100] as const;
+
 export function useSavingsGoals() {
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { createNotification } = useNotifications();
+  const notifiedMilestonesRef = useRef<Set<string>>(new Set());
 
   const fetchGoals = useCallback(async () => {
     try {
@@ -202,6 +207,55 @@ export function useSavingsGoals() {
       current_amount: newAmount,
       is_achieved: isAchieved,
     });
+
+    // Check for milestone notifications
+    const newPercentage = (newAmount / goal.target_amount) * 100;
+    const oldPercentage = (goal.current_amount / goal.target_amount) * 100;
+
+    for (const threshold of MILESTONE_THRESHOLDS) {
+      const notifKey = `${id}-${threshold}`;
+      
+      if (newPercentage >= threshold && oldPercentage < threshold && !notifiedMilestonesRef.current.has(notifKey)) {
+        notifiedMilestonesRef.current.add(notifKey);
+        
+        let title = `🎯 Goal Progress: ${threshold}%`;
+        let priority: 'low' | 'normal' | 'high' = 'normal';
+        
+        if (threshold === 100) {
+          title = '🎉 Goal Achieved!';
+          priority = 'high';
+          toast({
+            title: "🎉 Congratulations!",
+            description: `You've reached your "${goal.name}" goal!`,
+          });
+        } else if (threshold === 75) {
+          title = '🚀 Almost There!';
+          toast({
+            title: "🚀 Almost there!",
+            description: `You've reached 75% of your "${goal.name}" goal!`,
+          });
+        }
+
+        const message = threshold === 100
+          ? `Congratulations! You've reached your "${goal.name}" goal!`
+          : `You've reached ${threshold}% of your "${goal.name}" goal!`;
+
+        try {
+          await createNotification({
+            type: 'goal_milestone',
+            title,
+            message,
+            priority,
+            related_id: id,
+            related_type: 'milestone',
+            action_url: '/savings',
+            is_read: false,
+          });
+        } catch (error) {
+          console.error('Error creating goal notification:', error);
+        }
+      }
+    }
   };
 
   // Calculate totals
