@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AICategorizer } from '@/components/AICategorizer';
+import { AIInsightsPanel } from '@/components/AIInsightsPanel';
 
 // Sample uncategorized transactions for demo
 const sampleUncategorizedTransactions = [
@@ -22,13 +23,6 @@ const sampleUncategorizedTransactions = [
 ];
 
 const upcomingFeatures = [
-  {
-    id: 'insights',
-    title: 'AI Financial Insights',
-    description: 'Get personalized weekly analysis of your spending patterns and savings opportunities',
-    icon: Lightbulb,
-    status: 'coming-soon',
-  },
   {
     id: 'forecast',
     title: 'Smart Forecasting',
@@ -77,8 +71,12 @@ const AITools = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="categorizer" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+        <Tabs defaultValue="insights" className="space-y-6">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
+            <TabsTrigger value="insights" className="gap-2">
+              <Lightbulb className="w-4 h-4" />
+              Insights
+            </TabsTrigger>
             <TabsTrigger value="categorizer" className="gap-2">
               <Zap className="w-4 h-4" />
               Categorizer
@@ -88,6 +86,11 @@ const AITools = () => {
               Coming Soon
             </TabsTrigger>
           </TabsList>
+
+          {/* AI Insights Tab */}
+          <TabsContent value="insights" className="space-y-6">
+            <AIInsightsPanel />
+          </TabsContent>
 
           {/* AI Categorizer Tab */}
           <TabsContent value="categorizer" className="space-y-6">
