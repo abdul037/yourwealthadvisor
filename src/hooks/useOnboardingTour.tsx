@@ -79,8 +79,36 @@ export function TourProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const completed = localStorage.getItem(STORAGE_KEY);
-    setHasCompleted(completed === 'true');
-    // Don't auto-start tour - let users start it manually via help icon
+    if (completed === 'true') {
+      setHasCompleted(true);
+      return;
+    }
+    
+    setHasCompleted(false);
+    
+    // Auto-start tour for first-time users after page is fully loaded
+    const startTourWhenReady = () => {
+      // Wait for first tour target to exist before starting
+      const checkAndStart = () => {
+        const firstTarget = document.querySelector(TOUR_STEPS[0].target);
+        if (firstTarget) {
+          setIsActive(true);
+        } else {
+          // Retry after a short delay if target not yet rendered
+          setTimeout(checkAndStart, 500);
+        }
+      };
+      
+      // Start checking after initial render
+      setTimeout(checkAndStart, 1000);
+    };
+    
+    if (document.readyState === 'complete') {
+      startTourWhenReady();
+    } else {
+      window.addEventListener('load', startTourWhenReady);
+      return () => window.removeEventListener('load', startTourWhenReady);
+    }
   }, []);
 
   const completeTour = useCallback(() => {
