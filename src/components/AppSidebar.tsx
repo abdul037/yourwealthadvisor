@@ -8,7 +8,8 @@ import {
   Shield,
   TrendingUp,
   Download,
-  Sparkles
+  Sparkles,
+  Target
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -32,6 +33,7 @@ const mainNavItems = [
   { path: '/expenses', label: 'Expenses', icon: Receipt },
   { path: '/budget', label: 'Budget', icon: Wallet },
   { path: '/debt', label: 'Debt', icon: TrendingDown },
+  { path: '/savings', label: 'Savings Goals', icon: Target },
   { path: '/trends', label: 'Trends', icon: LineChart },
   { path: '/ai-tools', label: 'AI Tools', icon: Sparkles },
 ];

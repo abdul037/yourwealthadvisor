@@ -8,7 +8,8 @@ import {
   MoreHorizontal,
   Sparkles,
   Shield,
-  Download
+  Download,
+  Target
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ const mainNavItems = [
 
 const moreItems = [
   { path: '/debt', label: 'Debt Tracker', icon: TrendingDown },
+  { path: '/savings', label: 'Savings Goals', icon: Target },
   { path: '/trends', label: 'Trends', icon: LineChart },
   { path: '/ai-tools', label: 'AI Tools', icon: Sparkles },
   { path: '/admin', label: 'Admin Portal', icon: Shield },
