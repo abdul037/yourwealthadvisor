@@ -124,6 +124,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
     setHasCompleted(false);
     setCurrentStep(0);
+    setIsActive(true);
   }, []);
 
   const value: TourContextType = {
