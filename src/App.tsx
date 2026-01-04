@@ -11,6 +11,7 @@ import Expenses from "./pages/Expenses";
 import BudgetPlanner from "./pages/BudgetPlanner";
 import DebtTracker from "./pages/DebtTracker";
 import Trends from "./pages/Trends";
+import SavingsGoals from "./pages/SavingsGoals";
 import AITools from "./pages/AITools";
 import AdminPortal from "./pages/AdminPortal";
 import Auth from "./pages/Auth";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/budget" element={<AppLayout><BudgetPlanner /></AppLayout>} />
             <Route path="/debt" element={<AppLayout><DebtTracker /></AppLayout>} />
             <Route path="/trends" element={<AppLayout><Trends /></AppLayout>} />
+            <Route path="/savings" element={<AppLayout><SavingsGoals /></AppLayout>} />
             <Route path="/ai-tools" element={<AppLayout><AITools /></AppLayout>} />
             <Route path="/admin" element={<AppLayout><AdminPortal /></AppLayout>} />
             
