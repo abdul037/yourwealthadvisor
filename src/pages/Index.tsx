@@ -44,18 +44,18 @@ const Index = () => {
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
         {/* Hero Section - Net Worth & Quick Actions */}
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0" data-tour="net-worth">
             <NetWorthCard assets={assets} />
           </div>
           <div className="lg:w-80 flex flex-col gap-4">
             <div className="wealth-card flex-1">
               <p className="wealth-label mb-3">Quick Actions</p>
-              <div className="space-y-2">
+              <div className="space-y-2" data-tour="add-transaction">
                 <TransactionForm onAddTransaction={handleAddTransaction} />
               </div>
               
               {/* Quick Nav Grid */}
-              <div className="grid grid-cols-2 gap-2 mt-4">
+              <div className="grid grid-cols-2 gap-2 mt-4" data-tour="quick-nav">
                 {quickNavItems.map(item => (
                   <Link key={item.path} to={item.path}>
                     <Button 

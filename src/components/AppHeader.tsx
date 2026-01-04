@@ -7,6 +7,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
+import { TourRestartButton } from '@/components/OnboardingTour';
 
 export function AppHeader() {
   const navigate = useNavigate();
@@ -39,13 +40,18 @@ export function AppHeader() {
         </div>
         
         <div className="flex items-center gap-2">
-          <CurrencySelector />
+          <div data-tour="currency">
+            <CurrencySelector />
+          </div>
           <div className="hidden sm:block">
             <CurrencyConverter />
           </div>
-          <Button variant="ghost" size="icon" className="text-muted-foreground w-9 h-9">
-            <Bell className="w-5 h-5" />
-          </Button>
+          <div data-tour="notifications">
+            <Button variant="ghost" size="icon" className="text-muted-foreground w-9 h-9">
+              <Bell className="w-5 h-5" />
+            </Button>
+          </div>
+          <TourRestartButton />
           
           {user ? (
             <>
