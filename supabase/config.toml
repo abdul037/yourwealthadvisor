@@ -1,1 +1,4 @@
 project_id = "vmpenssdavqqhmhdejok"
+
+[functions.categorize-transaction]
+verify_jwt = false
