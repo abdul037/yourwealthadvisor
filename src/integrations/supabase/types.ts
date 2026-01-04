@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      assets: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          currency: string
+          current_price: number | null
+          id: string
+          is_active: boolean | null
+          last_price_update: string | null
+          liquidity_level: string | null
+          name: string
+          notes: string | null
+          purchase_date: string | null
+          purchase_price: number | null
+          subcategory: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string | null
+          currency?: string
+          current_price?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_price_update?: string | null
+          liquidity_level?: string | null
+          name: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          subcategory?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          currency?: string
+          current_price?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_price_update?: string | null
+          liquidity_level?: string | null
+          name?: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          subcategory?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      budgets: {
+        Row: {
+          allocated_amount: number
+          category: string
+          created_at: string | null
+          currency: string
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          period: string | null
+          start_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          allocated_amount: number
+          category: string
+          created_at?: string | null
+          currency?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          period?: string | null
+          start_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          allocated_amount?: number
+          category?: string
+          created_at?: string | null
+          currency?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          period?: string | null
+          start_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       category_liquidity_settings: {
         Row: {
           category_name: string
@@ -51,6 +153,66 @@ export type Database = {
           notes?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      debts: {
+        Row: {
+          created_at: string | null
+          currency: string
+          current_balance: number
+          due_date: number | null
+          end_date: string | null
+          id: string
+          interest_rate: number | null
+          is_active: boolean | null
+          lender: string | null
+          minimum_payment: number | null
+          name: string
+          notes: string | null
+          principal: number
+          start_date: string | null
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string
+          current_balance: number
+          due_date?: number | null
+          end_date?: string | null
+          id?: string
+          interest_rate?: number | null
+          is_active?: boolean | null
+          lender?: string | null
+          minimum_payment?: number | null
+          name: string
+          notes?: string | null
+          principal: number
+          start_date?: string | null
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string
+          current_balance?: number
+          due_date?: number | null
+          end_date?: string | null
+          id?: string
+          interest_rate?: number | null
+          is_active?: boolean | null
+          lender?: string | null
+          minimum_payment?: number | null
+          name?: string
+          notes?: string | null
+          principal?: number
+          start_date?: string | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -114,6 +276,54 @@ export type Database = {
           },
         ]
       }
+      milestones: {
+        Row: {
+          achieved_date: string | null
+          category: string | null
+          created_at: string | null
+          current_amount: number | null
+          id: string
+          is_achieved: boolean | null
+          name: string
+          notes: string | null
+          priority: string | null
+          target_amount: number
+          target_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achieved_date?: string | null
+          category?: string | null
+          created_at?: string | null
+          current_amount?: number | null
+          id?: string
+          is_achieved?: boolean | null
+          name: string
+          notes?: string | null
+          priority?: string | null
+          target_amount: number
+          target_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achieved_date?: string | null
+          category?: string | null
+          created_at?: string | null
+          current_amount?: number | null
+          id?: string
+          is_achieved?: boolean | null
+          name?: string
+          notes?: string | null
+          priority?: string | null
+          target_amount?: number
+          target_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       partners: {
         Row: {
           avatar_url: string | null
@@ -176,6 +386,68 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          currency: string
+          description: string | null
+          id: string
+          is_recurring: boolean | null
+          notes: string | null
+          partner_id: string | null
+          recurring_frequency: string | null
+          subcategory: string | null
+          transaction_date: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          notes?: string | null
+          partner_id?: string | null
+          recurring_frequency?: string | null
+          subcategory?: string | null
+          transaction_date?: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          notes?: string | null
+          partner_id?: string | null
+          recurring_frequency?: string | null
+          subcategory?: string | null
+          transaction_date?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
