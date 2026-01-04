@@ -5,6 +5,7 @@ import { NotificationCenter } from '@/components/NotificationCenter';
 import { BudgetVsActualChart } from '@/components/BudgetVsActualChart';
 import { VacationPlanner } from '@/components/VacationPlanner';
 import { RecurringTransactionsDashboard } from '@/components/RecurringTransactionsDashboard';
+import { BillsCalendar } from '@/components/BillsCalendar';
 import { useBudgetAlerts, BudgetAlert } from '@/hooks/useBudgetAlerts';
 import { Budget, Expense, sampleExpenses, sampleBudgets } from '@/lib/expenseData';
 import { sampleIncomeSources, getMonthlyIncomeData } from '@/lib/incomeData';
@@ -68,8 +69,9 @@ const BudgetPlanner = () => {
         <Tabs defaultValue="budget" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="budget">Budget</TabsTrigger>
-            <TabsTrigger value="recurring">Recurring Transactions</TabsTrigger>
-            <TabsTrigger value="vacation">Vacation Planner</TabsTrigger>
+            <TabsTrigger value="recurring">Recurring</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            <TabsTrigger value="vacation">Vacation</TabsTrigger>
           </TabsList>
 
           <TabsContent value="budget" className="space-y-6">
@@ -101,6 +103,10 @@ const BudgetPlanner = () => {
 
           <TabsContent value="recurring">
             <RecurringTransactionsDashboard />
+          </TabsContent>
+
+          <TabsContent value="calendar">
+            <BillsCalendar />
           </TabsContent>
 
           <TabsContent value="vacation">
