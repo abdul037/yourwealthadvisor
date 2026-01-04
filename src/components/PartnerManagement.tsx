@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, User, DollarSign, Droplets, Save, X, Users } from 'lucide-react';
+import { Plus, Trash2, Edit2, DollarSign, Droplets, Save, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { formatCurrency, LIQUIDITY_LABELS } from '@/lib/portfolioData';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface Partner {
   id: string;
@@ -44,6 +45,7 @@ const LIQUIDITY_COLORS: Record<string, string> = {
 };
 
 export function PartnerManagement() {
+  const { user, isAuthenticated } = useUserProfile();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,14 +67,20 @@ export function PartnerManagement() {
   });
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isAuthenticated && user) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, user]);
 
   const fetchData = async () => {
+    if (!user) return;
+    
     setLoading(true);
     const [partnersRes, incomeRes] = await Promise.all([
-      supabase.from('partners').select('*').order('created_at'),
-      supabase.from('income_sources').select('*').order('created_at'),
+      supabase.from('partners').select('*').eq('user_id', user.id).order('created_at'),
+      supabase.from('income_sources').select('*').eq('user_id', user.id).order('created_at'),
     ]);
 
     if (partnersRes.data) setPartners(partnersRes.data);
@@ -81,6 +89,11 @@ export function PartnerManagement() {
   };
 
   const handleAddPartner = async () => {
+    if (!user) {
+      toast({ title: 'Error', description: 'Please sign in to add partners', variant: 'destructive' });
+      return;
+    }
+    
     if (!newPartner.name.trim()) {
       toast({ title: 'Error', description: 'Partner name is required', variant: 'destructive' });
       return;
@@ -92,6 +105,7 @@ export function PartnerManagement() {
         name: newPartner.name.trim(),
         role: newPartner.role.trim() || null,
         email: newPartner.email.trim() || null,
+        user_id: user.id,
       })
       .select()
       .single();
@@ -119,6 +133,11 @@ export function PartnerManagement() {
   };
 
   const handleAddIncome = async () => {
+    if (!user) {
+      toast({ title: 'Error', description: 'Please sign in to add income', variant: 'destructive' });
+      return;
+    }
+    
     if (!newIncome.partner_id || !newIncome.source_name.trim() || !newIncome.amount) {
       toast({ title: 'Error', description: 'Please fill all required fields', variant: 'destructive' });
       return;
@@ -135,6 +154,7 @@ export function PartnerManagement() {
         frequency: newIncome.frequency,
         liquidity_level: newIncome.liquidity_level,
         notes: newIncome.notes.trim() || null,
+        user_id: user.id,
       })
       .select()
       .single();

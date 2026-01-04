@@ -104,6 +104,7 @@ export function AppSidebar() {
                       to={item.path} 
                       className="flex items-center gap-3"
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      data-tour={item.path === '/admin' ? 'admin-portal' : undefined}
                     >
                       <item.icon className="w-4 h-4" />
                       <span>{item.label}</span>
