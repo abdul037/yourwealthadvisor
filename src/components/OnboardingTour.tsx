@@ -105,7 +105,11 @@ function TourTooltip({
           "fixed z-[10000] w-80 shadow-2xl border-primary/20 bg-card",
           "animate-in fade-in-0 zoom-in-95 duration-200"
         )}
-        style={position ? { top: position.top, left: position.left } : { opacity: 0 }}
+        style={
+          position
+            ? { top: position.top, left: position.left }
+            : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+        }
       >
         {/* Arrow */}
         {position && (
@@ -223,7 +227,30 @@ export function OnboardingTour() {
     skipTour,
   } = useOnboardingTour();
 
-  if (!isActive || !currentStepData) return null;
+  const [isRenderable, setIsRenderable] = useState(false);
+
+  useEffect(() => {
+    if (!isActive || !currentStepData) {
+      setIsRenderable(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const target = document.querySelector(currentStepData.target);
+      if (target) {
+        setIsRenderable(true);
+      } else {
+        // If the user navigated to a page where this step doesn't exist,
+        // automatically advance so we don't block the UI with an overlay.
+        setIsRenderable(false);
+        setTimeout(nextStep, 0);
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [isActive, currentStepData, nextStep]);
+
+  if (!isActive || !currentStepData || !isRenderable) return null;
 
   return createPortal(
     <TourTooltip
