@@ -239,18 +239,13 @@ export function OnboardingTour() {
 }
 
 export function TourRestartButton() {
-  const { hasCompleted, startTour, resetTour } = useOnboardingTour();
-
-  const handleClick = () => {
-    resetTour();
-    setTimeout(startTour, 100);
-  };
+  const { resetTour } = useOnboardingTour();
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={handleClick}
+      onClick={resetTour}
       className="text-muted-foreground w-9 h-9"
       title="Start guided tour"
     >
