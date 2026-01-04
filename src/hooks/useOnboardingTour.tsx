@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 
 export interface TourStep {
   id: string;
@@ -55,20 +55,44 @@ const TOUR_STEPS: TourStep[] = [
 
 const STORAGE_KEY = 'wealth-tracker-tour-completed';
 
-export function useOnboardingTour() {
+interface TourContextType {
+  isActive: boolean;
+  currentStep: number;
+  totalSteps: number;
+  currentStepData: TourStep | undefined;
+  steps: TourStep[];
+  hasCompleted: boolean;
+  startTour: () => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  skipTour: () => void;
+  completeTour: () => void;
+  resetTour: () => void;
+}
+
+const TourContext = createContext<TourContextType | null>(null);
+
+export function TourProvider({ children }: { children: ReactNode }) {
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [hasCompleted, setHasCompleted] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(true); // Default true to prevent flash
 
   useEffect(() => {
     const completed = localStorage.getItem(STORAGE_KEY);
     if (completed === 'true') {
       setHasCompleted(true);
     } else {
+      setHasCompleted(false);
       // Auto-start tour for new users after a short delay
-      const timer = setTimeout(() => setIsActive(true), 1000);
+      const timer = setTimeout(() => setIsActive(true), 1500);
       return () => clearTimeout(timer);
     }
+  }, []);
+
+  const completeTour = useCallback(() => {
+    setIsActive(false);
+    localStorage.setItem(STORAGE_KEY, 'true');
+    setHasCompleted(true);
   }, []);
 
   const startTour = useCallback(() => {
@@ -82,7 +106,7 @@ export function useOnboardingTour() {
     } else {
       completeTour();
     }
-  }, [currentStep]);
+  }, [currentStep, completeTour]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
@@ -96,19 +120,13 @@ export function useOnboardingTour() {
     setHasCompleted(true);
   }, []);
 
-  const completeTour = useCallback(() => {
-    setIsActive(false);
-    localStorage.setItem(STORAGE_KEY, 'true');
-    setHasCompleted(true);
-  }, []);
-
   const resetTour = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     setHasCompleted(false);
     setCurrentStep(0);
   }, []);
 
-  return {
+  const value: TourContextType = {
     isActive,
     currentStep,
     totalSteps: TOUR_STEPS.length,
@@ -122,4 +140,28 @@ export function useOnboardingTour() {
     completeTour,
     resetTour,
   };
+
+  return <TourContext.Provider value={value}>{children}</TourContext.Provider>;
+}
+
+export function useOnboardingTour() {
+  const context = useContext(TourContext);
+  if (!context) {
+    // Return a safe default when used outside provider
+    return {
+      isActive: false,
+      currentStep: 0,
+      totalSteps: TOUR_STEPS.length,
+      currentStepData: TOUR_STEPS[0],
+      steps: TOUR_STEPS,
+      hasCompleted: true,
+      startTour: () => {},
+      nextStep: () => {},
+      prevStep: () => {},
+      skipTour: () => {},
+      completeTour: () => {},
+      resetTour: () => {},
+    };
+  }
+  return context;
 }
