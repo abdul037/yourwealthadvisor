@@ -4,9 +4,12 @@ import { BudgetTracker } from '@/components/BudgetTracker';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { BudgetVsActualChart } from '@/components/BudgetVsActualChart';
 import { VacationPlanner } from '@/components/VacationPlanner';
+import { RecurringTransactionsDashboard } from '@/components/RecurringTransactionsDashboard';
 import { useBudgetAlerts, BudgetAlert } from '@/hooks/useBudgetAlerts';
 import { Budget, Expense, sampleExpenses, sampleBudgets } from '@/lib/expenseData';
 import { sampleIncomeSources, getMonthlyIncomeData } from '@/lib/incomeData';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 const BudgetPlanner = () => {
   const [budgets, setBudgets] = useState<Budget[]>(sampleBudgets);
   const [expenses] = useState<Expense[]>(sampleExpenses);
@@ -58,39 +61,52 @@ const BudgetPlanner = () => {
         <div className="mb-6 sm:mb-8">
           <h1 className="text-xl sm:text-2xl font-bold mb-2">Monthly Budget Planner</h1>
           <p className="text-sm sm:text-base text-muted-foreground">
-            Allocate your income, track spending, and get alerts when approaching budget limits
+            Allocate your income, track spending, manage recurring bills, and get alerts
           </p>
         </div>
         
-        {/* Budget Allocation & Notifications */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="lg:col-span-2">
-            <BudgetAllocation 
-              monthlyIncome={currentMonthIncome}
-              budgets={budgets}
-              onUpdateBudgets={handleUpdateBudgets}
-              onAddBudget={handleAddBudget}
-            />
-          </div>
-          <div>
-            <NotificationCenter 
-              alerts={alerts}
-              onDismiss={handleDismissAlert}
-              onDismissAll={handleDismissAllAlerts}
-            />
-          </div>
-        </div>
-        
-        {/* Budget Tracking */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <BudgetTracker budgets={budgets} expenses={expenses} />
-          <BudgetVsActualChart budgets={budgets} expenses={expenses} />
-        </div>
-        
-        {/* Vacation Planner */}
-        <div className="mb-6 sm:mb-8">
-          <VacationPlanner />
-        </div>
+        <Tabs defaultValue="budget" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="budget">Budget</TabsTrigger>
+            <TabsTrigger value="recurring">Recurring Transactions</TabsTrigger>
+            <TabsTrigger value="vacation">Vacation Planner</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="budget" className="space-y-6">
+            {/* Budget Allocation & Notifications */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="lg:col-span-2">
+                <BudgetAllocation 
+                  monthlyIncome={currentMonthIncome}
+                  budgets={budgets}
+                  onUpdateBudgets={handleUpdateBudgets}
+                  onAddBudget={handleAddBudget}
+                />
+              </div>
+              <div>
+                <NotificationCenter 
+                  alerts={alerts}
+                  onDismiss={handleDismissAlert}
+                  onDismissAll={handleDismissAllAlerts}
+                />
+              </div>
+            </div>
+            
+            {/* Budget Tracking */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <BudgetTracker budgets={budgets} expenses={expenses} />
+              <BudgetVsActualChart budgets={budgets} expenses={expenses} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="recurring">
+            <RecurringTransactionsDashboard />
+          </TabsContent>
+
+          <TabsContent value="vacation">
+            <VacationPlanner />
+          </TabsContent>
+        </Tabs>
         
         {/* Footer */}
         <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
