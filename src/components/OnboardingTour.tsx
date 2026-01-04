@@ -225,32 +225,30 @@ export function OnboardingTour() {
     nextStep,
     prevStep,
     skipTour,
+    completeTour,
   } = useOnboardingTour();
 
-  const [isRenderable, setIsRenderable] = useState(false);
+  const [targetExists, setTargetExists] = useState(false);
 
   useEffect(() => {
     if (!isActive || !currentStepData) {
-      setIsRenderable(false);
+      setTargetExists(false);
       return;
     }
 
-    const timer = setTimeout(() => {
+    // Check if target exists, with a small delay to allow DOM to render
+    const checkTarget = () => {
       const target = document.querySelector(currentStepData.target);
-      if (target) {
-        setIsRenderable(true);
-      } else {
-        // If the user navigated to a page where this step doesn't exist,
-        // automatically advance so we don't block the UI with an overlay.
-        setIsRenderable(false);
-        setTimeout(nextStep, 0);
-      }
-    }, 50);
+      setTargetExists(!!target);
+    };
 
+    const timer = setTimeout(checkTarget, 100);
     return () => clearTimeout(timer);
-  }, [isActive, currentStepData, nextStep]);
+  }, [isActive, currentStepData]);
 
-  if (!isActive || !currentStepData || !isRenderable) return null;
+  // Don't render anything if tour is not active or target doesn't exist
+  // This prevents blocking the UI - user can restart tour later
+  if (!isActive || !currentStepData || !targetExists) return null;
 
   return createPortal(
     <TourTooltip

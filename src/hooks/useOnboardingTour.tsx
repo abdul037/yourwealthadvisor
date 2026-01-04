@@ -79,14 +79,8 @@ export function TourProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const completed = localStorage.getItem(STORAGE_KEY);
-    if (completed === 'true') {
-      setHasCompleted(true);
-    } else {
-      setHasCompleted(false);
-      // Auto-start tour for new users after a short delay
-      const timer = setTimeout(() => setIsActive(true), 1500);
-      return () => clearTimeout(timer);
-    }
+    setHasCompleted(completed === 'true');
+    // Don't auto-start tour - let users start it manually via help icon
   }, []);
 
   const completeTour = useCallback(() => {
