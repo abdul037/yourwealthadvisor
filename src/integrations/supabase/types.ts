@@ -286,6 +286,7 @@ export type Database = {
           is_achieved: boolean | null
           name: string
           notes: string | null
+          notification_milestones: Json | null
           priority: string | null
           target_amount: number
           target_date: string | null
@@ -301,6 +302,7 @@ export type Database = {
           is_achieved?: boolean | null
           name: string
           notes?: string | null
+          notification_milestones?: Json | null
           priority?: string | null
           target_amount: number
           target_date?: string | null
@@ -316,6 +318,7 @@ export type Database = {
           is_achieved?: boolean | null
           name?: string
           notes?: string | null
+          notification_milestones?: Json | null
           priority?: string | null
           target_amount?: number
           target_date?: string | null

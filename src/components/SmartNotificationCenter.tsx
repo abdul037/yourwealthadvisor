@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Bell, BellOff, Check, CheckCheck, Trash2, 
-  AlertTriangle, Info, Calendar, TrendingUp, X
+  AlertTriangle, Info, Calendar, TrendingUp, X,
+  ExternalLink, Target
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +17,7 @@ const NOTIFICATION_ICONS: Record<string, React.ReactNode> = {
   bill_reminder: <Calendar className="w-4 h-4" />,
   budget_alert: <AlertTriangle className="w-4 h-4" />,
   goal_milestone: <TrendingUp className="w-4 h-4" />,
+  goal_achieved: <Target className="w-4 h-4" />,
   system: <Info className="w-4 h-4" />,
 };
 
@@ -29,9 +32,26 @@ interface NotificationItemProps {
   notification: Notification;
   onMarkRead: (id: string) => void;
   onDelete: (id: string) => void;
+  onNavigate?: (url: string) => void;
 }
 
-function NotificationItem({ notification, onMarkRead, onDelete }: NotificationItemProps) {
+function NotificationItem({ notification, onMarkRead, onDelete, onNavigate }: NotificationItemProps) {
+  const handleAction = () => {
+    if (notification.action_url && onNavigate) {
+      onMarkRead(notification.id);
+      onNavigate(notification.action_url);
+    }
+  };
+
+  const getActionLabel = () => {
+    switch (notification.type) {
+      case 'bill_reminder': return 'View Bills';
+      case 'budget_alert': return 'View Budget';
+      case 'goal_milestone': return 'View Goals';
+      default: return 'View';
+    }
+  };
+
   return (
     <div 
       className={`p-3 rounded-lg border transition-colors ${
@@ -52,31 +72,42 @@ function NotificationItem({ notification, onMarkRead, onDelete }: NotificationIt
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
             {notification.message}
           </p>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-            </span>
-            <div className="flex items-center gap-1">
-              {!notification.is_read && (
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs text-muted-foreground">
+                {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+              </span>
+              <div className="flex items-center gap-1">
+                {notification.action_url && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 text-xs gap-1 px-2"
+                    onClick={handleAction}
+                  >
+                    {getActionLabel()}
+                    <ExternalLink className="w-3 h-3" />
+                  </Button>
+                )}
+                {!notification.is_read && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6"
+                    onClick={() => onMarkRead(notification.id)}
+                  >
+                    <Check className="w-3 h-3" />
+                  </Button>
+                )}
                 <Button 
                   variant="ghost" 
                   size="icon" 
                   className="h-6 w-6"
-                  onClick={() => onMarkRead(notification.id)}
+                  onClick={() => onDelete(notification.id)}
                 >
-                  <Check className="w-3 h-3" />
+                  <X className="w-3 h-3" />
                 </Button>
-              )}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6"
-                onClick={() => onDelete(notification.id)}
-              >
-                <X className="w-3 h-3" />
-              </Button>
+              </div>
             </div>
-          </div>
         </div>
       </div>
     </div>
@@ -95,6 +126,12 @@ export function SmartNotificationCenter() {
   } = useNotifications();
   
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  
+  const handleNavigate = (url: string) => {
+    setIsOpen(false);
+    navigate(url);
+  };
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -149,6 +186,7 @@ export function SmartNotificationCenter() {
                   notification={notification}
                   onMarkRead={markAsRead}
                   onDelete={deleteNotification}
+                  onNavigate={handleNavigate}
                 />
               ))}
             </div>

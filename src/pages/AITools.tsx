@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   Sparkles, Brain, MessageSquare, TrendingUp, 
-  FileText, Lightbulb, Zap, ArrowRight
+  FileText, Lightbulb, Zap, ArrowRight, Bell
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AICategorizer } from '@/components/AICategorizer';
 import { AIInsightsPanel } from '@/components/AIInsightsPanel';
+import { NotificationTestPanel } from '@/components/NotificationTestPanel';
 
 // Sample uncategorized transactions for demo
 const sampleUncategorizedTransactions = [
@@ -72,7 +73,7 @@ const AITools = () => {
         </div>
 
         <Tabs defaultValue="insights" className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-xl grid-cols-4">
             <TabsTrigger value="insights" className="gap-2">
               <Lightbulb className="w-4 h-4" />
               Insights
@@ -80,6 +81,10 @@ const AITools = () => {
             <TabsTrigger value="categorizer" className="gap-2">
               <Zap className="w-4 h-4" />
               Categorizer
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="gap-2">
+              <Bell className="w-4 h-4" />
+              Notifications
             </TabsTrigger>
             <TabsTrigger value="upcoming" className="gap-2">
               <Brain className="w-4 h-4" />
@@ -150,6 +155,11 @@ const AITools = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Notification Test Panel Tab */}
+          <TabsContent value="notifications" className="space-y-6">
+            <NotificationTestPanel />
           </TabsContent>
 
           {/* Upcoming Features Tab */}
