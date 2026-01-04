@@ -324,6 +324,54 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          priority: string | null
+          related_id: string | null
+          related_type: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          priority?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          priority?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       partners: {
         Row: {
           avatar_url: string | null
@@ -386,6 +434,83 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      recurring_transactions: {
+        Row: {
+          amount: number
+          auto_generate: boolean | null
+          category: string
+          created_at: string | null
+          currency: string
+          description: string | null
+          end_date: string | null
+          frequency: string
+          id: string
+          is_active: boolean | null
+          last_generated_date: string | null
+          next_due_date: string
+          notes: string | null
+          partner_id: string | null
+          reminder_days_before: number | null
+          start_date: string
+          subcategory: string | null
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          auto_generate?: boolean | null
+          category: string
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          end_date?: string | null
+          frequency: string
+          id?: string
+          is_active?: boolean | null
+          last_generated_date?: string | null
+          next_due_date: string
+          notes?: string | null
+          partner_id?: string | null
+          reminder_days_before?: number | null
+          start_date?: string
+          subcategory?: string | null
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          auto_generate?: boolean | null
+          category?: string
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean | null
+          last_generated_date?: string | null
+          next_due_date?: string
+          notes?: string | null
+          partner_id?: string | null
+          reminder_days_before?: number | null
+          start_date?: string
+          subcategory?: string | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_transactions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {

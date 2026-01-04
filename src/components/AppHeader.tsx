@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, LogIn, LogOut } from 'lucide-react';
+import { LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { CurrencyConverter, CurrencySelector } from '@/components/CurrencyConverter';
@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { TourRestartButton } from '@/components/OnboardingTour';
+import { SmartNotificationCenter } from '@/components/SmartNotificationCenter';
 
 export function AppHeader() {
   const navigate = useNavigate();
@@ -47,9 +48,7 @@ export function AppHeader() {
             <CurrencyConverter />
           </div>
           <div data-tour="notifications">
-            <Button variant="ghost" size="icon" className="text-muted-foreground w-9 h-9">
-              <Bell className="w-5 h-5" />
-            </Button>
+            <SmartNotificationCenter />
           </div>
           <TourRestartButton />
           
