@@ -5,7 +5,10 @@ import {
   Wallet, 
   TrendingDown, 
   LineChart,
-  MoreHorizontal
+  MoreHorizontal,
+  Sparkles,
+  Shield,
+  Download
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -26,6 +29,9 @@ const mainNavItems = [
 const moreItems = [
   { path: '/debt', label: 'Debt Tracker', icon: TrendingDown },
   { path: '/trends', label: 'Trends', icon: LineChart },
+  { path: '/ai-tools', label: 'AI Tools', icon: Sparkles },
+  { path: '/admin', label: 'Admin Portal', icon: Shield },
+  { path: '/install', label: 'Install App', icon: Download },
 ];
 
 export function MobileBottomNav() {
