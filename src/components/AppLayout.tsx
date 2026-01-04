@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { AppHeader } from '@/components/AppHeader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { OnboardingTour } from '@/components/OnboardingTour';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -21,6 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </SidebarInset>
         <MobileBottomNav />
       </div>
+      <OnboardingTour />
     </SidebarProvider>
   );
 }
