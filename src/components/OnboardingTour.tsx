@@ -102,7 +102,7 @@ function TourTooltip({
       <Card
         ref={tooltipRef}
         className={cn(
-          "fixed z-[10000] w-80 shadow-2xl border-primary/20 bg-card",
+          "fixed z-[10000] w-[calc(100vw-2rem)] sm:w-80 max-w-sm shadow-2xl border-primary/20 bg-card",
           "animate-in fade-in-0 zoom-in-95 duration-200"
         )}
         style={
