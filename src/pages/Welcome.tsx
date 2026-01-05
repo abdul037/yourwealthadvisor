@@ -66,13 +66,13 @@ export default function Welcome() {
             ثروة نت — إدارة ثروتك الشخصية
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Link to="/auth">
+            <Link to="/auth?mode=signup">
               <Button size="lg" className="gap-2 w-full sm:w-auto">
                 Get Started Free
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-            <Link to="/auth">
+            <Link to="/auth?mode=signin">
               <Button size="lg" variant="outline" className="w-full sm:w-auto">
                 Sign In
               </Button>
@@ -105,8 +105,8 @@ export default function Welcome() {
       <section className="py-12 bg-muted/30">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-lg mx-auto">
-            <p className="text-3xl font-bold text-primary">1,000+</p>
-            <p className="text-muted-foreground">Families tracking their wealth with Tharwa Net</p>
+            <p className="text-3xl font-bold text-primary">Join Today</p>
+            <p className="text-muted-foreground">Start your journey to financial freedom</p>
           </div>
         </div>
       </section>

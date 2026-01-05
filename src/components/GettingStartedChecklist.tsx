@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   CheckCircle2, Circle, X, ChevronRight,
-  Wallet, CreditCard, PiggyBank, BarChart3, User
+  Wallet, CreditCard, PiggyBank, BarChart3, User, Building2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ interface OnboardingProgress {
   expense_added: boolean;
   budget_created: boolean;
   goal_created: boolean;
+  bank_connected: boolean;
 }
 
 const CHECKLIST_ITEMS: ChecklistItem[] = [
@@ -67,6 +68,14 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     icon: PiggyBank,
     path: '/savings',
     checkKey: 'goal_created',
+  },
+  {
+    id: 'bank',
+    label: 'Connect a bank account',
+    description: 'Link your accounts for automatic tracking',
+    icon: Building2,
+    path: '/admin',
+    checkKey: 'bank_connected',
   },
 ];
 
