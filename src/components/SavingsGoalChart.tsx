@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SavingsGoal } from '@/hooks/useSavingsGoals';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface SavingsGoalChartProps {
   goals: SavingsGoal[];
@@ -20,6 +20,7 @@ const COLORS = [
 ];
 
 export function SavingsGoalChart({ goals }: SavingsGoalChartProps) {
+  const { formatAmount } = useFormattedCurrency();
   const activeGoals = goals.filter(g => !g.is_achieved);
 
   const barChartData = useMemo(() => {
@@ -71,17 +72,17 @@ export function SavingsGoalChart({ goals }: SavingsGoalChartProps) {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Saved:</span>
-              <span className="font-mono text-wealth-positive">{formatCurrency(data.saved)}</span>
+              <span className="font-mono text-wealth-positive">{formatAmount(data.saved)}</span>
             </div>
             {data.remaining !== undefined && (
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">Remaining:</span>
-                <span className="font-mono">{formatCurrency(data.remaining)}</span>
+                <span className="font-mono">{formatAmount(data.remaining)}</span>
               </div>
             )}
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Target:</span>
-              <span className="font-mono">{formatCurrency(data.target)}</span>
+              <span className="font-mono">{formatAmount(data.target)}</span>
             </div>
             {data.progress !== undefined && (
               <div className="flex justify-between gap-4 pt-1 border-t border-border">
@@ -105,11 +106,11 @@ export function SavingsGoalChart({ goals }: SavingsGoalChartProps) {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Target:</span>
-              <span className="font-mono">{formatCurrency(data.value)}</span>
+              <span className="font-mono">{formatAmount(data.value)}</span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Saved:</span>
-              <span className="font-mono text-wealth-positive">{formatCurrency(data.saved)}</span>
+              <span className="font-mono text-wealth-positive">{formatAmount(data.saved)}</span>
             </div>
           </div>
         </div>

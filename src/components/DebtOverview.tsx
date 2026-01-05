@@ -1,12 +1,13 @@
 import { AlertTriangle, TrendingDown, Calendar, Percent } from 'lucide-react';
 import { Debt, calculatePayoffProjection, calculateTotalInterest, getMonthsToPayoff } from '@/lib/debtData';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface DebtOverviewProps {
   debts: Debt[];
 }
 
 export function DebtOverview({ debts }: DebtOverviewProps) {
+  const { formatAmount } = useFormattedCurrency();
   const totalDebt = debts.reduce((sum, d) => sum + d.currentBalance, 0);
   const totalMinPayment = debts.reduce((sum, d) => sum + d.minimumPayment, 0);
   const totalMonthlyPayment = debts.reduce((sum, d) => sum + d.monthlyPayment, 0);
@@ -37,7 +38,7 @@ export function DebtOverview({ debts }: DebtOverviewProps) {
           <div>
             <p className="text-sm text-muted-foreground">Total Debt</p>
             <p className="text-3xl font-bold font-mono text-destructive">
-              {formatCurrency(totalDebt)}
+              {formatAmount(totalDebt)}
             </p>
           </div>
         </div>
@@ -77,8 +78,8 @@ export function DebtOverview({ debts }: DebtOverviewProps) {
             <TrendingDown className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Monthly Payments</span>
           </div>
-          <p className="font-bold font-mono">{formatCurrency(totalMonthlyPayment)}</p>
-          <p className="text-xs text-muted-foreground">Min: {formatCurrency(totalMinPayment)}</p>
+          <p className="font-bold font-mono">{formatAmount(totalMonthlyPayment)}</p>
+          <p className="text-xs text-muted-foreground">Min: {formatAmount(totalMinPayment)}</p>
         </div>
         
         <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
@@ -86,7 +87,7 @@ export function DebtOverview({ debts }: DebtOverviewProps) {
             <AlertTriangle className="w-4 h-4 text-destructive" />
             <span className="text-xs text-destructive">Total Interest</span>
           </div>
-          <p className="font-bold font-mono text-destructive">{formatCurrency(totalInterest)}</p>
+          <p className="font-bold font-mono text-destructive">{formatAmount(totalInterest)}</p>
           <p className="text-xs text-muted-foreground">If current payments</p>
         </div>
       </div>

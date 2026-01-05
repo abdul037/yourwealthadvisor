@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSavingsGoals, CreateSavingsGoal } from '@/hooks/useSavingsGoals';
 import { SavingsGoalCard } from '@/components/SavingsGoalCard';
 import { SavingsGoalChart } from '@/components/SavingsGoalChart';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 
@@ -28,6 +28,7 @@ const GOAL_CATEGORIES = [
 ];
 
 export function SavingsGoalsDashboard() {
+  const { formatAmount } = useFormattedCurrency();
   const {
     goals,
     loading,
@@ -116,7 +117,7 @@ export function SavingsGoalsDashboard() {
             <span className="text-sm text-muted-foreground">Total Saved</span>
           </div>
           <p className="text-2xl font-bold font-mono text-wealth-positive">
-            {formatCurrency(totalSavedAmount)}
+            {formatAmount(totalSavedAmount)}
           </p>
         </div>
 
@@ -127,7 +128,7 @@ export function SavingsGoalsDashboard() {
             </div>
             <span className="text-sm text-muted-foreground">Target Total</span>
           </div>
-          <p className="text-2xl font-bold font-mono">{formatCurrency(totalTargetAmount)}</p>
+          <p className="text-2xl font-bold font-mono">{formatAmount(totalTargetAmount)}</p>
         </div>
 
         <div className="p-4 rounded-xl bg-card border border-border">
@@ -147,7 +148,7 @@ export function SavingsGoalsDashboard() {
           <div>
             <h3 className="font-semibold text-lg">Overall Progress</h3>
             <p className="text-sm text-muted-foreground">
-              {formatCurrency(totalSavedAmount)} of {formatCurrency(totalTargetAmount)} saved
+              {formatAmount(totalSavedAmount)} of {formatAmount(totalTargetAmount)} saved
             </p>
           </div>
           <span className="text-2xl font-bold">{overallProgress.toFixed(0)}%</span>

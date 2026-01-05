@@ -1,11 +1,13 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { IncomeSource, getMonthlyIncomeData } from '@/lib/incomeData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface IncomeChartProps {
   incomeSources: IncomeSource[];
 }
 
 export function IncomeChart({ incomeSources }: IncomeChartProps) {
+  const { formatAmount } = useFormattedCurrency();
   const data = getMonthlyIncomeData(incomeSources);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -23,12 +25,12 @@ export function IncomeChart({ incomeSources }: IncomeChartProps) {
                 />
                 <span className="text-muted-foreground">{entry.name}</span>
               </div>
-              <span className="font-mono">AED {entry.value.toLocaleString()}</span>
+              <span className="font-mono">{formatAmount(entry.value)}</span>
             </div>
           ))}
           <div className="border-t border-border mt-2 pt-2 flex justify-between">
             <span className="text-muted-foreground text-sm">Total</span>
-            <span className="font-mono font-bold">AED {total.toLocaleString()}</span>
+            <span className="font-mono font-bold">{formatAmount(total)}</span>
           </div>
         </div>
       );

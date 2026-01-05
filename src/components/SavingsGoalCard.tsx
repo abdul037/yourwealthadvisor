@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SavingsGoal } from '@/hooks/useSavingsGoals';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface SavingsGoalCardProps {
   goal: SavingsGoal;
@@ -17,6 +17,7 @@ interface SavingsGoalCardProps {
 }
 
 export function SavingsGoalCard({ goal, onUpdate, onDelete, onAddFunds }: SavingsGoalCardProps) {
+  const { formatAmount } = useFormattedCurrency();
   const [addFundsOpen, setAddFundsOpen] = useState(false);
   const [fundAmount, setFundAmount] = useState('');
   
@@ -109,7 +110,7 @@ export function SavingsGoalCard({ goal, onUpdate, onDelete, onAddFunds }: Saving
                 </DialogHeader>
                 <form onSubmit={handleAddFunds} className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Amount (AED)</Label>
+                    <Label>Amount</Label>
                     <Input 
                       type="number"
                       value={fundAmount}
@@ -120,7 +121,7 @@ export function SavingsGoalCard({ goal, onUpdate, onDelete, onAddFunds }: Saving
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      Current: {formatCurrency(goal.current_amount)} • Remaining: {formatCurrency(remaining)}
+                      Current: {formatAmount(goal.current_amount)} • Remaining: {formatAmount(remaining)}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -165,13 +166,13 @@ export function SavingsGoalCard({ goal, onUpdate, onDelete, onAddFunds }: Saving
         <div className="p-3 rounded-lg bg-muted/50">
           <p className="text-xs text-muted-foreground mb-1">Saved</p>
           <p className="font-mono font-semibold text-wealth-positive">
-            {formatCurrency(goal.current_amount)}
+            {formatAmount(goal.current_amount)}
           </p>
         </div>
         <div className="p-3 rounded-lg bg-muted/50">
           <p className="text-xs text-muted-foreground mb-1">Target</p>
           <p className="font-mono font-semibold">
-            {formatCurrency(goal.target_amount)}
+            {formatAmount(goal.target_amount)}
           </p>
         </div>
       </div>
@@ -181,7 +182,7 @@ export function SavingsGoalCard({ goal, onUpdate, onDelete, onAddFunds }: Saving
         <div className="space-y-2 pt-3 border-t border-border">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Remaining</span>
-            <span className="font-mono font-medium">{formatCurrency(remaining)}</span>
+            <span className="font-mono font-medium">{formatAmount(remaining)}</span>
           </div>
           
           {goal.target_date && (
@@ -208,7 +209,7 @@ export function SavingsGoalCard({ goal, onUpdate, onDelete, onAddFunds }: Saving
                 Monthly Needed
               </span>
               <span className="font-mono font-medium text-primary">
-                {formatCurrency(monthlyNeeded)}/mo
+                {formatAmount(monthlyNeeded)}/mo
               </span>
             </div>
           )}

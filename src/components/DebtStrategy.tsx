@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Snowflake, Flame, ArrowRight, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Debt, getSnowballOrder, getAvalancheOrder, calculatePayoffProjection, calculateTotalInterest, getMonthsToPayoff, getDebtTypeInfo } from '@/lib/debtData';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface DebtStrategyProps {
   debts: Debt[];
 }
 
 export function DebtStrategy({ debts }: DebtStrategyProps) {
+  const { formatAmount } = useFormattedCurrency();
   const [strategy, setStrategy] = useState<'snowball' | 'avalanche'>('avalanche');
   
   const orderedDebts = strategy === 'snowball' ? getSnowballOrder(debts) : getAvalancheOrder(debts);
@@ -54,7 +55,7 @@ export function DebtStrategy({ debts }: DebtStrategyProps) {
           </p>
           <div className="text-sm">
             <span className="text-muted-foreground">Interest: </span>
-            <span className="font-mono text-destructive">{formatCurrency(avalancheStats.totalInterest)}</span>
+            <span className="font-mono text-destructive">{formatAmount(avalancheStats.totalInterest)}</span>
           </div>
         </button>
         
@@ -75,7 +76,7 @@ export function DebtStrategy({ debts }: DebtStrategyProps) {
           </p>
           <div className="text-sm">
             <span className="text-muted-foreground">Interest: </span>
-            <span className="font-mono text-destructive">{formatCurrency(snowballStats.totalInterest)}</span>
+            <span className="font-mono text-destructive">{formatAmount(snowballStats.totalInterest)}</span>
           </div>
         </button>
       </div>
@@ -112,7 +113,7 @@ export function DebtStrategy({ debts }: DebtStrategyProps) {
                   <p className="text-xs text-muted-foreground">
                     {strategy === 'avalanche' 
                       ? `${debt.interestRate}% APR`
-                      : formatCurrency(debt.currentBalance, debt.currency)}
+                      : formatAmount(debt.currentBalance)}
                   </p>
                 </div>
               </div>
@@ -125,7 +126,7 @@ export function DebtStrategy({ debts }: DebtStrategyProps) {
               ) : (
                 <span className="text-xs text-muted-foreground">
                   {strategy === 'avalanche' 
-                    ? formatCurrency(debt.currentBalance, debt.currency)
+                    ? formatAmount(debt.currentBalance)
                     : `${debt.interestRate}% APR`}
                 </span>
               )}
@@ -140,7 +141,7 @@ export function DebtStrategy({ debts }: DebtStrategyProps) {
           <div className="flex items-center gap-2 text-wealth-positive text-sm">
             <CheckCircle className="w-4 h-4" />
             <span>
-              Avalanche saves {formatCurrency(snowballStats.totalInterest - avalancheStats.totalInterest)} in interest
+              Avalanche saves {formatAmount(snowballStats.totalInterest - avalancheStats.totalInterest)} in interest
             </span>
           </div>
         </div>

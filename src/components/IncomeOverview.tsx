@@ -1,12 +1,13 @@
 import { TrendingUp, TrendingDown, Users } from 'lucide-react';
 import { IncomeSource, getMonthlyIncomeData } from '@/lib/incomeData';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface IncomeOverviewProps {
   incomeSources: IncomeSource[];
 }
 
 export function IncomeOverview({ incomeSources }: IncomeOverviewProps) {
+  const { formatAmount } = useFormattedCurrency();
   const monthlyData = getMonthlyIncomeData(incomeSources);
   const currentMonth = monthlyData[monthlyData.length - 1];
   const previousMonth = monthlyData[monthlyData.length - 2];
@@ -28,7 +29,7 @@ export function IncomeOverview({ incomeSources }: IncomeOverviewProps) {
         <div>
           <p className="wealth-label">Combined Monthly Income</p>
           <p className="text-3xl font-bold font-mono mt-1">
-            {formatCurrency(currentMonth?.total || 0)}
+            {formatAmount(currentMonth?.total || 0)}
           </p>
         </div>
         <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${
@@ -51,7 +52,7 @@ export function IncomeOverview({ incomeSources }: IncomeOverviewProps) {
             <div className="w-3 h-3 rounded-full bg-primary" />
             <span className="text-sm text-muted-foreground">Partner 1</span>
           </div>
-          <p className="text-xl font-bold font-mono">{formatCurrency(partner1Total)}</p>
+          <p className="text-xl font-bold font-mono">{formatAmount(partner1Total)}</p>
           <p className="text-xs text-muted-foreground mt-1">Tech Lead</p>
         </div>
         
@@ -60,7 +61,7 @@ export function IncomeOverview({ incomeSources }: IncomeOverviewProps) {
             <div className="w-3 h-3 rounded-full bg-purple-500" />
             <span className="text-sm text-muted-foreground">Partner 2</span>
           </div>
-          <p className="text-xl font-bold font-mono">{formatCurrency(partner2Total)}</p>
+          <p className="text-xl font-bold font-mono">{formatAmount(partner2Total)}</p>
           <p className="text-xs text-muted-foreground mt-1">Marketing Manager</p>
         </div>
       </div>
@@ -68,15 +69,15 @@ export function IncomeOverview({ incomeSources }: IncomeOverviewProps) {
       <div className="grid grid-cols-3 gap-3">
         <div className="text-center p-3 rounded-lg bg-muted/50">
           <p className="text-xs text-muted-foreground mb-1">Bonuses</p>
-          <p className="font-bold font-mono text-wealth-positive">{formatCurrency(bonusTotal)}</p>
+          <p className="font-bold font-mono text-wealth-positive">{formatAmount(bonusTotal)}</p>
         </div>
         <div className="text-center p-3 rounded-lg bg-muted/50">
           <p className="text-xs text-muted-foreground mb-1">Other Income</p>
-          <p className="font-bold font-mono">{formatCurrency(otherTotal)}</p>
+          <p className="font-bold font-mono">{formatAmount(otherTotal)}</p>
         </div>
         <div className="text-center p-3 rounded-lg bg-muted/50">
           <p className="text-xs text-muted-foreground mb-1">6-mo Average</p>
-          <p className="font-bold font-mono">{formatCurrency(avgMonthlyIncome)}</p>
+          <p className="font-bold font-mono">{formatAmount(avgMonthlyIncome)}</p>
         </div>
       </div>
     </div>

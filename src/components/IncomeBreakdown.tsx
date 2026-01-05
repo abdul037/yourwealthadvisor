@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { IncomeSource, getIncomeByType, INCOME_TYPES } from '@/lib/incomeData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface IncomeBreakdownProps {
   incomeSources: IncomeSource[];
@@ -8,6 +9,7 @@ interface IncomeBreakdownProps {
 }
 
 export function IncomeBreakdown({ incomeSources, month, year }: IncomeBreakdownProps) {
+  const { formatAmount } = useFormattedCurrency();
   const incomeByType = getIncomeByType(incomeSources, month, year);
   
   const data = Object.entries(incomeByType)
@@ -28,7 +30,7 @@ export function IncomeBreakdown({ incomeSources, month, year }: IncomeBreakdownP
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <p className="font-medium">{item.name}</p>
           <p className="text-muted-foreground text-sm">
-            AED {item.value.toLocaleString()} ({percentage}%)
+            {formatAmount(item.value)} ({percentage}%)
           </p>
         </div>
       );
