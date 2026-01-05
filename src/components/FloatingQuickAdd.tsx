@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -10,18 +10,35 @@ import {
 import { QuickTransactionInput } from '@/components/QuickTransactionInput';
 import { cn } from '@/lib/utils';
 
+// Trigger haptic feedback on supported devices
+const triggerHaptic = () => {
+  // Try Vibration API (works on most mobile browsers)
+  if ('vibrate' in navigator) {
+    navigator.vibrate(10); // Short 10ms vibration
+  }
+};
+
 export function FloatingQuickAdd() {
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleClick = useCallback(() => {
+    triggerHaptic();
+    setIsOpen(true);
+  }, []);
 
   return (
     <>
       {/* Floating Action Button - bottom right, above mobile nav */}
       <div className="fixed bottom-20 right-4 z-50 md:bottom-6 md:right-6">
+        {/* Pulse ring animation */}
+        <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
+        <div className="absolute inset-0 rounded-full bg-primary/20 animate-pulse" />
+        
         <Button
-          onClick={() => setIsOpen(true)}
+          onClick={handleClick}
           size="icon"
           className={cn(
-            "h-14 w-14 rounded-full shadow-2xl",
+            "relative h-14 w-14 rounded-full shadow-2xl",
             "bg-gradient-to-br from-primary via-primary to-primary/80",
             "hover:from-primary/90 hover:to-primary/70",
             "transition-all duration-300",
