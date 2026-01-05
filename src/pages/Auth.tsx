@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Wallet, Lock, Mail, User } from 'lucide-react';
+import { Eye, EyeOff, Wallet, Lock, Mail, User, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
@@ -127,13 +127,19 @@ const Auth = () => {
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
           toast({
-            title: 'Login Failed',
-            description: 'Invalid email or password. Try resetting your password.',
+            title: 'Incorrect Email or Password',
+            description: 'Please check your credentials or use "Forgot password?" to reset.',
+            variant: 'destructive',
+          });
+        } else if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: 'Email Not Verified',
+            description: 'Please check your inbox and verify your email first.',
             variant: 'destructive',
           });
         } else {
           toast({
-            title: 'Error',
+            title: 'Sign In Error',
             description: error.message,
             variant: 'destructive',
           });
@@ -241,6 +247,15 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        {/* Back to Welcome */}
+        <Link 
+          to="/welcome" 
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Welcome
+        </Link>
+
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent mb-4">

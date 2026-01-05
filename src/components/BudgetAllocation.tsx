@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { PieChart, Wallet, Save, RotateCcw, Plus } from 'lucide-react';
 import { Budget, EXPENSE_CATEGORIES, getCategoryColor } from '@/lib/expenseData';
 import { formatCurrency } from '@/lib/portfolioData';
+import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 
 interface BudgetAllocationProps {
   monthlyIncome: number;
@@ -27,6 +28,7 @@ export function BudgetAllocation({ monthlyIncome, budgets, onUpdateBudgets, onAd
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [newLimit, setNewLimit] = useState('');
+  const { markBudgetCreated } = useOnboardingProgress();
   
   const totalAllocated = Object.values(allocations).reduce((sum, val) => sum + val, 0);
   const unallocated = monthlyIncome - totalAllocated;
@@ -64,6 +66,9 @@ export function BudgetAllocation({ monthlyIncome, budgets, onUpdateBudgets, onAd
       currency: 'AED',
       period: 'monthly',
     });
+    
+    // Track onboarding progress
+    markBudgetCreated();
     
     setAllocations(prev => ({
       ...prev,

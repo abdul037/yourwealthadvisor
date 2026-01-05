@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Filter } from 'lucide-react';
+import { Plus, Trash2, Filter, CreditCard } from 'lucide-react';
 import { Expense, EXPENSE_CATEGORIES, getCategoryColor } from '@/lib/expenseData';
 import { formatCurrency, Currency } from '@/lib/portfolioData';
 import { format } from 'date-fns';
@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { UtensilsCrossed, Car, Zap, Gamepad2, ShoppingBag, Heart, GraduationCap, CreditCard, MoreHorizontal } from 'lucide-react';
+import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
+import { EmptyState } from '@/components/EmptyState';
+import { UtensilsCrossed, Car, Zap, Gamepad2, ShoppingBag, Heart, GraduationCap, MoreHorizontal } from 'lucide-react';
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -35,6 +37,7 @@ export function ExpenseList({ expenses, onAddExpense, onDeleteExpense }: Expense
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const { markExpenseAdded } = useOnboardingProgress();
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +50,9 @@ export function ExpenseList({ expenses, onAddExpense, onDeleteExpense }: Expense
       currency: 'AED',
       date,
     });
+    
+    // Track onboarding progress
+    markExpenseAdded();
     
     setCategory('');
     setDescription('');
@@ -143,9 +149,14 @@ export function ExpenseList({ expenses, onAddExpense, onDeleteExpense }: Expense
       
       <div className="space-y-2 max-h-[400px] overflow-y-auto">
         {sortedExpenses.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p className="text-sm">No expenses found</p>
-          </div>
+          <EmptyState
+            icon={CreditCard}
+            title="No expenses yet"
+            description="Start tracking your spending by adding your first expense"
+            actionLabel="Add Expense"
+            onAction={() => setOpen(true)}
+            variant="inline"
+          />
         ) : (
           sortedExpenses.map(expense => {
             const color = getCategoryColor(expense.category);

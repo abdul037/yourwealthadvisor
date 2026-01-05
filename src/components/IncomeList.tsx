@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Briefcase, Gift, Laptop, TrendingUp, Home, MoreHorizontal } from 'lucide-react';
+import { Plus, Trash2, Briefcase, Gift, Laptop, TrendingUp, Home, MoreHorizontal, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { IncomeSource, INCOME_TYPES } from '@/lib/incomeData';
 import { formatCurrency, Currency } from '@/lib/portfolioData';
+import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
+import { EmptyState } from '@/components/EmptyState';
 
 interface IncomeListProps {
   incomeSources: IncomeSource[];
@@ -25,6 +27,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export function IncomeList({ incomeSources, onAddIncome, onDeleteIncome }: IncomeListProps) {
   const [open, setOpen] = useState(false);
+  const { markIncomeAdded } = useOnboardingProgress();
   const [formData, setFormData] = useState({
     partner: 'Partner 1' as 'Partner 1' | 'Partner 2' | 'Joint',
     type: 'salary' as 'salary' | 'bonus' | 'freelance' | 'investment' | 'rental' | 'other',
@@ -45,6 +48,10 @@ export function IncomeList({ incomeSources, onAddIncome, onDeleteIncome }: Incom
       frequency: formData.frequency,
       date: new Date().toISOString().split('T')[0],
     });
+    
+    // Track onboarding progress
+    markIncomeAdded();
+    
     setFormData({
       partner: 'Partner 1',
       type: 'salary',
@@ -174,55 +181,66 @@ export function IncomeList({ incomeSources, onAddIncome, onDeleteIncome }: Incom
       </div>
       
       <div className="space-y-3 max-h-[400px] overflow-y-auto">
-        {recentIncome.map(income => {
-          const Icon = ICON_MAP[income.type] || MoreHorizontal;
-          const typeInfo = INCOME_TYPES.find(t => t.name === income.type);
-          
-          return (
-            <div 
-              key={income.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: `${typeInfo?.color}20` }}
-                >
-                  <Icon className="w-5 h-5" style={{ color: typeInfo?.color }} />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">{income.description}</p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className={`px-1.5 py-0.5 rounded ${
-                      income.partner === 'Partner 1' ? 'bg-primary/20 text-primary' :
-                      income.partner === 'Partner 2' ? 'bg-purple-500/20 text-purple-400' :
-                      'bg-green-500/20 text-green-400'
-                    }`}>
-                      {income.partner}
-                    </span>
-                    <span>•</span>
-                    <span>{new Date(income.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                    <span>•</span>
-                    <span className="capitalize">{income.frequency}</span>
+        {recentIncome.length === 0 ? (
+          <EmptyState
+            icon={Wallet}
+            title="No income sources yet"
+            description="Add your salary, freelance income, or other earnings to start tracking"
+            actionLabel="Add Income"
+            onAction={() => setOpen(true)}
+            variant="inline"
+          />
+        ) : (
+          recentIncome.map(income => {
+            const Icon = ICON_MAP[income.type] || MoreHorizontal;
+            const typeInfo = INCOME_TYPES.find(t => t.name === income.type);
+            
+            return (
+              <div 
+                key={income.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: `${typeInfo?.color}20` }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: typeInfo?.color }} />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{income.description}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className={`px-1.5 py-0.5 rounded ${
+                        income.partner === 'Partner 1' ? 'bg-primary/20 text-primary' :
+                        income.partner === 'Partner 2' ? 'bg-purple-500/20 text-purple-400' :
+                        'bg-green-500/20 text-green-400'
+                      }`}>
+                        {income.partner}
+                      </span>
+                      <span>•</span>
+                      <span>{new Date(income.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                      <span>•</span>
+                      <span className="capitalize">{income.frequency}</span>
+                    </div>
                   </div>
                 </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono font-medium text-wealth-positive">
+                    +{formatCurrency(income.amount, income.currency)}
+                  </span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                    onClick={() => onDeleteIncome(income.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="font-mono font-medium text-wealth-positive">
-                  +{formatCurrency(income.amount, income.currency)}
-                </span>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                  onClick={() => onDeleteIncome(income.id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );
