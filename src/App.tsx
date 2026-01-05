@@ -19,6 +19,8 @@ import Auth from "./pages/Auth";
 import Welcome from "./pages/Welcome";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
+import SplitExpenses from "./pages/SplitExpenses";
+import SplitGroupDetail from "./pages/SplitGroupDetail";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
 // Protected route wrapper that redirects unauthenticated users to welcome page
@@ -66,6 +68,8 @@ const App = () => (
               <Route path="/savings" element={<ProtectedRoute><AppLayout><SavingsGoals /></AppLayout></ProtectedRoute>} />
               <Route path="/ai-tools" element={<ProtectedRoute><AppLayout><AITools /></AppLayout></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><AppLayout><AdminPortal /></AppLayout></ProtectedRoute>} />
+              <Route path="/split" element={<ProtectedRoute><SplitExpenses /></ProtectedRoute>} />
+              <Route path="/split/:groupId" element={<ProtectedRoute><SplitGroupDetail /></ProtectedRoute>} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

@@ -8,7 +8,8 @@ import {
   Shield,
   Download,
   Sparkles,
-  Target
+  Target,
+  Split
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { TharwaLogo } from '@/components/TharwaLogo';
@@ -34,6 +35,7 @@ const mainNavItems = [
   { path: '/budget', label: 'Budget', icon: Wallet },
   { path: '/debt', label: 'Debt', icon: TrendingDown },
   { path: '/savings', label: 'Savings Goals', icon: Target },
+  { path: '/split', label: 'Split Expenses', icon: Split },
   { path: '/trends', label: 'Trends', icon: LineChart },
   { path: '/ai-tools', label: 'AI Tools', icon: Sparkles },
 ];

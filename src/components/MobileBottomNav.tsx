@@ -9,7 +9,8 @@ import {
   Sparkles,
   Shield,
   Download,
-  Target
+  Target,
+  Split
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -24,10 +25,11 @@ const mainNavItems = [
   { path: '/', label: 'Home', icon: LayoutDashboard },
   { path: '/income', label: 'Income', icon: DollarSign },
   { path: '/expenses', label: 'Expenses', icon: Receipt },
-  { path: '/budget', label: 'Budget', icon: Wallet },
+  { path: '/split', label: 'Split', icon: Split },
 ];
 
 const moreItems = [
+  { path: '/budget', label: 'Budget', icon: Wallet },
   { path: '/debt', label: 'Debt Tracker', icon: TrendingDown },
   { path: '/savings', label: 'Savings Goals', icon: Target },
   { path: '/trends', label: 'Trends', icon: LineChart },
