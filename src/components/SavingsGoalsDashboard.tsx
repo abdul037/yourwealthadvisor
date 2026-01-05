@@ -13,6 +13,7 @@ import { SavingsGoalCard } from '@/components/SavingsGoalCard';
 import { SavingsGoalChart } from '@/components/SavingsGoalChart';
 import { formatCurrency } from '@/lib/portfolioData';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 
 const GOAL_CATEGORIES = [
   'Emergency Fund',
@@ -52,10 +53,16 @@ export function SavingsGoalsDashboard() {
     notes: '',
   });
 
+  const { markGoalCreated } = useOnboardingProgress();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name && formData.target_amount > 0) {
       await addGoal(formData);
+      
+      // Track onboarding progress
+      markGoalCreated();
+      
       setFormData({
         name: '',
         target_amount: 0,

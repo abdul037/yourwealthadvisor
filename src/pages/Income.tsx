@@ -54,7 +54,7 @@ const Income = () => {
         {/* Footer */}
         <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            WealthTrack • Family Income Tracking
+            Tharwa Net • Family Income Tracking
           </p>
         </footer>
       </main>
