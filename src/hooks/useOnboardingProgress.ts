@@ -7,6 +7,7 @@ export interface OnboardingProgress {
   expense_added: boolean;
   budget_created: boolean;
   goal_created: boolean;
+  bank_connected: boolean;
 }
 
 const DEFAULT_PROGRESS: OnboardingProgress = {
@@ -14,6 +15,7 @@ const DEFAULT_PROGRESS: OnboardingProgress = {
   expense_added: false,
   budget_created: false,
   goal_created: false,
+  bank_connected: false,
 };
 
 export function useOnboardingProgress() {
@@ -55,6 +57,7 @@ export function useOnboardingProgress() {
   const markExpenseAdded = useCallback(() => updateProgress('expense_added'), [updateProgress]);
   const markBudgetCreated = useCallback(() => updateProgress('budget_created'), [updateProgress]);
   const markGoalCreated = useCallback(() => updateProgress('goal_created'), [updateProgress]);
+  const markBankConnected = useCallback(() => updateProgress('bank_connected'), [updateProgress]);
 
   return {
     progress: getProgress(),
@@ -63,5 +66,6 @@ export function useOnboardingProgress() {
     markExpenseAdded,
     markBudgetCreated,
     markGoalCreated,
+    markBankConnected,
   };
 }

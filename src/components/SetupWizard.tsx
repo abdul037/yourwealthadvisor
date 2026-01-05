@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   User, Upload, FileSpreadsheet, CheckCircle2, 
-  ArrowRight, ArrowLeft, Users, Wallet, LayoutDashboard
+  ArrowRight, ArrowLeft, Users, Wallet, LayoutDashboard, Link2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,10 +11,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Progress } from '@/components/ui/progress';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { cn } from '@/lib/utils';
+import { SetupWizardBankConnection } from '@/components/SetupWizardBankConnection';
+import { BankAccount } from '@/lib/mockBankingData';
 
 interface SetupWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAccountsConnected?: (accounts: BankAccount[]) => void;
 }
 
 type SetupPath = 'quick-start' | 'bulk-upload' | 'guided' | null;
@@ -22,15 +25,21 @@ type SetupPath = 'quick-start' | 'bulk-upload' | 'guided' | null;
 const STEPS = [
   { id: 'welcome', title: 'Welcome', icon: User },
   { id: 'path', title: 'Choose Path', icon: FileSpreadsheet },
+  { id: 'connect', title: 'Connect Accounts', icon: Link2 },
   { id: 'complete', title: 'All Set', icon: CheckCircle2 },
 ];
 
-export function SetupWizard({ open, onOpenChange }: SetupWizardProps) {
+export function SetupWizard({ open, onOpenChange, onAccountsConnected }: SetupWizardProps) {
   const navigate = useNavigate();
   const { profile, updateProfile, completeOnboarding, displayName } = useUserProfile();
   const [currentStep, setCurrentStep] = useState(0);
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [selectedPath, setSelectedPath] = useState<SetupPath>(null);
+  const [connectedAccounts, setConnectedAccounts] = useState<BankAccount[]>([]);
+
+  const handleAccountsConnected = (accounts: BankAccount[]) => {
+    setConnectedAccounts(prev => [...prev, ...accounts]);
+  };
 
   const handleNext = async () => {
     if (currentStep === 0 && fullName.trim()) {
@@ -50,6 +59,12 @@ export function SetupWizard({ open, onOpenChange }: SetupWizardProps) {
 
   const handleComplete = async () => {
     await completeOnboarding();
+    
+    // Pass connected accounts to parent
+    if (connectedAccounts.length > 0 && onAccountsConnected) {
+      onAccountsConnected(connectedAccounts);
+    }
+    
     onOpenChange(false);
     
     // Navigate based on selected path
@@ -152,8 +167,21 @@ export function SetupWizard({ open, onOpenChange }: SetupWizardProps) {
             </div>
           )}
 
-          {/* Step 2: Complete */}
+          {/* Step 2: Connect Accounts */}
           {currentStep === 2 && (
+            <div className="space-y-4">
+              <p className="text-muted-foreground text-sm">
+                Connect your bank accounts, investments, and utilities for automatic tracking.
+              </p>
+              <SetupWizardBankConnection 
+                connectedAccounts={connectedAccounts}
+                onConnectionSuccess={handleAccountsConnected}
+              />
+            </div>
+          )}
+
+          {/* Step 3: Complete */}
+          {currentStep === 3 && (
             <div className="text-center space-y-4 py-4">
               <div className="w-16 h-16 rounded-full bg-wealth-positive/20 flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-8 h-8 text-wealth-positive" />
@@ -161,14 +189,19 @@ export function SetupWizard({ open, onOpenChange }: SetupWizardProps) {
               <div>
                 <h3 className="text-lg font-semibold">You're all set, {fullName || displayName}!</h3>
                 <p className="text-muted-foreground mt-1">
-                  {selectedPath === 'quick-start' && "Your dashboard is ready. Start by adding your first income or expense."}
-                  {selectedPath === 'bulk-upload' && "We'll take you to the import section to upload your data."}
-                  {selectedPath === 'guided' && "Let's set up your partners and income sources."}
+                  {connectedAccounts.length > 0 
+                    ? `${connectedAccounts.length} account${connectedAccounts.length > 1 ? 's' : ''} connected. Data syncing automatically.`
+                    : selectedPath === 'quick-start' 
+                      ? "Your dashboard is ready. Start by adding your first income or expense."
+                      : selectedPath === 'bulk-upload' 
+                        ? "We'll take you to the import section to upload your data."
+                        : "Let's set up your partners and income sources."
+                  }
                 </p>
               </div>
               <div className="flex flex-col gap-2 pt-2">
                 <Button onClick={handleComplete} className="w-full gap-2">
-                  {selectedPath === 'quick-start' ? 'Go to Dashboard' : 'Continue Setup'}
+                  {selectedPath === 'quick-start' || connectedAccounts.length > 0 ? 'Go to Dashboard' : 'Continue Setup'}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -177,7 +210,7 @@ export function SetupWizard({ open, onOpenChange }: SetupWizardProps) {
         </div>
 
         {/* Navigation buttons */}
-        {currentStep < 2 && (
+        {currentStep < 3 && (
           <div className="flex justify-between pt-2">
             <Button 
               variant="ghost" 
@@ -198,7 +231,11 @@ export function SetupWizard({ open, onOpenChange }: SetupWizardProps) {
               disabled={currentStep === 1 && !selectedPath}
               className="gap-1"
             >
-              Next
+              {currentStep === 2 ? (
+                connectedAccounts.length > 0 ? 'Continue' : 'Skip for now'
+              ) : (
+                'Next'
+              )}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
