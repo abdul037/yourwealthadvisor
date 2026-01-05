@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Wallet, Lock, Mail, User, ArrowLeft, KeyRound } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, ArrowLeft, KeyRound } from 'lucide-react';
+import { TharwaLogo } from '@/components/TharwaLogo';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
@@ -408,13 +409,9 @@ const Auth = () => {
         </Link>
 
         {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent mb-4">
-            <Wallet className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Tharwa Net</h1>
-          <p className="text-muted-foreground text-sm mt-1">Your Personal Wealth Manager</p>
-          <p className="text-xs text-muted-foreground mt-0.5">ثروة نت</p>
+        <div className="flex flex-col items-center mb-8">
+          <TharwaLogo size="xl" variant="full" />
+          <p className="text-xs text-muted-foreground mt-1">ثروة نت</p>
         </div>
 
         <Card className="border-border/50 shadow-xl">
