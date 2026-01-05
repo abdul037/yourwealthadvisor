@@ -16,10 +16,11 @@ import { CashFlowForecast } from '@/components/CashFlowForecast';
 import { WelcomeBanner } from '@/components/WelcomeBanner';
 import { SetupWizard } from '@/components/SetupWizard';
 import { GettingStartedChecklist } from '@/components/GettingStartedChecklist';
+import { DashboardConnectedAccounts } from '@/components/DashboardConnectedAccounts';
 import { initialPortfolio, Transaction, Asset } from '@/lib/portfolioData';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { BankAccount } from '@/lib/mockBankingData';
+import { BankAccount, BankTransaction } from '@/lib/mockBankingData';
 
 const quickNavItems = [
   { path: '/income', label: 'Income', icon: DollarSign, color: 'bg-wealth-positive/20 text-wealth-positive' },
@@ -38,6 +39,20 @@ const Index = () => {
 
   const handleAccountsConnected = (accounts: BankAccount[]) => {
     setConnectedAccounts(prev => [...prev, ...accounts]);
+  };
+
+  const handleTransactionsImported = (bankTransactions: BankTransaction[]) => {
+    // Convert bank transactions to app transactions
+    const newTransactions: Transaction[] = bankTransactions.map(bt => ({
+      id: bt.id,
+      amount: Math.abs(bt.amount),
+      type: bt.amount < 0 ? 'expense' as const : 'income' as const,
+      category: bt.category,
+      description: bt.description,
+      date: bt.date,
+      currency: 'AED',
+    }));
+    setTransactions(prev => [...newTransactions, ...prev]);
   };
   
   // Show setup wizard for new authenticated users who haven't completed onboarding
@@ -121,10 +136,21 @@ const Index = () => {
           </div>
         </div>
         
+        {/* Connected Accounts Widget */}
+        {(connectedAccounts.length > 0 || isAuthenticated) && (
+          <div className="mb-6 sm:mb-8">
+            <DashboardConnectedAccounts 
+              accounts={connectedAccounts}
+              onAccountsConnected={handleAccountsConnected}
+              onTransactionsImported={handleTransactionsImported}
+            />
+          </div>
+        )}
+        
         {/* Portfolio Aggregation - Connected Platforms */}
         <div className="mb-6 sm:mb-8">
           <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Investment Portfolio Overview</h2>
-          <PortfolioAggregation />
+          <PortfolioAggregation connectedAccounts={connectedAccounts} />
         </div>
         
         {/* Income Liquidity & Emergency Fund */}
