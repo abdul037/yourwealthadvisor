@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Sparkles, ArrowRight, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { DemoDataSeeder } from '@/components/DemoDataSeeder';
 
 export function WelcomeBanner() {
   const { isAuthenticated, displayName, profile, loading } = useUserProfile();
@@ -72,12 +73,15 @@ export function WelcomeBanner() {
               </p>
             </div>
           </div>
-          <Link to="/admin">
-            <Button className="gap-2">
-              Get Started
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <DemoDataSeeder />
+            <Link to="/admin">
+              <Button className="gap-2">
+                Get Started
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     );

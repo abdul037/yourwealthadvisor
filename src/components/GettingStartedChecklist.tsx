@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
+import { DemoDataSeeder } from '@/components/DemoDataSeeder';
 import { cn } from '@/lib/utils';
 
 interface ChecklistItem {
@@ -126,14 +127,17 @@ export function GettingStartedChecklist() {
               ({completedCount}/{CHECKLIST_ITEMS.length})
             </span>
           </CardTitle>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            onClick={handleDismiss}
-          >
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <DemoDataSeeder />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={handleDismiss}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
         <Progress value={progress} className="h-1.5" />
       </CardHeader>
