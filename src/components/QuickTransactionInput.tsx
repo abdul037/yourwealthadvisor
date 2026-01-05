@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { Send, Loader2, Check, X, Edit2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Send, Loader2, Check, X, Edit2, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useTransactionParser, ParsedTransaction } from '@/hooks/useTransactionParser';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -24,8 +25,35 @@ export function QuickTransactionInput() {
   
   const { parse, isLoading, error } = useTransactionParser();
   const { addTransaction } = useTransactions();
+  const { 
+    isListening, 
+    isSupported: isVoiceSupported, 
+    transcript, 
+    interimTranscript, 
+    error: voiceError,
+    startListening, 
+    stopListening 
+  } = useVoiceInput();
 
   const placeholder = EXAMPLE_INPUTS[Math.floor(Math.random() * EXAMPLE_INPUTS.length)];
+
+  // Update input when voice transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setInput(transcript);
+    }
+  }, [transcript]);
+
+  // Show voice errors as toasts
+  useEffect(() => {
+    if (voiceError) {
+      toast({
+        title: 'Voice Input',
+        description: voiceError,
+        variant: 'destructive',
+      });
+    }
+  }, [voiceError]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -143,18 +171,21 @@ export function QuickTransactionInput() {
     );
   }
 
+  const displayValue = isListening && interimTranscript ? interimTranscript : input;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Input
-            value={input}
+            value={displayValue}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={`Try: "${placeholder}"`}
-            disabled={isLoading}
+            placeholder={isListening ? "Listening..." : `Try: "${placeholder}"`}
+            disabled={isLoading || isListening}
             className={cn(
               "pr-10",
-              error && "border-destructive"
+              error && "border-destructive",
+              isListening && "border-primary animate-pulse"
             )}
           />
           {isLoading && (
@@ -163,10 +194,22 @@ export function QuickTransactionInput() {
             </div>
           )}
         </div>
+        {isVoiceSupported && (
+          <Button
+            type="button"
+            size="icon"
+            variant={isListening ? "destructive" : "outline"}
+            onClick={isListening ? stopListening : startListening}
+            disabled={isLoading}
+            className={cn(isListening && "animate-pulse")}
+          >
+            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
+        )}
         <Button 
           type="submit" 
           size="icon"
-          disabled={!input.trim() || isLoading}
+          disabled={!input.trim() || isLoading || isListening}
         >
           <Send className="h-4 w-4" />
         </Button>
