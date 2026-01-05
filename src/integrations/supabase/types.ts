@@ -216,6 +216,238 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_group_expenses: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string
+          group_id: string
+          id: string
+          paid_by_member_id: string
+          split_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description: string
+          group_id: string
+          id?: string
+          paid_by_member_id: string
+          split_type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string
+          group_id?: string
+          id?: string
+          paid_by_member_id?: string
+          split_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_group_expenses_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "expense_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_group_expenses_paid_by_member_id_fkey"
+            columns: ["paid_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "expense_group_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expense_group_members: {
+        Row: {
+          email: string | null
+          group_id: string
+          id: string
+          is_creator: boolean | null
+          joined_at: string | null
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          email?: string | null
+          group_id: string
+          id?: string
+          is_creator?: boolean | null
+          joined_at?: string | null
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          email?: string | null
+          group_id?: string
+          id?: string
+          is_creator?: boolean | null
+          joined_at?: string | null
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "expense_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expense_groups: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          currency: string
+          description: string | null
+          id: string
+          invite_code: string | null
+          is_active: boolean | null
+          is_settled: boolean | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          invite_code?: string | null
+          is_active?: boolean | null
+          is_settled?: boolean | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          invite_code?: string | null
+          is_active?: boolean | null
+          is_settled?: boolean | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      expense_settlements: {
+        Row: {
+          amount: number
+          from_member_id: string
+          group_id: string
+          id: string
+          settled_at: string | null
+          to_member_id: string
+          transaction_id: string | null
+        }
+        Insert: {
+          amount: number
+          from_member_id: string
+          group_id: string
+          id?: string
+          settled_at?: string | null
+          to_member_id: string
+          transaction_id?: string | null
+        }
+        Update: {
+          amount?: number
+          from_member_id?: string
+          group_id?: string
+          id?: string
+          settled_at?: string | null
+          to_member_id?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_settlements_from_member_id_fkey"
+            columns: ["from_member_id"]
+            isOneToOne: false
+            referencedRelation: "expense_group_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_settlements_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "expense_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_settlements_to_member_id_fkey"
+            columns: ["to_member_id"]
+            isOneToOne: false
+            referencedRelation: "expense_group_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_settlements_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expense_splits: {
+        Row: {
+          amount: number
+          created_at: string | null
+          expense_id: string
+          id: string
+          is_paid: boolean | null
+          member_id: string
+          percentage: number | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          expense_id: string
+          id?: string
+          is_paid?: boolean | null
+          member_id: string
+          percentage?: number | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          expense_id?: string
+          id?: string
+          is_paid?: boolean | null
+          member_id?: string
+          percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_splits_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense_group_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_splits_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "expense_group_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       income_sources: {
         Row: {
           amount: number
