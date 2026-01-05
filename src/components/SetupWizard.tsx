@@ -91,7 +91,7 @@ export function SetupWizard({ open, onOpenChange }: SetupWizardProps) {
           {currentStep === 0 && (
             <div className="space-y-4">
               <p className="text-muted-foreground">
-                Welcome to WealthTrack! Let's personalize your experience.
+                Welcome to Tharwa Net! Let's personalize your wealth management experience.
               </p>
               <div className="space-y-2">
                 <Label htmlFor="fullName">What should we call you?</Label>

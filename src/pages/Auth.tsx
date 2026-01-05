@@ -185,7 +185,7 @@ const Auth = () => {
       } else {
         toast({
           title: 'Account Created',
-          description: 'Welcome to WealthTrack! You are now signed in.',
+          description: 'Welcome to Tharwa Net! You are now signed in.',
         });
       }
     } catch (error) {
@@ -204,11 +204,12 @@ const Auth = () => {
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
-            <Wallet className="w-8 h-8 text-primary" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent mb-4">
+            <Wallet className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">WealthTrack</h1>
-          <p className="text-muted-foreground text-sm mt-1">Family Wealth Management</p>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Tharwa Net</h1>
+          <p className="text-muted-foreground text-sm mt-1">Your Personal Wealth Manager</p>
+          <p className="text-xs text-muted-foreground mt-0.5">ثروة نت</p>
         </div>
 
         <Card className="border-border/50 shadow-xl">

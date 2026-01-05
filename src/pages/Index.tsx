@@ -15,6 +15,7 @@ import { EmergencyFundCalculator } from '@/components/EmergencyFundCalculator';
 import { CashFlowForecast } from '@/components/CashFlowForecast';
 import { WelcomeBanner } from '@/components/WelcomeBanner';
 import { SetupWizard } from '@/components/SetupWizard';
+import { GettingStartedChecklist } from '@/components/GettingStartedChecklist';
 import { initialPortfolio, Transaction, Asset } from '@/lib/portfolioData';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -61,6 +62,11 @@ const Index = () => {
         {/* Welcome Banner */}
         <div className="mb-6">
           <WelcomeBanner />
+        </div>
+        
+        {/* Getting Started Checklist for new users */}
+        <div className="mb-6">
+          <GettingStartedChecklist />
         </div>
         
         {/* Hero Section - Net Worth & Quick Actions */}
@@ -145,7 +151,7 @@ const Index = () => {
         {/* Footer */}
         <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            WealthTrack • Family of 4 in Dubai (Kids: 5 & 7 yrs)
+            Tharwa Net • Your Personal Wealth Manager
           </p>
         </footer>
       </main>

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CurrencyProvider } from "@/components/CurrencyConverter";
 import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
@@ -15,8 +15,29 @@ import SavingsGoals from "./pages/SavingsGoals";
 import AITools from "./pages/AITools";
 import AdminPortal from "./pages/AdminPortal";
 import Auth from "./pages/Auth";
+import Welcome from "./pages/Welcome";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
+import { useUserProfile } from "@/hooks/useUserProfile";
+
+// Protected route wrapper that redirects unauthenticated users to welcome page
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, loading } = useUserProfile();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/welcome" replace />;
+  }
+  
+  return <>{children}</>;
+}
 
 const queryClient = new QueryClient();
 
@@ -28,20 +49,21 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Auth and Install pages without layout */}
+            {/* Public pages without layout */}
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/install" element={<Install />} />
             
-            {/* Main app pages with layout */}
-            <Route path="/" element={<AppLayout><Index /></AppLayout>} />
-            <Route path="/income" element={<AppLayout><Income /></AppLayout>} />
-            <Route path="/expenses" element={<AppLayout><Expenses /></AppLayout>} />
-            <Route path="/budget" element={<AppLayout><BudgetPlanner /></AppLayout>} />
-            <Route path="/debt" element={<AppLayout><DebtTracker /></AppLayout>} />
-            <Route path="/trends" element={<AppLayout><Trends /></AppLayout>} />
-            <Route path="/savings" element={<AppLayout><SavingsGoals /></AppLayout>} />
-            <Route path="/ai-tools" element={<AppLayout><AITools /></AppLayout>} />
-            <Route path="/admin" element={<AppLayout><AdminPortal /></AppLayout>} />
+            {/* Protected app pages with layout */}
+            <Route path="/" element={<ProtectedRoute><AppLayout><Index /></AppLayout></ProtectedRoute>} />
+            <Route path="/income" element={<ProtectedRoute><AppLayout><Income /></AppLayout></ProtectedRoute>} />
+            <Route path="/expenses" element={<ProtectedRoute><AppLayout><Expenses /></AppLayout></ProtectedRoute>} />
+            <Route path="/budget" element={<ProtectedRoute><AppLayout><BudgetPlanner /></AppLayout></ProtectedRoute>} />
+            <Route path="/debt" element={<ProtectedRoute><AppLayout><DebtTracker /></AppLayout></ProtectedRoute>} />
+            <Route path="/trends" element={<ProtectedRoute><AppLayout><Trends /></AppLayout></ProtectedRoute>} />
+            <Route path="/savings" element={<ProtectedRoute><AppLayout><SavingsGoals /></AppLayout></ProtectedRoute>} />
+            <Route path="/ai-tools" element={<ProtectedRoute><AppLayout><AITools /></AppLayout></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AppLayout><AdminPortal /></AppLayout></ProtectedRoute>} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
