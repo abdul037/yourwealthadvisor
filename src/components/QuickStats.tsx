@@ -3,13 +3,23 @@ import { Asset } from '@/lib/portfolioData';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
+import { Period, getSimulatedChange } from '@/lib/periodUtils';
+import { useMemo } from 'react';
 
 interface QuickStatsProps {
   assets: Asset[];
+  period?: Period;
 }
 
-export function QuickStats({ assets }: QuickStatsProps) {
+export function QuickStats({ assets, period = '1W' }: QuickStatsProps) {
   const { formatAmount } = useFormattedCurrency();
+  
+  // Generate period-based changes for each category
+  const categoryChanges = useMemo(() => ({
+    land: getSimulatedChange(period, 1.2),
+    stocks: getSimulatedChange(period, 3.5),
+    gold: getSimulatedChange(period, 0.8),
+  }), [period]);
   
   const totalWealth = assets.reduce((sum, a) => sum + a.aedValue, 0);
   const stocksValue = assets.filter(a => a.category === 'Stocks').reduce((sum, a) => sum + a.aedValue, 0);
@@ -24,6 +34,7 @@ export function QuickStats({ assets }: QuickStatsProps) {
       color: 'text-asset-land',
       bg: 'bg-asset-land/20',
       percentage: ((landValue / totalWealth) * 100).toFixed(1),
+      change: categoryChanges.land,
       link: '/trends'
     },
     { 
@@ -33,6 +44,7 @@ export function QuickStats({ assets }: QuickStatsProps) {
       color: 'text-asset-stocks',
       bg: 'bg-asset-stocks/20',
       percentage: ((stocksValue / totalWealth) * 100).toFixed(1),
+      change: categoryChanges.stocks,
       link: '/trends'
     },
     { 
@@ -42,6 +54,7 @@ export function QuickStats({ assets }: QuickStatsProps) {
       color: 'text-asset-gold',
       bg: 'bg-asset-gold/20',
       percentage: ((goldValue / totalWealth) * 100).toFixed(1),
+      change: categoryChanges.gold,
       link: '/trends'
     },
   ];
@@ -61,7 +74,12 @@ export function QuickStats({ assets }: QuickStatsProps) {
             <div>
               <p className="text-xs text-muted-foreground">{stat.label}</p>
               <p className="text-lg font-bold font-mono">{formatAmount(stat.value)}</p>
-              <p className="text-xs text-muted-foreground">{stat.percentage}% of total</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">{stat.percentage}% of total</p>
+                <span className={`text-xs font-medium ${stat.change >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
+                  {stat.change >= 0 ? '+' : ''}{stat.change.toFixed(1)}%
+                </span>
+              </div>
             </div>
           </div>
           <Link to={stat.link}>

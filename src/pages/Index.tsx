@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { DollarSign, Receipt, Wallet, TrendingDown, ArrowRight } from 'lucide-react';
+import { Period } from '@/lib/periodUtils';
 import { Button } from '@/components/ui/button';
 import { NetWorthCard } from '@/components/NetWorthCard';
 import { AllocationChart } from '@/components/AllocationChart';
@@ -36,6 +37,7 @@ const Index = () => {
   const { isAuthenticated, profile, loading } = useUserProfile();
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [connectedAccounts, setConnectedAccounts] = useState<BankAccount[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<Period>('1W');
 
   const handleAccountsConnected = (accounts: BankAccount[]) => {
     setConnectedAccounts(prev => [...prev, ...accounts]);
@@ -97,7 +99,7 @@ const Index = () => {
         {/* Hero Section - Net Worth & Quick Actions */}
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="flex-1 min-w-0" data-tour="net-worth">
-            <NetWorthCard assets={assets} />
+            <NetWorthCard assets={assets} period={selectedPeriod} onPeriodChange={setSelectedPeriod} />
           </div>
           <div className="lg:w-80 flex flex-col gap-4">
             <div className="wealth-card flex-1">
@@ -150,7 +152,7 @@ const Index = () => {
         {/* Portfolio Aggregation - Connected Platforms */}
         <div className="mb-6 sm:mb-8">
           <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Investment Portfolio Overview</h2>
-          <PortfolioAggregation connectedAccounts={connectedAccounts} />
+          <PortfolioAggregation connectedAccounts={connectedAccounts} period={selectedPeriod} />
         </div>
         
         {/* Income Liquidity & Emergency Fund */}
@@ -165,7 +167,7 @@ const Index = () => {
         </div>
         
         {/* Quick Stats */}
-        <QuickStats assets={assets} />
+        <QuickStats assets={assets} period={selectedPeriod} />
         
         {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
@@ -176,7 +178,7 @@ const Index = () => {
           <LiquidityBreakdown assets={assets} />
           
           {/* Recent Transactions */}
-          <RecentTransactions transactions={transactions} />
+          <RecentTransactions transactions={transactions} period={selectedPeriod} />
         </div>
         
         {/* Asset List */}
