@@ -50,8 +50,8 @@ export function WealthHeader() {
               <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-base sm:text-xl font-bold tracking-tight truncate">WealthTrack</h1>
-              <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Portfolio & Expense Manager</p>
+              <h1 className="text-base sm:text-xl font-bold tracking-tight truncate">Tharwa Net</h1>
+              <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Your Personalized Wealth Manager</p>
             </div>
           </div>
           

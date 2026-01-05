@@ -3,6 +3,7 @@ import { DebtOverview } from '@/components/DebtOverview';
 import { DebtList } from '@/components/DebtList';
 import { PayoffCalculator } from '@/components/PayoffCalculator';
 import { DebtStrategy } from '@/components/DebtStrategy';
+import { PageHeader } from '@/components/PageHeader';
 import { Debt, sampleDebts } from '@/lib/debtData';
 
 const DebtTracker = () => {
@@ -31,12 +32,12 @@ const DebtTracker = () => {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl font-bold mb-2">Debt Tracker</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Manage your liabilities and plan your path to becoming debt-free
-          </p>
-        </div>
+        {/* Page Header */}
+        <PageHeader 
+          title="Debt Tracker"
+          description="Manage your liabilities and plan your path to becoming debt-free"
+          breadcrumb={[{ label: 'Debt', path: '/debt' }]}
+        />
         
         {/* Debt Overview */}
         <div className="mb-6 sm:mb-8">
@@ -67,7 +68,7 @@ const DebtTracker = () => {
         {/* Footer */}
         <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            WealthTrack • Debt Tracker
+            Tharwa Net • Debt Tracker
           </p>
         </footer>
       </main>

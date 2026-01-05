@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AICategorizer } from '@/components/AICategorizer';
 import { AIInsightsPanel } from '@/components/AIInsightsPanel';
 import { NotificationTestPanel } from '@/components/NotificationTestPanel';
+import { PageHeader } from '@/components/PageHeader';
 
 // Sample uncategorized transactions for demo
 const sampleUncategorizedTransactions = [
@@ -59,18 +60,17 @@ const AITools = () => {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
+        {/* Page Header */}
+        <PageHeader 
+          title="AI Tools"
+          description="AI-powered insights and transaction categorization"
+          breadcrumb={[{ label: 'AI Tools', path: '/ai-tools' }]}
+          actions={
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">AI Tools</h1>
-              <p className="text-muted-foreground">Powered by Lovable AI</p>
-            </div>
-          </div>
-        </div>
+          }
+        />
 
         <Tabs defaultValue="insights" className="space-y-6">
           <TabsList className="grid w-full max-w-xl grid-cols-4">

@@ -4,6 +4,7 @@ import { BudgetCard } from '@/components/BudgetCard';
 import { SpendingChart } from '@/components/SpendingChart';
 import { CategoryBreakdown } from '@/components/CategoryBreakdown';
 import { ExpenseList } from '@/components/ExpenseList';
+import { PageHeader } from '@/components/PageHeader';
 import { Expense, Budget, sampleExpenses, sampleBudgets } from '@/lib/expenseData';
 
 const Expenses = () => {
@@ -40,6 +41,13 @@ const Expenses = () => {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
+        {/* Page Header */}
+        <PageHeader 
+          title="Expense Management"
+          description="Track spending and manage your budget categories"
+          breadcrumb={[{ label: 'Expenses', path: '/expenses' }]}
+        />
+        
         {/* Monthly Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="lg:col-span-2">
