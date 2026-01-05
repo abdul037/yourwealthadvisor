@@ -10,9 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { sampleExpenses } from '@/lib/expenseData';
-import { sampleIncomeSources, getMonthlyIncomeData } from '@/lib/incomeData';
-import { sampleBudgets } from '@/lib/expenseData';
+import { useIncomes } from '@/hooks/useIncomes';
+import { useExpenses } from '@/hooks/useTransactions';
+import { useBudgets } from '@/hooks/useBudgets';
+import { useDebts } from '@/hooks/useDebts';
+import { useAssets } from '@/hooks/useAssets';
 
 interface Insight {
   type: 'warning' | 'success' | 'tip' | 'alert';
@@ -68,27 +70,31 @@ export function AIInsightsPanel() {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
+  
+  // Use real data from hooks
+  const { totalMonthlyIncome } = useIncomes();
+  const { transactions: expenses } = useExpenses();
+  const { budgets } = useBudgets();
+  const { debts } = useDebts();
+  const { assets } = useAssets();
 
   const generateInsights = async () => {
     setIsLoading(true);
     setProgress(10);
 
     try {
-      // Gather financial data from sample data (in production, this would come from database)
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
       
-      // Calculate monthly income
-      const monthlyIncomeData = getMonthlyIncomeData(sampleIncomeSources);
-      const latestMonth = monthlyIncomeData[monthlyIncomeData.length - 1];
-      const totalIncome = latestMonth?.total || 55000;
+      // Use real income data
+      const totalIncome = totalMonthlyIncome || 0;
       
       setProgress(30);
       
-      // Calculate expenses by category
+      // Calculate expenses by category from real data
       const expensesByCategory: Record<string, number> = {};
-      const currentMonthExpenses = sampleExpenses.filter(e => {
-        const d = new Date(e.date);
+      const currentMonthExpenses = expenses.filter(e => {
+        const d = new Date(e.transaction_date);
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       });
       
@@ -96,7 +102,7 @@ export function AIInsightsPanel() {
         expensesByCategory[e.category] = (expensesByCategory[e.category] || 0) + e.amount;
       });
       
-      const totalExpenses = Object.values(expensesByCategory).reduce((a, b) => a + b, 0) || 35000;
+      const totalExpenses = Object.values(expensesByCategory).reduce((a, b) => a + b, 0);
       const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
       
       setProgress(50);
@@ -107,12 +113,18 @@ export function AIInsightsPanel() {
         .slice(0, 5)
         .map(([cat]) => cat);
       
-      // Calculate budget utilization
+      // Calculate budget utilization from real budgets
       const budgetUtilization: Record<string, number> = {};
-      sampleBudgets.forEach(b => {
+      budgets.forEach(b => {
         const spent = expensesByCategory[b.category] || 0;
-        budgetUtilization[b.category] = (spent / b.limit) * 100;
+        budgetUtilization[b.category] = b.allocated_amount > 0 ? (spent / b.allocated_amount) * 100 : 0;
       });
+      
+      // Calculate real net worth from assets
+      const netWorth = assets.reduce((sum, a) => sum + a.amount, 0);
+      
+      // Calculate real debt total
+      const debtTotal = debts.reduce((sum, d) => sum + d.current_balance, 0);
       
       setProgress(70);
       
@@ -122,11 +134,11 @@ export function AIInsightsPanel() {
         expensesByCategory,
         savingsRate,
         topSpendingCategories,
-        monthOverMonthChange: 5.2, // Simulated
+        monthOverMonthChange: 0,
         budgetUtilization,
-        upcomingBills: 3, // Simulated
-        netWorth: 1250000, // Simulated
-        debtTotal: 150000, // Simulated
+        upcomingBills: 0,
+        netWorth,
+        debtTotal,
       };
 
       const { data, error } = await supabase.functions.invoke('generate-insights', {

@@ -1,80 +1,66 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle2, TrendingUp, ExternalLink } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { LIQUIDITY_LABELS, initialPortfolio } from '@/lib/portfolioData';
-import { sampleExpenses } from '@/lib/expenseData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAssets } from '@/hooks/useAssets';
+import { useExpenses } from '@/hooks/useTransactions';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { Link } from 'react-router-dom';
 
-interface LiquiditySetting {
-  category_name: string;
-  category_type: string;
-  liquidity_level: 'L1' | 'L2' | 'L3' | 'NL';
-  liquidity_percentage: number;
-}
-
 export function EmergencyFundCalculator() {
-  const [liquiditySettings, setLiquiditySettings] = useState<LiquiditySetting[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { assets, isLoading: assetsLoading } = useAssets();
+  const { transactions: expenses, isLoading: expensesLoading } = useExpenses();
   const [targetMonths, setTargetMonths] = useState(6);
   const { formatAmount } = useFormattedCurrency();
 
-  useEffect(() => {
-    fetchLiquiditySettings();
-  }, []);
+  const isLoading = assetsLoading || expensesLoading;
 
-  const fetchLiquiditySettings = async () => {
-    const { data } = await supabase
-      .from('category_liquidity_settings')
-      .select('*')
-      .eq('category_type', 'asset');
-    
-    if (data) setLiquiditySettings(data as LiquiditySetting[]);
-    setLoading(false);
-  };
-
-  // Calculate monthly expenses from sample data
+  // Calculate monthly expenses from real transactions
   const calculateMonthlyExpenses = () => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     
-    const thisMonthExpenses = sampleExpenses.filter(e => {
-      const date = new Date(e.date);
+    const thisMonthExpenses = expenses.filter(e => {
+      const date = new Date(e.transaction_date);
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
     });
     
     const total = thisMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
-    return total > 0 ? total : 38000;
+    
+    // If no current month data, calculate average from all expenses
+    if (total === 0 && expenses.length > 0) {
+      const avgTotal = expenses.reduce((sum, e) => sum + e.amount, 0);
+      // Rough monthly average
+      return avgTotal / Math.max(1, Math.ceil(expenses.length / 10));
+    }
+    
+    return total;
   };
 
-  // Calculate liquid assets based on portfolio and liquidity settings
+  // Calculate liquid assets based on real portfolio
   const calculateLiquidAssets = () => {
     let instantlyLiquid = 0;
     let shortTermLiquid = 0;
     let mediumTermLiquid = 0;
     let totalAssets = 0;
 
-    initialPortfolio.forEach(asset => {
-      const valueAED = asset.aedValue;
+    assets.forEach(asset => {
+      const valueAED = asset.amount;
       totalAssets += valueAED;
 
-      const setting = liquiditySettings.find(s => s.category_name === asset.category);
-      const percentage = setting?.liquidity_percentage ?? 80;
-      const level = setting?.liquidity_level ?? asset.liquidityLevel;
-      const effectiveValue = valueAED * (percentage / 100);
+      const level = asset.liquidity_level || 'L2';
 
       switch (level) {
         case 'L1':
-          instantlyLiquid += effectiveValue;
+          instantlyLiquid += valueAED;
           break;
         case 'L2':
-          shortTermLiquid += effectiveValue;
+          shortTermLiquid += valueAED;
           break;
         case 'L3':
-          mediumTermLiquid += effectiveValue;
+          mediumTermLiquid += valueAED;
           break;
       }
     });
@@ -88,14 +74,52 @@ export function EmergencyFundCalculator() {
     };
   };
 
+  if (isLoading) {
+    return (
+      <div className="wealth-card">
+        <Skeleton className="h-48 w-full" />
+      </div>
+    );
+  }
+
   const monthlyExpenses = calculateMonthlyExpenses();
   const liquidAssets = calculateLiquidAssets();
+
+  // Handle case when no data
+  if (monthlyExpenses === 0 && liquidAssets.totalAssets === 0) {
+    return (
+      <div className="wealth-card">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold">Emergency Fund Status</h3>
+              <p className="text-xs text-muted-foreground">Add expenses and assets to calculate</p>
+            </div>
+          </div>
+          <Link to="/expenses">
+            <Button variant="outline" size="sm" className="gap-1">
+              Add Data <ExternalLink className="w-3 h-3" />
+            </Button>
+          </Link>
+        </div>
+        <div className="text-center py-8 text-muted-foreground">
+          <p>Add expenses and assets to see your emergency fund status</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Use a reasonable default if no expenses yet
+  const effectiveMonthlyExpenses = monthlyExpenses > 0 ? monthlyExpenses : 1;
   
-  const monthsCoveredInstant = liquidAssets.instantlyLiquid / monthlyExpenses;
-  const monthsCoveredShort = (liquidAssets.instantlyLiquid + liquidAssets.shortTermLiquid) / monthlyExpenses;
-  const monthsCoveredTotal = liquidAssets.totalLiquid / monthlyExpenses;
+  const monthsCoveredInstant = liquidAssets.instantlyLiquid / effectiveMonthlyExpenses;
+  const monthsCoveredShort = (liquidAssets.instantlyLiquid + liquidAssets.shortTermLiquid) / effectiveMonthlyExpenses;
+  const monthsCoveredTotal = liquidAssets.totalLiquid / effectiveMonthlyExpenses;
   
-  const targetAmount = monthlyExpenses * targetMonths;
+  const targetAmount = effectiveMonthlyExpenses * targetMonths;
   const progressToTarget = Math.min((liquidAssets.totalLiquid / targetAmount) * 100, 100);
   const shortfall = Math.max(targetAmount - liquidAssets.totalLiquid, 0);
 
@@ -106,14 +130,6 @@ export function EmergencyFundCalculator() {
   };
 
   const status = getStatus();
-
-  if (loading) {
-    return (
-      <div className="wealth-card animate-pulse">
-        <div className="h-48 bg-muted rounded-lg" />
-      </div>
-    );
-  }
 
   return (
     <div className="wealth-card">

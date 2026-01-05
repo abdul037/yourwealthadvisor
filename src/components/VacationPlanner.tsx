@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,44 +59,31 @@ const categoryColors = {
   other: 'bg-gray-500/20 text-gray-400',
 };
 
-const sampleVacations: Vacation[] = [
-  {
-    id: '1',
-    destination: 'Maldives Family Getaway',
-    startDate: '2025-06-15',
-    endDate: '2025-06-22',
-    targetBudget: 25000,
-    savedAmount: 12500,
-    monthlySavings: 2500,
-    expenses: [
-      { id: '1', category: 'flights', description: 'Emirates Return Flights (4 pax)', estimatedCost: 8000 },
-      { id: '2', category: 'accommodation', description: 'Resort Villa (7 nights)', estimatedCost: 12000 },
-      { id: '3', category: 'food', description: 'Meals & Dining', estimatedCost: 2500 },
-      { id: '4', category: 'activities', description: 'Snorkeling, Spa, Tours', estimatedCost: 1500 },
-      { id: '5', category: 'transport', description: 'Speedboat Transfers', estimatedCost: 1000 },
-    ],
-  },
-  {
-    id: '2',
-    destination: 'Europe Summer Trip',
-    startDate: '2025-08-01',
-    endDate: '2025-08-15',
-    targetBudget: 45000,
-    savedAmount: 15000,
-    monthlySavings: 4000,
-    expenses: [
-      { id: '1', category: 'flights', description: 'Flights to Paris (4 pax)', estimatedCost: 12000 },
-      { id: '2', category: 'accommodation', description: 'Hotels (14 nights)', estimatedCost: 18000 },
-      { id: '3', category: 'food', description: 'Meals & Dining', estimatedCost: 6000 },
-      { id: '4', category: 'activities', description: 'Museums, Tours, Shows', estimatedCost: 5000 },
-      { id: '5', category: 'transport', description: 'Train Passes & Transfers', estimatedCost: 4000 },
-    ],
-  },
-];
+const STORAGE_KEY = 'tharwa-vacation-plans';
+
+// Load vacations from localStorage
+const loadVacations = (): Vacation[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Save vacations to localStorage
+const saveVacations = (vacations: Vacation[]) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(vacations));
+};
 
 export function VacationPlanner() {
   const { formatAmount } = useFormattedCurrency();
-  const [vacations, setVacations] = useState<Vacation[]>(sampleVacations);
+  const [vacations, setVacations] = useState<Vacation[]>(() => loadVacations());
+  
+  // Persist vacations to localStorage
+  useEffect(() => {
+    saveVacations(vacations);
+  }, [vacations]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newVacation, setNewVacation] = useState({
     destination: '',
