@@ -6,6 +6,7 @@ import { BudgetVsActualChart } from '@/components/BudgetVsActualChart';
 import { VacationPlanner } from '@/components/VacationPlanner';
 import { RecurringTransactionsDashboard } from '@/components/RecurringTransactionsDashboard';
 import { BillsCalendar } from '@/components/BillsCalendar';
+import { PageHeader } from '@/components/PageHeader';
 import { useBudgetAlerts, BudgetAlert } from '@/hooks/useBudgetAlerts';
 import { Budget, Expense, sampleExpenses, sampleBudgets } from '@/lib/expenseData';
 import { sampleIncomeSources, getMonthlyIncomeData } from '@/lib/incomeData';
@@ -59,12 +60,12 @@ const BudgetPlanner = () => {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl font-bold mb-2">Monthly Budget Planner</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Allocate your income, track spending, manage recurring bills, and get alerts
-          </p>
-        </div>
+        {/* Page Header */}
+        <PageHeader 
+          title="Budget Planner"
+          description="Allocate your income, track spending, manage recurring bills, and get alerts"
+          breadcrumb={[{ label: 'Budget', path: '/budget' }]}
+        />
         
         <Tabs defaultValue="budget" className="w-full">
           <TabsList className="mb-6">

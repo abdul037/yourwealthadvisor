@@ -15,6 +15,7 @@ import { ImportedTransactions } from '@/components/ImportedTransactions';
 import { PartnerManagement } from '@/components/PartnerManagement';
 import { LiquiditySettings } from '@/components/LiquiditySettings';
 import { ComprehensiveBulkUpload } from '@/components/ComprehensiveBulkUpload';
+import { PageHeader } from '@/components/PageHeader';
 import { BankAccount, BankTransaction, DEMO_TRANSACTIONS } from '@/lib/mockBankingData';
 const AVAILABLE_ICONS = [
   'UtensilsCrossed', 'Car', 'Zap', 'Gamepad2', 'ShoppingBag', 'Heart', 'GraduationCap',
@@ -149,7 +150,7 @@ const AdminPortal = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'wealthtrack_template.csv';
+    a.download = 'tharwanet_template.csv';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -196,10 +197,12 @@ const AdminPortal = () => {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl font-bold mb-2">Admin Portal</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">Manage categories, bank connections, and customize your experience</p>
-        </div>
+        {/* Page Header */}
+        <PageHeader 
+          title="Settings"
+          description="Manage categories, bank connections, and customize your experience"
+          breadcrumb={[{ label: 'Settings', path: '/admin' }]}
+        />
         
         <Tabs defaultValue="partners" className="space-y-4 sm:space-y-6">
           <TabsList className="w-full overflow-x-auto flex flex-nowrap">
@@ -450,7 +453,7 @@ const AdminPortal = () => {
         {/* Footer */}
         <footer className="mt-12 pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            WealthTrack • Admin Portal
+            Tharwa Net • Admin Portal
           </p>
         </footer>
       </main>

@@ -18,6 +18,7 @@ import { WelcomeBanner } from '@/components/WelcomeBanner';
 import { SetupWizard } from '@/components/SetupWizard';
 import { GettingStartedChecklist } from '@/components/GettingStartedChecklist';
 import { DashboardConnectedAccounts } from '@/components/DashboardConnectedAccounts';
+import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { initialPortfolio, Transaction, Asset } from '@/lib/portfolioData';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -76,6 +77,17 @@ const Index = () => {
 
   // Calculate combined monthly income (AED value)
   const combinedIncome = 55000; // This would come from actual income sources
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
+          <DashboardSkeleton variant="full" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

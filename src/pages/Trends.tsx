@@ -3,6 +3,7 @@ import { NetWorthChart } from '@/components/NetWorthChart';
 import { MilestoneTracker } from '@/components/MilestoneTracker';
 import { WealthStats } from '@/components/WealthStats';
 import { IncomeSourcesChart } from '@/components/IncomeSourcesChart';
+import { PageHeader } from '@/components/PageHeader';
 import { generateNetWorthHistory, calculateProjection, sampleMilestones, Milestone } from '@/lib/categoryData';
 import { sampleIncomeSources, getMonthlyIncomeData } from '@/lib/incomeData';
 import { sampleExpenses, getMonthlySpending } from '@/lib/expenseData';
@@ -70,6 +71,13 @@ const Trends = () => {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
+        {/* Page Header */}
+        <PageHeader 
+          title="Financial Trends"
+          description="Visualize your wealth growth and track milestones"
+          breadcrumb={[{ label: 'Trends', path: '/trends' }]}
+        />
+        
         {/* Wealth Stats */}
         <div className="mb-6 sm:mb-8">
           <WealthStats 
@@ -109,7 +117,7 @@ const Trends = () => {
         {/* Footer */}
         <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            WealthTrack • Net Worth Trends & Projections
+            Tharwa Net • Net Worth Trends & Projections
           </p>
         </footer>
       </main>

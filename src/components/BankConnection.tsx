@@ -214,7 +214,7 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-medium">WealthTrack will access:</h4>
+              <h4 className="font-medium">Tharwa Net will access:</h4>
               <div className="space-y-2">
                 {consentItems.access.map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
@@ -225,7 +225,7 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
               </div>
               
               <div className="space-y-2">
-                <h4 className="font-medium text-sm text-muted-foreground">WealthTrack will NOT:</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Tharwa Net will NOT:</h4>
                 {consentItems.notAccess.map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
                     <X className="w-4 h-4 text-red-400" />
