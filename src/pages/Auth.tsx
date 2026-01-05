@@ -60,16 +60,29 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check URL hash for recovery token first (before auth state listener)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    const accessToken = hashParams.get('access_token');
+    
+    if (type === 'recovery' && accessToken) {
+      setIsRecoveryMode(true);
+      return; // Don't set up redirect logic if in recovery mode
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setIsRecoveryMode(true);
-      } else if (session?.user && !isRecoveryMode) {
+      } else if (event === 'SIGNED_IN' && session?.user && !isRecoveryMode) {
+        // Only redirect if not in recovery mode
         navigate('/');
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user && !isRecoveryMode) {
+      // Don't redirect if we're in recovery mode or URL has recovery token
+      const currentHash = new URLSearchParams(window.location.hash.substring(1));
+      if (session?.user && !isRecoveryMode && currentHash.get('type') !== 'recovery') {
         navigate('/');
       }
     });
