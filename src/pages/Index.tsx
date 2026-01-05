@@ -19,6 +19,7 @@ import { GettingStartedChecklist } from '@/components/GettingStartedChecklist';
 import { initialPortfolio, Transaction, Asset } from '@/lib/portfolioData';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { BankAccount } from '@/lib/mockBankingData';
 
 const quickNavItems = [
   { path: '/income', label: 'Income', icon: DollarSign, color: 'bg-wealth-positive/20 text-wealth-positive' },
@@ -33,6 +34,11 @@ const Index = () => {
   const { formatAmount } = useFormattedCurrency();
   const { isAuthenticated, profile, loading } = useUserProfile();
   const [showSetupWizard, setShowSetupWizard] = useState(false);
+  const [connectedAccounts, setConnectedAccounts] = useState<BankAccount[]>([]);
+
+  const handleAccountsConnected = (accounts: BankAccount[]) => {
+    setConnectedAccounts(prev => [...prev, ...accounts]);
+  };
   
   // Show setup wizard for new authenticated users who haven't completed onboarding
   useEffect(() => {
@@ -56,7 +62,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SetupWizard open={showSetupWizard} onOpenChange={setShowSetupWizard} />
+      <SetupWizard 
+        open={showSetupWizard} 
+        onOpenChange={setShowSetupWizard} 
+        onAccountsConnected={handleAccountsConnected}
+      />
       
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
         {/* Welcome Banner */}
