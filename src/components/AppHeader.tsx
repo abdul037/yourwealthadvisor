@@ -9,6 +9,9 @@ import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { TourRestartButton } from '@/components/OnboardingTour';
 import { SmartNotificationCenter } from '@/components/SmartNotificationCenter';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { GlobalSearch } from '@/components/GlobalSearch';
+import { DataExport } from '@/components/DataExport';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +33,7 @@ export function AppHeader() {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
   
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -59,12 +63,18 @@ export function AppHeader() {
           </div>
           
           <div className="flex items-center gap-2">
-            <div data-tour="currency">
-              <CurrencySelector />
-            </div>
-            <div className="hidden sm:block">
+            {/* Global Search */}
+            <GlobalSearch onExportClick={() => setShowExportDialog(true)} />
+            
+            <div className="hidden sm:flex items-center gap-2">
+              <div data-tour="currency">
+                <CurrencySelector />
+              </div>
               <CurrencyConverter />
             </div>
+            
+            <ThemeToggle />
+            
             <div data-tour="notifications">
               <SmartNotificationCenter />
             </div>
@@ -116,6 +126,13 @@ export function AppHeader() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Export Dialog */}
+      <DataExport 
+        open={showExportDialog} 
+        onOpenChange={setShowExportDialog}
+        triggerButton={false}
+      />
     </>
   );
 }
