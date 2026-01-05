@@ -5,6 +5,7 @@ import { AppHeader } from '@/components/AppHeader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { OnboardingTour } from '@/components/OnboardingTour';
 import { TourProvider } from '@/hooks/useOnboardingTour';
+import { FloatingQuickAdd } from '@/components/FloatingQuickAdd';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -23,6 +24,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </main>
           </SidebarInset>
           <MobileBottomNav />
+          <FloatingQuickAdd />
         </div>
         <OnboardingTour />
       </SidebarProvider>
