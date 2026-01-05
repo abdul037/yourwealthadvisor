@@ -1,8 +1,9 @@
 import { ArrowDownLeft, ArrowUpRight, TrendingUp } from 'lucide-react';
-import { Transaction, formatCurrency } from '@/lib/portfolioData';
+import { Transaction } from '@/lib/portfolioData';
 import { format } from 'date-fns';
 import { Period, filterByPeriod, getPeriodLabel } from '@/lib/periodUtils';
 import { useMemo } from 'react';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -10,6 +11,7 @@ interface RecentTransactionsProps {
 }
 
 export function RecentTransactions({ transactions, period = 'ALL' }: RecentTransactionsProps) {
+  const { formatAmount } = useFormattedCurrency();
   const filteredTransactions = useMemo(() => {
     const filtered = period === 'ALL' ? transactions : filterByPeriod(transactions, period);
     return [...filtered]
@@ -76,7 +78,7 @@ export function RecentTransactions({ transactions, period = 'ALL' }: RecentTrans
                   transaction.type === 'income' ? 'text-wealth-positive' : ''
                 }`}>
                   {transaction.type === 'expense' ? '-' : transaction.type === 'income' ? '+' : ''}
-                  {formatCurrency(transaction.amount, transaction.currency)}
+                  {formatAmount(transaction.amount)}
                 </p>
               </div>
             </div>

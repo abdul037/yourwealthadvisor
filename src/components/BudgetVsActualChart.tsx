@@ -1,6 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import { Budget, Expense, getCategoryColor } from '@/lib/expenseData';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface BudgetVsActualChartProps {
   budgets: Budget[];
@@ -8,6 +8,7 @@ interface BudgetVsActualChartProps {
 }
 
 export function BudgetVsActualChart({ budgets, expenses }: BudgetVsActualChartProps) {
+  const { formatAmount } = useFormattedCurrency();
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   
@@ -49,18 +50,18 @@ export function BudgetVsActualChart({ budgets, expenses }: BudgetVsActualChartPr
           <div className="space-y-1 text-sm">
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Budget:</span>
-              <span className="font-mono">{formatCurrency(item.budget)}</span>
+              <span className="font-mono">{formatAmount(item.budget)}</span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Spent:</span>
               <span className={`font-mono ${isOver ? 'text-destructive' : ''}`}>
-                {formatCurrency(item.spent)}
+                {formatAmount(item.spent)}
               </span>
             </div>
             <div className="flex justify-between gap-4 border-t border-border pt-1 mt-1">
               <span className="text-muted-foreground">{isOver ? 'Over:' : 'Left:'}</span>
               <span className={`font-mono font-medium ${isOver ? 'text-destructive' : 'text-wealth-positive'}`}>
-                {formatCurrency(isOver ? item.overBudget : item.remaining)}
+                {formatAmount(isOver ? item.overBudget : item.remaining)}
               </span>
             </div>
           </div>

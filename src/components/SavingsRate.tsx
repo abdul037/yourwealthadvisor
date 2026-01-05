@@ -1,7 +1,7 @@
 import { PiggyBank, TrendingUp } from 'lucide-react';
 import { IncomeSource, getMonthlyIncomeData } from '@/lib/incomeData';
 import { Expense, getMonthlySpending } from '@/lib/expenseData';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface SavingsRateProps {
   incomeSources: IncomeSource[];
@@ -9,6 +9,7 @@ interface SavingsRateProps {
 }
 
 export function SavingsRate({ incomeSources, expenses }: SavingsRateProps) {
+  const { formatAmount } = useFormattedCurrency();
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   
@@ -51,19 +52,19 @@ export function SavingsRate({ incomeSources, expenses }: SavingsRateProps) {
         <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
           <span className="text-sm text-muted-foreground">Income</span>
           <span className="font-mono font-medium text-wealth-positive">
-            {formatCurrency(currentMonthIncome)}
+            {formatAmount(currentMonthIncome)}
           </span>
         </div>
         <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
           <span className="text-sm text-muted-foreground">Expenses</span>
           <span className="font-mono font-medium text-wealth-negative">
-            {formatCurrency(currentMonthExpenses)}
+            {formatAmount(currentMonthExpenses)}
           </span>
         </div>
         <div className="flex justify-between items-center p-3 rounded-lg bg-wealth-positive/10 border border-wealth-positive/20">
           <span className="text-sm font-medium">Net Savings</span>
           <span className={`font-mono font-bold ${savings >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
-            {savings >= 0 ? '+' : ''}{formatCurrency(savings)}
+            {savings >= 0 ? '+' : ''}{formatAmount(savings)}
           </span>
         </div>
       </div>
@@ -73,7 +74,7 @@ export function SavingsRate({ incomeSources, expenses }: SavingsRateProps) {
           <TrendingUp className="w-4 h-4" />
           <span>6-month avg savings: </span>
           <span className={`font-mono font-medium ${avgSavings >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
-            {formatCurrency(avgSavings)}/mo
+            {formatAmount(avgSavings)}/mo
           </span>
         </div>
       </div>

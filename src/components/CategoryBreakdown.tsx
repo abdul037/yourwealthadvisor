@@ -1,5 +1,5 @@
 import { Expense, EXPENSE_CATEGORIES, getCategoryColor, getSpendingByCategory } from '@/lib/expenseData';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { UtensilsCrossed, Car, Zap, Gamepad2, ShoppingBag, Heart, GraduationCap, CreditCard, MoreHorizontal } from 'lucide-react';
 
@@ -22,6 +22,7 @@ const ICONS: Record<string, React.ReactNode> = {
 };
 
 export function CategoryBreakdown({ expenses, month, year }: CategoryBreakdownProps) {
+  const { formatAmount } = useFormattedCurrency();
   const spending = getSpendingByCategory(expenses, month, year);
   const total = Object.values(spending).reduce((sum, val) => sum + val, 0);
   
@@ -41,7 +42,7 @@ export function CategoryBreakdown({ expenses, month, year }: CategoryBreakdownPr
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <p className="font-medium text-sm">{data.name}</p>
           <p className="text-muted-foreground text-xs">
-            AED {data.value.toLocaleString()} ({data.percentage}%)
+            {formatAmount(data.value)} ({data.percentage}%)
           </p>
         </div>
       );
@@ -96,7 +97,7 @@ export function CategoryBreakdown({ expenses, month, year }: CategoryBreakdownPr
                   <p className="text-xs text-muted-foreground">{item.percentage}%</p>
                 </div>
               </div>
-              <p className="text-sm font-mono">{formatCurrency(item.value)}</p>
+              <p className="text-sm font-mono">{formatAmount(item.value)}</p>
             </div>
           ))}
         </div>
@@ -105,7 +106,7 @@ export function CategoryBreakdown({ expenses, month, year }: CategoryBreakdownPr
       <div className="mt-4 pt-4 border-t border-border">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Total Spending</span>
-          <span className="text-lg font-bold font-mono">{formatCurrency(total)}</span>
+          <span className="text-lg font-bold font-mono">{formatAmount(total)}</span>
         </div>
       </div>
     </div>

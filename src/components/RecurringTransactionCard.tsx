@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { RecurringTransaction } from '@/hooks/useRecurringTransactionsDB';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +39,7 @@ export function RecurringTransactionCard({
   onDelete, 
   onGenerate 
 }: RecurringTransactionCardProps) {
+  const { formatAmount } = useFormattedCurrency();
   const isOverdue = new Date(transaction.next_due_date) < new Date(new Date().toDateString());
   const isDueToday = transaction.next_due_date === new Date().toISOString().split('T')[0];
   
@@ -103,9 +104,8 @@ export function RecurringTransactionCard({
               ? 'text-wealth-positive' 
               : 'text-wealth-negative'
           }`}>
-            {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+            {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)}
           </p>
-          <p className="text-xs text-muted-foreground">{transaction.currency}</p>
         </div>
       </div>
 

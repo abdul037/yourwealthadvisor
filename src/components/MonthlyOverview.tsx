@@ -1,6 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, Wallet, Target } from 'lucide-react';
 import { Expense, Budget } from '@/lib/expenseData';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { format } from 'date-fns';
 
 interface MonthlyOverviewProps {
@@ -9,6 +9,7 @@ interface MonthlyOverviewProps {
 }
 
 export function MonthlyOverview({ expenses, budgets }: MonthlyOverviewProps) {
+  const { formatAmount } = useFormattedCurrency();
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
@@ -51,7 +52,7 @@ export function MonthlyOverview({ expenses, budgets }: MonthlyOverviewProps) {
             <p className="wealth-label mb-1">{format(new Date(), 'MMMM yyyy')} Spending</p>
             <div className="flex items-center gap-3">
               <h2 className="text-4xl md:text-5xl font-bold font-mono tracking-tight text-destructive">
-                {formatCurrency(thisMonthTotal)}
+                {formatAmount(thisMonthTotal)}
               </h2>
               {lastMonthTotal > 0 && (
                 <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
@@ -71,7 +72,7 @@ export function MonthlyOverview({ expenses, budgets }: MonthlyOverviewProps) {
               <Wallet className="w-4 h-4 text-muted-foreground" />
               <p className="wealth-label">Daily Avg</p>
             </div>
-            <p className="text-xl font-bold font-mono">{formatCurrency(dailyAverage)}</p>
+            <p className="text-xl font-bold font-mono">{formatAmount(dailyAverage)}</p>
           </div>
           
           <div className="p-4 rounded-lg bg-muted/30">
@@ -79,7 +80,7 @@ export function MonthlyOverview({ expenses, budgets }: MonthlyOverviewProps) {
               <Target className="w-4 h-4 text-muted-foreground" />
               <p className="wealth-label">Total Budget</p>
             </div>
-            <p className="text-xl font-bold font-mono">{formatCurrency(totalBudget)}</p>
+            <p className="text-xl font-bold font-mono">{formatAmount(totalBudget)}</p>
           </div>
           
           <div className="p-4 rounded-lg bg-muted/30">
@@ -87,7 +88,7 @@ export function MonthlyOverview({ expenses, budgets }: MonthlyOverviewProps) {
               <p className="wealth-label">Budget Left</p>
             </div>
             <p className={`text-xl font-bold font-mono ${budgetRemaining < 0 ? 'text-destructive' : 'text-wealth-positive'}`}>
-              {formatCurrency(Math.abs(budgetRemaining))}
+              {formatAmount(Math.abs(budgetRemaining))}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {budgetPercentUsed.toFixed(0)}% used

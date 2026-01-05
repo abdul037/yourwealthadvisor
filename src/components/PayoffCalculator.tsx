@@ -4,7 +4,7 @@ import { Calculator, TrendingDown, Zap } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Debt, calculatePayoffProjection, calculateTotalInterest, getMonthsToPayoff, getPayoffDate } from '@/lib/debtData';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface PayoffCalculatorProps {
   debt: Debt | null;
@@ -12,6 +12,7 @@ interface PayoffCalculatorProps {
 }
 
 export function PayoffCalculator({ debt, onClose }: PayoffCalculatorProps) {
+  const { formatAmount, symbol } = useFormattedCurrency();
   const [extraPayment, setExtraPayment] = useState(0);
   
   if (!debt) {
@@ -72,7 +73,7 @@ export function PayoffCalculator({ debt, onClose }: PayoffCalculatorProps) {
                   {entry.dataKey === 'balance' ? 'With Extra' : 'Current'}
                 </span>
               </div>
-              <span className="font-mono">{formatCurrency(entry.value, debt.currency)}</span>
+              <span className="font-mono">{formatAmount(entry.value)}</span>
             </div>
           ))}
         </div>
@@ -106,7 +107,7 @@ export function PayoffCalculator({ debt, onClose }: PayoffCalculatorProps) {
             <span className="font-medium">Extra Monthly Payment</span>
           </div>
           <span className="font-mono font-bold text-primary">
-            +{formatCurrency(extraPayment, debt.currency)}
+            +{formatAmount(extraPayment)}
           </span>
         </div>
         <Slider
@@ -118,8 +119,8 @@ export function PayoffCalculator({ debt, onClose }: PayoffCalculatorProps) {
           className="cursor-pointer"
         />
         <div className="flex justify-between text-xs text-muted-foreground mt-2">
-          <span>AED 0</span>
-          <span>AED 5,000</span>
+          <span>{symbol}0</span>
+          <span>{symbol}5,000</span>
         </div>
       </div>
       
@@ -132,7 +133,7 @@ export function PayoffCalculator({ debt, onClose }: PayoffCalculatorProps) {
             Payoff: {currentPayoffDate ? new Date(currentPayoffDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A'}
           </p>
           <p className="text-sm text-destructive mt-2">
-            Interest: {formatCurrency(currentInterest, debt.currency)}
+            Interest: {formatAmount(currentInterest)}
           </p>
         </div>
         
@@ -143,7 +144,7 @@ export function PayoffCalculator({ debt, onClose }: PayoffCalculatorProps) {
             Payoff: {extraPayoffDate ? new Date(extraPayoffDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A'}
           </p>
           <p className="text-sm text-wealth-positive mt-2">
-            Interest: {formatCurrency(extraInterest, debt.currency)}
+            Interest: {formatAmount(extraInterest)}
           </p>
         </div>
       </div>
@@ -157,7 +158,7 @@ export function PayoffCalculator({ debt, onClose }: PayoffCalculatorProps) {
           </div>
           <div className="p-3 rounded-lg bg-wealth-positive/10 border border-wealth-positive/30 text-center">
             <p className="text-xs text-muted-foreground mb-1">Interest Saved</p>
-            <p className="font-bold text-wealth-positive">{formatCurrency(interestSaved, debt.currency)}</p>
+            <p className="font-bold text-wealth-positive">{formatAmount(interestSaved)}</p>
           </div>
         </div>
       )}
