@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Plus, Trash2, Filter, CreditCard } from 'lucide-react';
 import { Expense, EXPENSE_CATEGORIES, getCategoryColor } from '@/lib/expenseData';
-import { formatCurrency, Currency } from '@/lib/portfolioData';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import { EmptyState } from '@/components/EmptyState';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { UtensilsCrossed, Car, Zap, Gamepad2, ShoppingBag, Heart, GraduationCap, MoreHorizontal } from 'lucide-react';
 
 interface ExpenseListProps {
@@ -38,6 +38,7 @@ export function ExpenseList({ expenses, onAddExpense, onDeleteExpense }: Expense
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const { markExpenseAdded } = useOnboardingProgress();
+  const { formatAmount } = useFormattedCurrency();
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,7 +186,7 @@ export function ExpenseList({ expenses, onAddExpense, onDeleteExpense }: Expense
                 
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-mono font-medium text-destructive">
-                    -{formatCurrency(expense.amount)}
+                    -{formatAmount(expense.amount, expense.currency)}
                   </p>
                   <button
                     onClick={() => onDeleteExpense(expense.id)}

@@ -1,6 +1,6 @@
 import { AlertTriangle, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { Budget, Expense, getCategoryColor } from '@/lib/expenseData';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { Progress } from '@/components/ui/progress';
 
 interface BudgetStatus {
@@ -19,6 +19,7 @@ interface BudgetTrackerProps {
 }
 
 export function BudgetTracker({ budgets, expenses }: BudgetTrackerProps) {
+  const { formatAmount } = useFormattedCurrency();
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   
@@ -123,18 +124,18 @@ export function BudgetTracker({ budgets, expenses }: BudgetTrackerProps) {
       <div className="grid grid-cols-4 gap-3 mb-6">
         <div className="p-3 rounded-lg bg-muted/50 text-center">
           <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
-          <p className="font-bold font-mono">{formatCurrency(totalBudget)}</p>
+          <p className="font-bold font-mono">{formatAmount(totalBudget)}</p>
         </div>
         <div className="p-3 rounded-lg bg-muted/50 text-center">
           <p className="text-xs text-muted-foreground mb-1">Total Spent</p>
           <p className={`font-bold font-mono ${totalSpent > totalBudget ? 'text-destructive' : ''}`}>
-            {formatCurrency(totalSpent)}
+            {formatAmount(totalSpent)}
           </p>
         </div>
         <div className="p-3 rounded-lg bg-muted/50 text-center">
           <p className="text-xs text-muted-foreground mb-1">Remaining</p>
           <p className={`font-bold font-mono ${totalBudget - totalSpent < 0 ? 'text-destructive' : 'text-wealth-positive'}`}>
-            {formatCurrency(totalBudget - totalSpent)}
+            {formatAmount(totalBudget - totalSpent)}
           </p>
         </div>
         <div className="p-3 rounded-lg bg-muted/50 text-center">
@@ -162,19 +163,19 @@ export function BudgetTracker({ budgets, expenses }: BudgetTrackerProps) {
                     <p className="font-medium">{budget.category}</p>
                     <p className="text-xs text-muted-foreground">
                       {budget.status === 'exceeded' 
-                        ? `Over by ${formatCurrency(Math.abs(budget.remaining))}`
+                        ? `Over by ${formatAmount(Math.abs(budget.remaining))}`
                         : budget.status === 'critical'
                         ? 'Critical - Review spending'
                         : budget.status === 'warning'
                         ? 'Approaching limit'
-                        : `${formatCurrency(budget.remaining)} remaining`
+                        : `${formatAmount(budget.remaining)} remaining`
                       }
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="font-mono font-medium">
-                    {formatCurrency(budget.spent)} / {formatCurrency(budget.limit)}
+                    {formatAmount(budget.spent)} / {formatAmount(budget.limit)}
                   </p>
                   <p className={`text-sm font-mono ${
                     budget.percentage >= 100 ? 'text-destructive' :

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PieChart, Wallet, Save, RotateCcw, Plus } from 'lucide-react';
 import { Budget, EXPENSE_CATEGORIES, getCategoryColor } from '@/lib/expenseData';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 
 interface BudgetAllocationProps {
@@ -17,6 +17,7 @@ interface BudgetAllocationProps {
 }
 
 export function BudgetAllocation({ monthlyIncome, budgets, onUpdateBudgets, onAddBudget }: BudgetAllocationProps) {
+  const { formatAmount } = useFormattedCurrency();
   const [allocations, setAllocations] = useState<Record<string, number>>(() => {
     const initial: Record<string, number> = {};
     budgets.forEach(b => {
@@ -112,16 +113,16 @@ export function BudgetAllocation({ monthlyIncome, budgets, onUpdateBudgets, onAd
       <div className="grid grid-cols-3 gap-4 mb-6 p-4 rounded-lg bg-muted/50">
         <div className="text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Monthly Income</p>
-          <p className="text-lg font-bold font-mono">{formatCurrency(monthlyIncome)}</p>
+          <p className="text-lg font-bold font-mono">{formatAmount(monthlyIncome)}</p>
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Allocated</p>
-          <p className="text-lg font-bold font-mono text-primary">{formatCurrency(totalAllocated)}</p>
+          <p className="text-lg font-bold font-mono text-primary">{formatAmount(totalAllocated)}</p>
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Unallocated</p>
           <p className={`text-lg font-bold font-mono ${unallocated < 0 ? 'text-destructive' : 'text-wealth-positive'}`}>
-            {formatCurrency(unallocated)}
+            {formatAmount(unallocated)}
           </p>
         </div>
       </div>
@@ -169,7 +170,7 @@ export function BudgetAllocation({ monthlyIncome, budgets, onUpdateBudgets, onAd
                   <span className="font-medium text-sm">{budget.category}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-mono">{formatCurrency(allocation)}</span>
+                  <span className="text-sm font-mono">{formatAmount(allocation)}</span>
                   <span className="text-xs text-muted-foreground">({percentage.toFixed(0)}%)</span>
                 </div>
               </div>
