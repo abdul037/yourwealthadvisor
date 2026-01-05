@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Send, Loader2, Check, X, Edit2, Mic, MicOff } from 'lucide-react';
+import { Send, Loader2, Check, X, Edit2, Mic, MicOff, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -174,50 +174,88 @@ export function QuickTransactionInput() {
   const displayValue = isListening && interimTranscript ? interimTranscript : input;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Input
-            value={displayValue}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={isListening ? "Listening..." : `Try: "${placeholder}"`}
-            disabled={isLoading || isListening}
-            className={cn(
-              "pr-10",
-              error && "border-destructive",
-              isListening && "border-primary animate-pulse"
-            )}
-          />
-          {isLoading && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
-          )}
+    <div className="relative">
+      {/* Highlighted header */}
+      <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+          <Sparkles className="h-3.5 w-3.5 text-primary" />
+          <span className="text-xs font-medium text-primary">AI-Powered</span>
         </div>
-        {isVoiceSupported && (
-          <Button
-            type="button"
-            size="icon"
-            variant={isListening ? "destructive" : "outline"}
-            onClick={isListening ? stopListening : startListening}
-            disabled={isLoading}
-            className={cn(isListening && "animate-pulse")}
-          >
-            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-        )}
-        <Button 
-          type="submit" 
-          size="icon"
-          disabled={!input.trim() || isLoading || isListening}
-        >
-          <Send className="h-4 w-4" />
-        </Button>
+        <span className="text-xs text-muted-foreground">Type or speak naturally</span>
       </div>
-      
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
-    </form>
+
+      <form onSubmit={handleSubmit} className="space-y-3">
+        {/* Main input area with glow effect */}
+        <div className={cn(
+          "relative p-0.5 rounded-xl transition-all duration-300",
+          "bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30",
+          isListening && "from-primary/50 via-accent/50 to-primary/50 shadow-lg shadow-primary/20"
+        )}>
+          <div className="flex gap-2 bg-background rounded-[10px] p-2">
+            {/* Voice button - prominent */}
+            {isVoiceSupported && (
+              <Button
+                type="button"
+                size="icon"
+                variant={isListening ? "destructive" : "secondary"}
+                onClick={isListening ? stopListening : startListening}
+                disabled={isLoading}
+                className={cn(
+                  "h-10 w-10 shrink-0 transition-all",
+                  isListening && "animate-pulse shadow-lg shadow-destructive/30",
+                  !isListening && "hover:bg-primary hover:text-primary-foreground"
+                )}
+              >
+                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            )}
+            
+            {/* Input field */}
+            <div className="relative flex-1">
+              <Input
+                value={displayValue}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={isListening ? "Listening..." : `e.g. "${placeholder}"`}
+                disabled={isLoading || isListening}
+                className={cn(
+                  "h-10 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
+                  "placeholder:text-muted-foreground/60",
+                  error && "text-destructive"
+                )}
+              />
+              {isLoading && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </div>
+            
+            {/* Send button */}
+            <Button 
+              type="submit" 
+              size="icon"
+              disabled={!input.trim() || isLoading || isListening}
+              className="h-10 w-10 shrink-0"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Helper text */}
+        <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <Mic className="h-3 w-3" />
+            Tap mic to speak
+          </span>
+          <span className="text-border">•</span>
+          <span>or type & send</span>
+        </div>
+        
+        {error && (
+          <p className="text-sm text-destructive text-center">{error}</p>
+        )}
+      </form>
+    </div>
   );
 }
