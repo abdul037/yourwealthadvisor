@@ -6,12 +6,12 @@ import {
   TrendingDown, 
   LineChart, 
   Shield,
-  TrendingUp,
   Download,
   Sparkles,
   Target
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
+import { TharwaLogo } from '@/components/TharwaLogo';
 import { useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -53,16 +53,11 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" data-tour="sidebar">
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-3 px-2 py-2">
-          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-            <TrendingUp className="w-4 h-4 text-primary" />
-          </div>
-          {!collapsed && (
-            <div className="min-w-0">
-              <h1 className="text-base font-bold tracking-tight truncate">Tharwa Net</h1>
-              <p className="text-[10px] text-muted-foreground">Your Personalized Wealth Manager</p>
-            </div>
-          )}
+        <div className="px-2 py-2">
+          <TharwaLogo 
+            size={collapsed ? 'sm' : 'md'} 
+            variant={collapsed ? 'icon-only' : 'full'} 
+          />
         </div>
       </SidebarHeader>
 
@@ -125,7 +120,7 @@ export function AppSidebar() {
         <div className="px-2 py-2">
           {!collapsed && (
             <p className="text-[10px] text-muted-foreground text-center">
-              Family of 4 in Dubai
+              © 2026 Tharwa Net
             </p>
           )}
         </div>

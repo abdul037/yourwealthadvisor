@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { TharwaLogo } from '@/components/TharwaLogo';
 
 const features = [
   {
@@ -40,14 +41,7 @@ export default function Welcome() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       {/* Header */}
       <header className="container mx-auto px-4 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Tharwa Net
-          </span>
-        </div>
+        <TharwaLogo size="lg" variant="full" />
         <Link to="/auth">
           <Button variant="outline" size="sm">
             Sign In
