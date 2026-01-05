@@ -19,7 +19,10 @@ import { SetupWizard } from '@/components/SetupWizard';
 import { GettingStartedChecklist } from '@/components/GettingStartedChecklist';
 import { DashboardConnectedAccounts } from '@/components/DashboardConnectedAccounts';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
-import { initialPortfolio, Transaction, Asset } from '@/lib/portfolioData';
+import { useAssets, Asset as DBAsset } from '@/hooks/useAssets';
+import { useTransactions, Transaction as DBTransaction } from '@/hooks/useTransactions';
+import { useIncomes } from '@/hooks/useIncomes';
+import { Transaction, Asset } from '@/lib/portfolioData';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { BankAccount, BankTransaction } from '@/lib/mockBankingData';
@@ -31,55 +34,88 @@ const quickNavItems = [
   { path: '/debt', label: 'Debt', icon: TrendingDown, color: 'bg-accent/20 text-accent' },
 ];
 
+// Adapter to convert DB asset to component format
+const adaptAsset = (dbAsset: DBAsset): Asset => ({
+  id: dbAsset.id,
+  name: dbAsset.name,
+  category: dbAsset.category as Asset['category'],
+  amount: dbAsset.amount,
+  unit: (dbAsset.currency || 'AED') as Asset['unit'],
+  aedValue: dbAsset.amount, // Assuming AED for now
+  usdValue: dbAsset.amount * 0.27, // Approximate conversion
+  inrValue: dbAsset.amount * 22.7, // Approximate conversion
+  liquidityLevel: (dbAsset.liquidity_level || 'L2') as Asset['liquidityLevel'],
+  isCash: dbAsset.category === 'Cash',
+});
+
+// Adapter to convert DB transaction to component format
+const adaptTransaction = (dbTransaction: DBTransaction): Transaction => ({
+  id: dbTransaction.id,
+  amount: dbTransaction.amount,
+  type: dbTransaction.type as Transaction['type'],
+  category: dbTransaction.category,
+  description: dbTransaction.description || '',
+  date: dbTransaction.transaction_date,
+  currency: (dbTransaction.currency || 'AED') as Transaction['currency'],
+});
+
 const Index = () => {
-  const [assets] = useState<Asset[]>(initialPortfolio);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { assets: dbAssets, isLoading: assetsLoading } = useAssets();
+  const { transactions: dbTransactions, isLoading: transactionsLoading, addTransaction } = useTransactions({ limit: 20 });
+  const { totalMonthlyIncome, isLoading: incomesLoading } = useIncomes();
   const { formatAmount } = useFormattedCurrency();
-  const { isAuthenticated, profile, loading } = useUserProfile();
+  const { isAuthenticated, profile, loading: profileLoading } = useUserProfile();
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [connectedAccounts, setConnectedAccounts] = useState<BankAccount[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('1W');
+
+  const isLoading = profileLoading || assetsLoading || transactionsLoading || incomesLoading;
+
+  // Convert DB data to component format
+  const assets: Asset[] = dbAssets.map(adaptAsset);
+  const transactions: Transaction[] = dbTransactions.map(adaptTransaction);
 
   const handleAccountsConnected = (accounts: BankAccount[]) => {
     setConnectedAccounts(prev => [...prev, ...accounts]);
   };
 
-  const handleTransactionsImported = (bankTransactions: BankTransaction[]) => {
-    // Convert bank transactions to app transactions
-    const newTransactions: Transaction[] = bankTransactions.map(bt => ({
-      id: bt.id,
-      amount: Math.abs(bt.amount),
-      type: bt.amount < 0 ? 'expense' as const : 'income' as const,
-      category: bt.category,
-      description: bt.description,
-      date: bt.date,
-      currency: 'AED',
-    }));
-    setTransactions(prev => [...newTransactions, ...prev]);
+  const handleTransactionsImported = async (bankTransactions: BankTransaction[]) => {
+    // Import transactions to database
+    for (const bt of bankTransactions) {
+      await addTransaction.mutateAsync({
+        amount: Math.abs(bt.amount),
+        type: bt.amount < 0 ? 'expense' : 'income',
+        category: bt.category,
+        description: bt.description,
+        transaction_date: bt.date,
+        currency: 'AED',
+      });
+    }
   };
   
   // Show setup wizard for new authenticated users who haven't completed onboarding
   useEffect(() => {
-    if (!loading && isAuthenticated && profile && !profile.onboarding_completed) {
-      // Delay slightly to let the page render first
+    if (!profileLoading && isAuthenticated && profile && !profile.onboarding_completed) {
       const timer = setTimeout(() => setShowSetupWizard(true), 500);
       return () => clearTimeout(timer);
     }
-  }, [loading, isAuthenticated, profile]);
+  }, [profileLoading, isAuthenticated, profile]);
   
-  const handleAddTransaction = (transaction: Omit<Transaction, 'id'>) => {
-    const newTransaction: Transaction = {
-      ...transaction,
-      id: crypto.randomUUID(),
-    };
-    setTransactions(prev => [newTransaction, ...prev]);
+  const handleAddTransaction = async (transaction: Omit<Transaction, 'id'>) => {
+    await addTransaction.mutateAsync({
+      amount: transaction.amount,
+      type: transaction.type,
+      category: transaction.category,
+      description: transaction.description,
+      transaction_date: transaction.date,
+      currency: transaction.currency,
+    });
   };
 
-  // Calculate combined monthly income (AED value)
-  const combinedIncome = 55000; // This would come from actual income sources
+  // Use calculated monthly income
+  const combinedIncome = totalMonthlyIncome || 0;
 
-  // Show loading state
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
@@ -140,8 +176,12 @@ const Index = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="wealth-label mb-1">Combined Income</p>
-                    <p className="text-lg sm:text-xl font-bold font-mono text-wealth-positive">{formatAmount(combinedIncome)}/mo</p>
-                    <p className="text-xs text-muted-foreground mt-1">2 earning partners</p>
+                    <p className="text-lg sm:text-xl font-bold font-mono text-wealth-positive">
+                      {combinedIncome > 0 ? `${formatAmount(combinedIncome)}/mo` : 'Add income'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {combinedIncome > 0 ? 'Monthly total' : 'Track your earnings'}
+                    </p>
                   </div>
                   <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
