@@ -85,7 +85,20 @@ interface CurrencyContextType {
 export const CurrencyContext = createContext<CurrencyContextType | null>(null);
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
-  const [displayCurrency, setDisplayCurrency] = useState<ExtendedCurrency>('AED');
+  const [displayCurrency, setDisplayCurrency] = useState<ExtendedCurrency>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('tharwa-display-currency');
+      if (saved && ['AED', 'USD', 'INR', 'PKR'].includes(saved)) {
+        return saved as ExtendedCurrency;
+      }
+    }
+    return 'AED';
+  });
+
+  // Persist currency selection
+  useEffect(() => {
+    localStorage.setItem('tharwa-display-currency', displayCurrency);
+  }, [displayCurrency]);
 
   const convert = (amount: number, from: ExtendedCurrency = 'AED') => {
     return convertExtended(amount, from, displayCurrency);
