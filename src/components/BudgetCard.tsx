@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Budget, Expense, EXPENSE_CATEGORIES, getCategoryColor } from '@/lib/expenseData';
-import { formatCurrency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,7 @@ interface BudgetCardProps {
 export function BudgetCard({ budgets, expenses, onAddBudget, onDeleteBudget }: BudgetCardProps) {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState('');
+  const { formatAmount } = useFormattedCurrency();
   const [limit, setLimit] = useState('');
   
   const currentMonth = new Date().getMonth();
@@ -125,7 +126,7 @@ export function BudgetCard({ budgets, expenses, onAddBudget, onDeleteBudget }: B
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-sm font-mono ${isOverBudget ? 'text-destructive' : ''}`}>
-                      {formatCurrency(spent)} / {formatCurrency(budget.limit)}
+                      {formatAmount(spent)} / {formatAmount(budget.limit)}
                     </span>
                     <button
                       onClick={() => onDeleteBudget(budget.id)}
@@ -146,8 +147,8 @@ export function BudgetCard({ budgets, expenses, onAddBudget, onDeleteBudget }: B
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {isOverBudget 
-                    ? `Over by ${formatCurrency(spent - budget.limit)}`
-                    : `${formatCurrency(budget.limit - spent)} remaining`
+                    ? `Over by ${formatAmount(spent - budget.limit)}`
+                    : `${formatAmount(budget.limit - spent)} remaining`
                   }
                 </p>
               </div>

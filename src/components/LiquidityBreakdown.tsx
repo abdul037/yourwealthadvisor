@@ -1,4 +1,5 @@
-import { Asset, LiquidityLevel, LIQUIDITY_LABELS, formatCurrency } from '@/lib/portfolioData';
+import { Asset, LiquidityLevel, LIQUIDITY_LABELS } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface LiquidityBreakdownProps {
   assets: Asset[];
@@ -12,6 +13,7 @@ const LIQUIDITY_COLORS: Record<LiquidityLevel, string> = {
 };
 
 export function LiquidityBreakdown({ assets }: LiquidityBreakdownProps) {
+  const { formatAmount } = useFormattedCurrency();
   const liquidityTotals = assets.reduce((acc, asset) => {
     acc[asset.liquidityLevel] = (acc[asset.liquidityLevel] || 0) + asset.aedValue;
     return acc;
@@ -55,7 +57,7 @@ export function LiquidityBreakdown({ assets }: LiquidityBreakdownProps) {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm font-mono font-medium">{formatCurrency(value)}</p>
+                <p className="text-sm font-mono font-medium">{formatAmount(value)}</p>
                 <p className="text-xs text-muted-foreground">{percentage}%</p>
               </div>
             </div>

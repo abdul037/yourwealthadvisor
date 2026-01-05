@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Debt, DEBT_TYPES, getDebtTypeInfo, calculatePayoffProjection, getMonthsToPayoff } from '@/lib/debtData';
-import { formatCurrency, Currency } from '@/lib/portfolioData';
+import { Currency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface DebtListProps {
   debts: Debt[];
@@ -28,6 +29,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 export function DebtList({ debts, onAddDebt, onDeleteDebt, onSelectDebt }: DebtListProps) {
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { formatAmount } = useFormattedCurrency();
   const [formData, setFormData] = useState({
     name: '',
     type: 'credit_card' as Debt['type'],
@@ -235,7 +237,7 @@ export function DebtList({ debts, onAddDebt, onDeleteDebt, onSelectDebt }: DebtL
                 
                 <div className="text-right">
                   <p className="font-mono font-bold text-destructive">
-                    {formatCurrency(debt.currentBalance, debt.currency)}
+                    {formatAmount(debt.currentBalance, debt.currency)}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {debt.interestRate}% APR
@@ -260,15 +262,15 @@ export function DebtList({ debts, onAddDebt, onDeleteDebt, onSelectDebt }: DebtL
                   <div className="grid grid-cols-3 gap-3 text-sm">
                     <div>
                       <p className="text-muted-foreground">Original</p>
-                      <p className="font-mono">{formatCurrency(debt.principal, debt.currency)}</p>
+                      <p className="font-mono">{formatAmount(debt.principal, debt.currency)}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Monthly</p>
-                      <p className="font-mono">{formatCurrency(debt.monthlyPayment, debt.currency)}</p>
+                      <p className="font-mono">{formatAmount(debt.monthlyPayment, debt.currency)}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Minimum</p>
-                      <p className="font-mono">{formatCurrency(debt.minimumPayment, debt.currency)}</p>
+                      <p className="font-mono">{formatAmount(debt.minimumPayment, debt.currency)}</p>
                     </div>
                   </div>
                   

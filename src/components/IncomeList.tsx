@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { IncomeSource, INCOME_TYPES } from '@/lib/incomeData';
-import { formatCurrency, Currency } from '@/lib/portfolioData';
+import { Currency } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import { EmptyState } from '@/components/EmptyState';
 
@@ -28,6 +29,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 export function IncomeList({ incomeSources, onAddIncome, onDeleteIncome }: IncomeListProps) {
   const [open, setOpen] = useState(false);
   const { markIncomeAdded } = useOnboardingProgress();
+  const { formatAmount } = useFormattedCurrency();
   const [formData, setFormData] = useState({
     partner: 'Partner 1' as 'Partner 1' | 'Partner 2' | 'Joint',
     type: 'salary' as 'salary' | 'bonus' | 'freelance' | 'investment' | 'rental' | 'other',
@@ -226,7 +228,7 @@ export function IncomeList({ incomeSources, onAddIncome, onDeleteIncome }: Incom
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-mono font-medium text-wealth-positive">
-                    +{formatCurrency(income.amount, income.currency)}
+                    +{formatAmount(income.amount, income.currency)}
                   </span>
                   <Button 
                     variant="ghost" 
