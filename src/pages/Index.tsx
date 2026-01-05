@@ -8,6 +8,7 @@ import { AllocationChart } from '@/components/AllocationChart';
 import { LiquidityBreakdown } from '@/components/LiquidityBreakdown';
 import { AssetList } from '@/components/AssetList';
 import { TransactionForm } from '@/components/TransactionForm';
+import { QuickTransactionInput } from '@/components/QuickTransactionInput';
 import { RecentTransactions } from '@/components/RecentTransactions';
 import { QuickStats } from '@/components/QuickStats';
 import { PortfolioAggregation } from '@/components/PortfolioAggregation';
@@ -157,8 +158,14 @@ const Index = () => {
           </div>
           <div className="lg:w-80 flex flex-col gap-4">
             <div className="wealth-card flex-1">
-              <p className="wealth-label mb-3">Quick Actions</p>
-              <div className="space-y-2" data-tour="add-transaction">
+              <p className="wealth-label mb-3">Quick Add</p>
+              <div className="space-y-3" data-tour="add-transaction">
+                <QuickTransactionInput />
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="flex-1 border-t border-border"></span>
+                  <span>or use full form</span>
+                  <span className="flex-1 border-t border-border"></span>
+                </div>
                 <TransactionForm onAddTransaction={handleAddTransaction} />
               </div>
               
