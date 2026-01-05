@@ -107,6 +107,16 @@ export default function Welcome() {
         </div>
       </section>
 
+      {/* Social Proof Section */}
+      <section className="py-12 bg-muted/30">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-lg mx-auto">
+            <p className="text-3xl font-bold text-primary">1,000+</p>
+            <p className="text-muted-foreground">Families tracking their wealth with Tharwa Net</p>
+          </div>
+        </div>
+      </section>
+
       {/* Benefits Section */}
       <section className="container mx-auto px-4 py-16">
         <div className="max-w-2xl mx-auto">

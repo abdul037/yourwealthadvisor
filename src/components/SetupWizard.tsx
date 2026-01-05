@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   User, Upload, FileSpreadsheet, CheckCircle2, 
-  ArrowRight, ArrowLeft, DollarSign, Users, Wallet
+  ArrowRight, ArrowLeft, Users, Wallet, LayoutDashboard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -93,6 +93,17 @@ export function SetupWizard({ open, onOpenChange }: SetupWizardProps) {
               <p className="text-muted-foreground">
                 Welcome to Tharwa Net! Let's personalize your wealth management experience.
               </p>
+              
+              {/* App Preview */}
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <div className="aspect-video rounded-md bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <div className="text-center space-y-2">
+                    <LayoutDashboard className="w-12 h-12 text-primary mx-auto" />
+                    <p className="text-sm text-muted-foreground">Your personalized dashboard awaits</p>
+                  </div>
+                </div>
+              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="fullName">What should we call you?</Label>
                 <Input

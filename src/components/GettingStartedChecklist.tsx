@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import { cn } from '@/lib/utils';
 
 interface ChecklistItem {
@@ -73,6 +74,7 @@ const STORAGE_KEY = 'tharwa-checklist-dismissed';
 
 export function GettingStartedChecklist() {
   const { profile, isAuthenticated } = useUserProfile();
+  const { progress: onboardingProgress } = useOnboardingProgress();
   const [dismissed, setDismissed] = useState(true); // Default true to prevent flash
 
   useEffect(() => {
@@ -83,15 +85,13 @@ export function GettingStartedChecklist() {
   if (!isAuthenticated || dismissed) {
     return null;
   }
-
-  const onboardingProgress = (profile as any)?.onboarding_progress as OnboardingProgress | null;
   
-  // Calculate completed items
+  // Calculate completed items using the reactive onboardingProgress hook
   const getItemCompleted = (item: ChecklistItem): boolean => {
     if (item.id === 'profile') {
       return !!profile?.full_name;
     }
-    return onboardingProgress?.[item.checkKey] ?? false;
+    return onboardingProgress[item.checkKey] ?? false;
   };
 
   const completedCount = CHECKLIST_ITEMS.filter(getItemCompleted).length;
