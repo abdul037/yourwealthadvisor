@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Trash2, Upload, Download, RefreshCw, Palette, Building2, Users, Droplets, FileSpreadsheet } from 'lucide-react';
+import { Plus, Trash2, Upload, Download, RefreshCw, Palette, Building2, Users, Droplets, FileSpreadsheet, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,8 @@ import { PartnerManagement } from '@/components/PartnerManagement';
 import { LiquiditySettings } from '@/components/LiquiditySettings';
 import { ComprehensiveBulkUpload } from '@/components/ComprehensiveBulkUpload';
 import { PageHeader } from '@/components/PageHeader';
+import { DemoDataSeeder } from '@/components/DemoDataSeeder';
+import { ClearDemoData } from '@/components/ClearDemoData';
 import { BankAccount, BankTransaction, DEMO_TRANSACTIONS } from '@/lib/mockBankingData';
 const AVAILABLE_ICONS = [
   'UtensilsCrossed', 'Car', 'Zap', 'Gamepad2', 'ShoppingBag', 'Heart', 'GraduationCap',
@@ -223,6 +225,11 @@ const AdminPortal = () => {
             </TabsTrigger>
             <TabsTrigger value="categories" className="text-xs sm:text-sm flex-shrink-0">Categories</TabsTrigger>
             <TabsTrigger value="import" className="text-xs sm:text-sm flex-shrink-0">Import</TabsTrigger>
+            <TabsTrigger value="data" className="gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0">
+              <Database className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Data</span>
+              <span className="sm:hidden">Data</span>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="partners" className="space-y-6">
@@ -447,6 +454,48 @@ const AdminPortal = () => {
           
           <TabsContent value="import" className="space-y-6">
             <ComprehensiveBulkUpload />
+          </TabsContent>
+          
+          <TabsContent value="data" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Load Demo Data */}
+              <div className="wealth-card">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                    <Database className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Demo Data</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Load sample data to explore all features
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  New to Tharwa Net? Load demo data to see how the app works with realistic income, expenses, budgets, assets, and savings goals.
+                </p>
+                <DemoDataSeeder />
+              </div>
+              
+              {/* Clear All Data */}
+              <div className="wealth-card border-destructive/20">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-destructive/20 flex items-center justify-center">
+                    <Trash2 className="w-5 h-5 text-destructive" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Clear All Data</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Remove all financial data and start fresh
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Ready to add your real finances? Clear all demo data and start tracking your actual income, expenses, and investments.
+                </p>
+                <ClearDemoData />
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
         
