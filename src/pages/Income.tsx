@@ -1,30 +1,81 @@
-import { useState } from 'react';
+import { useIncomes, IncomeSource as DBIncomeSource } from '@/hooks/useIncomes';
+import { useExpenses, Transaction } from '@/hooks/useTransactions';
 import { IncomeOverview } from '@/components/IncomeOverview';
 import { IncomeChart } from '@/components/IncomeChart';
 import { IncomeBreakdown } from '@/components/IncomeBreakdown';
 import { IncomeList } from '@/components/IncomeList';
 import { SavingsRate } from '@/components/SavingsRate';
 import { PageHeader } from '@/components/PageHeader';
-import { IncomeSource, sampleIncomeSources } from '@/lib/incomeData';
-import { sampleExpenses } from '@/lib/expenseData';
+import { DashboardSkeleton } from '@/components/DashboardSkeleton';
+import { EmptyState } from '@/components/EmptyState';
+import { IncomeSource } from '@/lib/incomeData';
+import { Expense } from '@/lib/expenseData';
+import { DollarSign } from 'lucide-react';
+
+// Adapter to convert DB income to component format
+const adaptIncome = (dbIncome: DBIncomeSource): IncomeSource => ({
+  id: dbIncome.id,
+  partner: (dbIncome.partner_id ? 'Partner 1' : 'Joint') as IncomeSource['partner'],
+  type: (dbIncome.source_type || 'other') as IncomeSource['type'],
+  description: dbIncome.source_name,
+  amount: dbIncome.amount,
+  currency: (dbIncome.currency || 'AED') as IncomeSource['currency'],
+  frequency: (dbIncome.frequency || 'monthly') as IncomeSource['frequency'],
+  date: dbIncome.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+});
+
+// Adapter to convert DB transaction to expense format
+const adaptExpense = (transaction: Transaction): Expense => ({
+  id: transaction.id,
+  category: transaction.category,
+  description: transaction.description || '',
+  amount: transaction.amount,
+  currency: (transaction.currency || 'AED') as Expense['currency'],
+  date: transaction.transaction_date,
+});
 
 const Income = () => {
-  const [incomeSources, setIncomeSources] = useState<IncomeSource[]>(sampleIncomeSources);
+  const { incomes, isLoading: incomesLoading, addIncome, deleteIncome } = useIncomes();
+  const { transactions: expenseTransactions, isLoading: expensesLoading } = useExpenses();
   
-  const handleAddIncome = (income: Omit<IncomeSource, 'id'>) => {
-    const newIncome: IncomeSource = {
-      ...income,
-      id: crypto.randomUUID(),
-    };
-    setIncomeSources(prev => [newIncome, ...prev]);
+  const isLoading = incomesLoading || expensesLoading;
+  
+  // Convert DB data to component format
+  const incomeSources: IncomeSource[] = incomes.map(adaptIncome);
+  const expenses: Expense[] = expenseTransactions.map(adaptExpense);
+  
+  const handleAddIncome = async (income: Omit<IncomeSource, 'id'>) => {
+    await addIncome.mutateAsync({
+      source_name: income.description,
+      source_type: income.type,
+      amount: income.amount,
+      currency: income.currency,
+      frequency: income.frequency,
+      partner_id: '00000000-0000-0000-0000-000000000000', // Placeholder - needs real partner
+    });
   };
   
-  const handleDeleteIncome = (id: string) => {
-    setIncomeSources(prev => prev.filter(i => i.id !== id));
+  const handleDeleteIncome = async (id: string) => {
+    await deleteIncome.mutateAsync(id);
   };
   
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
+          <PageHeader 
+            title="Income Tracking"
+            description="Monitor your income sources and track earnings over time"
+            breadcrumb={[{ label: 'Income', path: '/income' }]}
+          />
+          <DashboardSkeleton variant="full" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,21 +87,33 @@ const Income = () => {
           breadcrumb={[{ label: 'Income', path: '/income' }]}
         />
         
-        {/* Income Overview */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="lg:col-span-2">
-            <IncomeOverview incomeSources={incomeSources} />
-          </div>
-          <div>
-            <SavingsRate incomeSources={incomeSources} expenses={sampleExpenses} />
-          </div>
-        </div>
-        
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <IncomeChart incomeSources={incomeSources} />
-          <IncomeBreakdown incomeSources={incomeSources} month={currentMonth} year={currentYear} />
-        </div>
+        {incomeSources.length === 0 ? (
+          <EmptyState
+            icon={DollarSign}
+            title="No income sources yet"
+            description="Add your first income source to start tracking your earnings."
+            actionLabel="Add Income"
+            onAction={() => {/* Trigger add income dialog */}}
+          />
+        ) : (
+          <>
+            {/* Income Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+              <div className="lg:col-span-2">
+                <IncomeOverview incomeSources={incomeSources} />
+              </div>
+              <div>
+                <SavingsRate incomeSources={incomeSources} expenses={expenses} />
+              </div>
+            </div>
+            
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+              <IncomeChart incomeSources={incomeSources} />
+              <IncomeBreakdown incomeSources={incomeSources} month={currentMonth} year={currentYear} />
+            </div>
+          </>
+        )}
         
         {/* Income List */}
         <IncomeList 

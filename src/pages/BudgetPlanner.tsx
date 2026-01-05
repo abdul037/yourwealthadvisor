@@ -1,4 +1,7 @@
 import { useState, useCallback } from 'react';
+import { useExpenses, Transaction } from '@/hooks/useTransactions';
+import { useBudgets, Budget as DBBudget } from '@/hooks/useBudgets';
+import { useIncomes } from '@/hooks/useIncomes';
 import { BudgetAllocation } from '@/components/BudgetAllocation';
 import { BudgetTracker } from '@/components/BudgetTracker';
 import { NotificationCenter } from '@/components/NotificationCenter';
@@ -7,19 +10,44 @@ import { VacationPlanner } from '@/components/VacationPlanner';
 import { RecurringTransactionsDashboard } from '@/components/RecurringTransactionsDashboard';
 import { BillsCalendar } from '@/components/BillsCalendar';
 import { PageHeader } from '@/components/PageHeader';
+import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { useBudgetAlerts, BudgetAlert } from '@/hooks/useBudgetAlerts';
-import { Budget, Expense, sampleExpenses, sampleBudgets } from '@/lib/expenseData';
-import { sampleIncomeSources, getMonthlyIncomeData } from '@/lib/incomeData';
+import { Budget, Expense } from '@/lib/expenseData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+// Adapter to convert DB transaction to expense format
+const adaptExpense = (transaction: Transaction): Expense => ({
+  id: transaction.id,
+  category: transaction.category,
+  description: transaction.description || '',
+  amount: transaction.amount,
+  currency: (transaction.currency || 'AED') as Expense['currency'],
+  date: transaction.transaction_date,
+});
+
+// Adapter to convert DB budget to component format
+const adaptBudget = (dbBudget: DBBudget): Budget => ({
+  id: dbBudget.id,
+  category: dbBudget.category,
+  limit: dbBudget.allocated_amount,
+  currency: (dbBudget.currency || 'AED') as Budget['currency'],
+  period: (dbBudget.period || 'monthly') as Budget['period'],
+});
+
 const BudgetPlanner = () => {
-  const [budgets, setBudgets] = useState<Budget[]>(sampleBudgets);
-  const [expenses] = useState<Expense[]>(sampleExpenses);
+  const { transactions, isLoading: expensesLoading } = useExpenses();
+  const { budgets: dbBudgets, isLoading: budgetsLoading, addBudget, updateBudget } = useBudgets();
+  const { totalMonthlyIncome, isLoading: incomesLoading } = useIncomes();
   const [alerts, setAlerts] = useState<BudgetAlert[]>([]);
   
-  // Calculate monthly income
-  const monthlyIncomeData = getMonthlyIncomeData(sampleIncomeSources);
-  const currentMonthIncome = monthlyIncomeData[monthlyIncomeData.length - 1]?.total || 55000;
+  const isLoading = expensesLoading || budgetsLoading || incomesLoading;
+  
+  // Convert DB data to component format
+  const expenses: Expense[] = transactions.map(adaptExpense);
+  const budgets: Budget[] = dbBudgets.map(adaptBudget);
+  
+  // Use calculated monthly income or default
+  const currentMonthIncome = totalMonthlyIncome || 55000;
   
   // Handle new alerts
   const handleAlertTriggered = useCallback((alert: BudgetAlert) => {
@@ -37,16 +65,26 @@ const BudgetPlanner = () => {
     onAlertTriggered: handleAlertTriggered,
   });
   
-  const handleUpdateBudgets = (updatedBudgets: Budget[]) => {
-    setBudgets(updatedBudgets);
+  const handleUpdateBudgets = async (updatedBudgets: Budget[]) => {
+    // Update each modified budget
+    for (const budget of updatedBudgets) {
+      const original = budgets.find(b => b.id === budget.id);
+      if (original && original.limit !== budget.limit) {
+        await updateBudget.mutateAsync({
+          id: budget.id,
+          allocated_amount: budget.limit,
+        });
+      }
+    }
   };
   
-  const handleAddBudget = (budget: Omit<Budget, 'id'>) => {
-    const newBudget: Budget = {
-      ...budget,
-      id: crypto.randomUUID(),
-    };
-    setBudgets(prev => [...prev, newBudget]);
+  const handleAddBudget = async (budget: Omit<Budget, 'id'>) => {
+    await addBudget.mutateAsync({
+      category: budget.category,
+      allocated_amount: budget.limit,
+      currency: budget.currency,
+      period: budget.period,
+    });
   };
   
   const handleDismissAlert = (id: string) => {
@@ -56,6 +94,21 @@ const BudgetPlanner = () => {
   const handleDismissAllAlerts = () => {
     setAlerts([]);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
+          <PageHeader 
+            title="Budget Planner"
+            description="Allocate your income, track spending, manage recurring bills, and get alerts"
+            breadcrumb={[{ label: 'Budget', path: '/budget' }]}
+          />
+          <DashboardSkeleton variant="full" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
