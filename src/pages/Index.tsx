@@ -19,6 +19,7 @@ import { SetupWizard } from '@/components/SetupWizard';
 import { GettingStartedChecklist } from '@/components/GettingStartedChecklist';
 import { DashboardConnectedAccounts } from '@/components/DashboardConnectedAccounts';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
+import { NotificationWidget } from '@/components/SmartNotificationCenter';
 import { useAssets, Asset as DBAsset } from '@/hooks/useAssets';
 import { useTransactions, Transaction as DBTransaction } from '@/hooks/useTransactions';
 import { useIncomes } from '@/hooks/useIncomes';
@@ -139,9 +140,14 @@ const Index = () => {
           <WelcomeBanner />
         </div>
         
-        {/* Getting Started Checklist for new users */}
-        <div className="mb-6">
-          <GettingStartedChecklist />
+        {/* Getting Started Checklist & Notifications for new users */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <GettingStartedChecklist />
+          </div>
+          <div>
+            <NotificationWidget />
+          </div>
         </div>
         
         {/* Hero Section - Net Worth & Quick Actions */}
