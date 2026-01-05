@@ -1,15 +1,23 @@
 import { ArrowDownLeft, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { Transaction, formatCurrency } from '@/lib/portfolioData';
 import { format } from 'date-fns';
+import { Period, filterByPeriod, getPeriodLabel } from '@/lib/periodUtils';
+import { useMemo } from 'react';
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
+  period?: Period;
 }
 
-export function RecentTransactions({ transactions }: RecentTransactionsProps) {
-  const sortedTransactions = [...transactions]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+export function RecentTransactions({ transactions, period = 'ALL' }: RecentTransactionsProps) {
+  const filteredTransactions = useMemo(() => {
+    const filtered = period === 'ALL' ? transactions : filterByPeriod(transactions, period);
+    return [...filtered]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  }, [transactions, period]);
+  
+  const periodLabel = getPeriodLabel(period);
   
   const getIcon = (type: Transaction['type']) => {
     switch (type) {
@@ -30,18 +38,23 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
   return (
     <div className="wealth-card">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Recent Transactions</h3>
+        <div>
+          <h3 className="text-lg font-semibold">Recent Transactions</h3>
+          {period !== 'ALL' && (
+            <p className="text-xs text-muted-foreground">{periodLabel}</p>
+          )}
+        </div>
         <button className="text-xs text-primary hover:underline">View all</button>
       </div>
       
-      {transactions.length === 0 ? (
+      {filteredTransactions.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          <p className="text-sm">No transactions yet</p>
+          <p className="text-sm">No transactions {period !== 'ALL' ? periodLabel : 'yet'}</p>
           <p className="text-xs mt-1">Add your first transaction above</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {sortedTransactions.map((transaction) => (
+          {filteredTransactions.map((transaction) => (
             <div 
               key={transaction.id}
               className="flex items-center gap-3 p-3 rounded-lg bg-muted/30"

@@ -3,13 +3,18 @@ import { Asset } from '@/lib/portfolioData';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
+import { Period, getPeriodComparisonLabel, getSimulatedChange } from '@/lib/periodUtils';
+import { DashboardPeriodSelector } from '@/components/DashboardPeriodSelector';
+import { useMemo } from 'react';
 
 interface NetWorthCardProps {
   assets: Asset[];
+  period: Period;
+  onPeriodChange: (period: Period) => void;
 }
 
-export function NetWorthCard({ assets }: NetWorthCardProps) {
-  const { formatAmount, displayCurrency, symbol } = useFormattedCurrency();
+export function NetWorthCard({ assets, period, onPeriodChange }: NetWorthCardProps) {
+  const { formatAmount } = useFormattedCurrency();
   
   const totalWealth = assets.reduce((sum, asset) => sum + asset.aedValue, 0);
   
@@ -19,9 +24,10 @@ export function NetWorthCard({ assets }: NetWorthCardProps) {
   
   const investedAmount = totalWealth - cashAmount;
   
-  // Simulated change for demo
-  const changePercent = 2.4;
+  // Simulated change based on period
+  const changePercent = useMemo(() => getSimulatedChange(period), [period]);
   const isPositive = changePercent > 0;
+  const comparisonLabel = getPeriodComparisonLabel(period);
   
   return (
     <div className="wealth-card relative overflow-hidden">
@@ -29,19 +35,24 @@ export function NetWorthCard({ assets }: NetWorthCardProps) {
       <div className="absolute -top-20 -right-20 w-60 h-60 bg-primary/10 rounded-full blur-3xl" />
       
       <div className="relative">
+        <div className="flex items-center justify-between mb-2">
+          <p className="wealth-label">Total Net Worth</p>
+          <DashboardPeriodSelector value={period} onChange={onPeriodChange} />
+        </div>
+        
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <p className="wealth-label mb-1">Total Net Worth</p>
-            <div className="flex items-center gap-3">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-mono tracking-tight">
-                {formatAmount(totalWealth)}
-              </h2>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-mono tracking-tight">
+              {formatAmount(totalWealth)}
+            </h2>
+            <div className="flex items-center gap-2">
               <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
                 isPositive ? 'bg-wealth-positive/20 text-wealth-positive' : 'bg-wealth-negative/20 text-wealth-negative'
               }`}>
                 {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                {Math.abs(changePercent)}%
+                {Math.abs(changePercent).toFixed(1)}%
               </div>
+              <span className="text-xs text-muted-foreground hidden sm:inline">{comparisonLabel}</span>
             </div>
           </div>
           

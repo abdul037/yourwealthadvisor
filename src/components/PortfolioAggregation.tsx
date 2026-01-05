@@ -1,12 +1,14 @@
 import { TrendingUp, TrendingDown, Building2, Coins, BarChart3, Zap, RefreshCw, ExternalLink } from 'lucide-react';
 import { BankAccount, DEMO_INVESTMENT_ACCOUNTS, DEMO_CRYPTO_ACCOUNTS, DEMO_UTILITY_ACCOUNTS } from '@/lib/mockBankingData';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
+import { Period, getPeriodLabel, getSimulatedChange } from '@/lib/periodUtils';
 
 interface PortfolioAggregationProps {
   connectedAccounts?: BankAccount[];
+  period?: Period;
 }
 
 interface PlatformSummary {
@@ -18,9 +20,13 @@ interface PlatformSummary {
   change?: number;
 }
 
-export function PortfolioAggregation({ connectedAccounts = [] }: PortfolioAggregationProps) {
+export function PortfolioAggregation({ connectedAccounts = [], period = '1W' }: PortfolioAggregationProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { formatAmount } = useFormattedCurrency();
+  
+  // Get period-based change
+  const periodChange = useMemo(() => getSimulatedChange(period, 5.2), [period]);
+  const periodLabel = getPeriodLabel(period);
   
   // Combine demo accounts with any connected accounts for display
   const allInvestmentAccounts = [...DEMO_INVESTMENT_ACCOUNTS, ...connectedAccounts.filter(a => a.accountType === 'investment')];
@@ -93,12 +99,12 @@ export function PortfolioAggregation({ connectedAccounts = [] }: PortfolioAggreg
             </Button>
           </div>
           
-          <div className="flex items-end gap-4">
+          <div className="flex items-end gap-4 flex-wrap">
             <p className="text-3xl sm:text-4xl font-bold font-mono">{formatAmount(totalPortfolioValue)}</p>
-            <div className="flex items-center gap-1 text-wealth-positive mb-1">
-              <TrendingUp className="w-4 h-4" />
-              <span className="text-sm font-medium">+5.2%</span>
-              <span className="text-xs text-muted-foreground">this month</span>
+            <div className={`flex items-center gap-1 mb-1 ${periodChange >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
+              {periodChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+              <span className="text-sm font-medium">{periodChange >= 0 ? '+' : ''}{periodChange.toFixed(1)}%</span>
+              <span className="text-xs text-muted-foreground">{periodLabel}</span>
             </div>
           </div>
         </div>
