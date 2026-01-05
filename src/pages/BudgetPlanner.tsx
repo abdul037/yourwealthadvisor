@@ -46,8 +46,8 @@ const BudgetPlanner = () => {
   const expenses: Expense[] = transactions.map(adaptExpense);
   const budgets: Budget[] = dbBudgets.map(adaptBudget);
   
-  // Use calculated monthly income or default
-  const currentMonthIncome = totalMonthlyIncome || 55000;
+  // Use calculated monthly income (no fallback to mock data)
+  const currentMonthIncome = totalMonthlyIncome || 0;
   
   // Handle new alerts
   const handleAlertTriggered = useCallback((alert: BudgetAlert) => {

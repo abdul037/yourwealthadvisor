@@ -5,10 +5,11 @@ import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, ReferenceLine } fro
 import { TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { sampleIncomeSources } from '@/lib/incomeData';
-import { sampleBudgets } from '@/lib/expenseData';
-import { sampleDebts } from '@/lib/debtData';
+import { useIncomes } from '@/hooks/useIncomes';
+import { useBudgets } from '@/hooks/useBudgets';
+import { useDebts } from '@/hooks/useDebts';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ForecastMonth {
   month: string;
@@ -19,10 +20,13 @@ interface ForecastMonth {
   cumulativeLiquidity: number;
 }
 
-const INR_TO_AED = 0.044;
-
 export const CashFlowForecast = () => {
-  const { formatAmount, displayCurrency, symbol } = useFormattedCurrency();
+  const { formatAmount } = useFormattedCurrency();
+  const { totalMonthlyIncome, isLoading: incomesLoading } = useIncomes();
+  const { budgets, isLoading: budgetsLoading } = useBudgets();
+  const { debts, isLoading: debtsLoading } = useDebts();
+
+  const isLoading = incomesLoading || budgetsLoading || debtsLoading;
 
   const forecastData = useMemo(() => {
     const months: ForecastMonth[] = [];
@@ -30,28 +34,21 @@ export const CashFlowForecast = () => {
     const currentDate = new Date();
     let cumulativeLiquidity = 0;
 
-    const monthlyIncome = sampleIncomeSources.reduce((total, source) => {
-      let amount = source.amount;
-      if (source.currency === 'INR') {
-        amount *= INR_TO_AED;
-      }
-      
-      if (source.frequency === 'annual') {
-        amount /= 12;
-      } else if (source.frequency === 'quarterly') {
-        amount /= 3;
-      }
-      
-      return total + amount;
+    // Use real data from hooks
+    const monthlyIncome = totalMonthlyIncome || 0;
+
+    const monthlyExpenses = budgets.reduce((total, budget) => {
+      return total + budget.allocated_amount;
     }, 0);
 
-    const monthlyExpenses = sampleBudgets.reduce((total, budget) => {
-      return total + budget.limit;
+    const monthlyDebtPayments = debts.reduce((total, debt) => {
+      return total + (debt.minimum_payment || 0);
     }, 0);
 
-    const monthlyDebtPayments = sampleDebts.reduce((total, debt) => {
-      return total + debt.minimumPayment;
-    }, 0);
+    // Only generate forecast if we have data
+    if (monthlyIncome === 0 && monthlyExpenses === 0 && monthlyDebtPayments === 0) {
+      return [];
+    }
 
     for (let i = 0; i < 12; i++) {
       const forecastDate = new Date(currentDate);
@@ -78,7 +75,7 @@ export const CashFlowForecast = () => {
     }
 
     return months;
-  }, []);
+  }, [totalMonthlyIncome, budgets, debts]);
 
   const chartConfig = {
     income: { label: 'Income', color: 'hsl(var(--wealth-positive))' },
@@ -86,6 +83,43 @@ export const CashFlowForecast = () => {
     netCashFlow: { label: 'Net Cash Flow', color: 'hsl(var(--primary))' },
     cumulativeLiquidity: { label: 'Cumulative', color: 'hsl(var(--accent))' },
   };
+
+  if (isLoading) {
+    return (
+      <Card className="wealth-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-semibold">12-Month Cash Flow Forecast</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (forecastData.length === 0) {
+    return (
+      <Card className="wealth-card">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-semibold">12-Month Cash Flow Forecast</CardTitle>
+            <Link to="/income">
+              <Button variant="outline" size="sm" className="gap-1">
+                Add Data <ExternalLink className="w-3 h-3" />
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-12 text-muted-foreground">
+            <TrendingUp className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p className="font-medium">No Data Available</p>
+            <p className="text-sm">Add income sources and budgets to see your cash flow forecast</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const totalNetCashFlow = forecastData.reduce((sum, m) => sum + m.netCashFlow, 0);
   const avgMonthlyCashFlow = Math.round(totalNetCashFlow / 12);
