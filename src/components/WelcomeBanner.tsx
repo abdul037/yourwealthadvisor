@@ -37,7 +37,7 @@ export function WelcomeBanner() {
               <Sparkles className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold">Welcome to WealthTrack!</h2>
+              <h2 className="text-lg sm:text-xl font-bold">Welcome to Tharwa Net!</h2>
               <p className="text-sm text-muted-foreground">
                 Sign in to track your finances and manage your wealth
               </p>
@@ -68,7 +68,7 @@ export function WelcomeBanner() {
                 {greeting}, {displayName || 'there'}! 🎉
               </h2>
               <p className="text-sm text-muted-foreground">
-                Welcome to WealthTrack! Let's set up your financial dashboard.
+                Welcome to Tharwa Net! Let's set up your wealth dashboard.
               </p>
             </div>
           </div>

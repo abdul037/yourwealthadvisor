@@ -16,8 +16,8 @@ const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
     target: '[data-tour="welcome"]',
-    title: 'Welcome to WealthTrack!',
-    description: 'This is your personalized financial dashboard. Let\'s take a quick tour!',
+    title: 'Welcome to Tharwa Net!',
+    description: 'This is your personalized wealth dashboard. Let\'s take a quick tour to get you started!',
     position: 'bottom',
   },
   {
