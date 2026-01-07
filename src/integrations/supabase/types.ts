@@ -344,6 +344,45 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_payers: {
+        Row: {
+          amount: number
+          created_at: string | null
+          expense_id: string
+          id: string
+          member_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          expense_id: string
+          id?: string
+          member_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          expense_id?: string
+          id?: string
+          member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_payers_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expense_group_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_payers_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "expense_group_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expense_settlements: {
         Row: {
           amount: number

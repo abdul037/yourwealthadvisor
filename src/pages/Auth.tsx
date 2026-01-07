@@ -74,12 +74,15 @@ const Auth = () => {
       return; // Don't set up redirect logic if in recovery mode
     }
 
+    // Get redirect param for post-login navigation
+    const redirectPath = searchParams.get('redirect');
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setIsRecoveryMode(true);
       } else if (event === 'SIGNED_IN' && session?.user && !isRecoveryMode) {
-        // Only redirect if not in recovery mode
-        navigate('/');
+        // Redirect to intended path or home
+        navigate(redirectPath || '/');
       }
     });
 
@@ -134,10 +137,16 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
+      // Preserve redirect param for OAuth
+      const redirectPath = searchParams.get('redirect');
+      const finalRedirect = redirectPath 
+        ? `${window.location.origin}${redirectPath}` 
+        : `${window.location.origin}/`;
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: finalRedirect,
         },
       });
 

@@ -37,6 +37,14 @@ export interface ExpenseGroupExpense {
   updated_at: string;
 }
 
+export interface ExpensePayer {
+  id: string;
+  expense_id: string;
+  member_id: string;
+  amount: number;
+  created_at: string;
+}
+
 export interface ExpenseSplit {
   id: string;
   expense_id: string;
@@ -73,12 +81,9 @@ export interface SettlementSuggestion {
   amount: number;
 }
 
-export interface MemberBalance {
+export interface PayerEntry {
   memberId: string;
-  memberName: string;
-  paid: number;
-  owes: number;
-  balance: number; // positive = gets money back, negative = owes money
+  amount: number;
 }
 
 export function useExpenseGroups() {
@@ -228,6 +233,22 @@ export function useExpenseGroup(groupId: string | undefined) {
     enabled: !!groupId && expenses.length > 0,
   });
 
+  const { data: payers = [] } = useQuery({
+    queryKey: ['expense-payers', groupId],
+    queryFn: async () => {
+      if (!groupId || expenses.length === 0) return [];
+      const expenseIds = expenses.map(e => e.id);
+      const { data, error } = await supabase
+        .from('expense_payers')
+        .select('*')
+        .in('expense_id', expenseIds);
+      
+      if (error) throw error;
+      return data as ExpensePayer[];
+    },
+    enabled: !!groupId && expenses.length > 0,
+  });
+
   const { data: settlements = [] } = useQuery({
     queryKey: ['expense-settlements', groupId],
     queryFn: async () => {
@@ -244,11 +265,23 @@ export function useExpenseGroup(groupId: string | undefined) {
     enabled: !!groupId,
   });
 
-  // Calculate balances
+  // Calculate balances - now supporting multi-payer
   const balances: MemberBalance[] = members.map(member => {
-    const paid = expenses
-      .filter(e => e.paid_by_member_id === member.id)
-      .reduce((sum, e) => sum + Number(e.amount), 0);
+    // Calculate what this member paid (sum from expense_payers, fallback to paid_by_member_id)
+    let paid = 0;
+    expenses.forEach(expense => {
+      const expensePayers = payers.filter(p => p.expense_id === expense.id);
+      if (expensePayers.length > 0) {
+        // Multi-payer: sum what this member contributed
+        const memberPayment = expensePayers.find(p => p.member_id === member.id);
+        paid += memberPayment ? Number(memberPayment.amount) : 0;
+      } else {
+        // Single payer fallback
+        if (expense.paid_by_member_id === member.id) {
+          paid += Number(expense.amount);
+        }
+      }
+    });
     
     const owes = splits
       .filter(s => s.member_id === member.id)
@@ -332,17 +365,23 @@ export function useExpenseGroup(groupId: string | undefined) {
     mutationFn: async ({ 
       description, 
       amount, 
-      paidByMemberId, 
+      paidByMemberId,
+      payers: expensePayers,
       splitType,
       customSplits 
     }: { 
       description: string; 
       amount: number; 
-      paidByMemberId: string;
+      paidByMemberId?: string; // Single payer (legacy)
+      payers?: PayerEntry[]; // Multi-payer support
       splitType: 'equal' | 'percentage' | 'custom';
       customSplits?: { memberId: string; amount?: number; percentage?: number }[];
     }) => {
       if (!groupId) throw new Error('No group ID');
+
+      // Determine primary payer for the expense record
+      const primaryPayerId = paidByMemberId || (expensePayers && expensePayers.length > 0 ? expensePayers[0].memberId : null);
+      if (!primaryPayerId) throw new Error('At least one payer is required');
 
       // Create expense
       const { data: expense, error: expenseError } = await supabase
@@ -351,13 +390,30 @@ export function useExpenseGroup(groupId: string | undefined) {
           group_id: groupId, 
           description, 
           amount, 
-          paid_by_member_id: paidByMemberId,
+          paid_by_member_id: primaryPayerId,
           split_type: splitType 
         })
         .select()
         .single();
       
       if (expenseError) throw expenseError;
+
+      // If multi-payer, insert into expense_payers table
+      if (expensePayers && expensePayers.length > 0) {
+        const payersToInsert = expensePayers.map(p => ({
+          expense_id: expense.id,
+          member_id: p.memberId,
+          amount: p.amount,
+        }));
+
+        const { error: payerError } = await supabase
+          .from('expense_payers')
+          .insert(payersToInsert);
+        
+        if (payerError) {
+          console.error('Failed to insert payers:', payerError);
+        }
+      }
 
       // Create splits
       let splitsToInsert: { expense_id: string; member_id: string; amount: number; percentage?: number }[] = [];
@@ -391,6 +447,7 @@ export function useExpenseGroup(groupId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expense-group-expenses', groupId] });
       queryClient.invalidateQueries({ queryKey: ['expense-splits', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-payers', groupId] });
       toast({ title: 'Expense added' });
     },
   });
@@ -450,11 +507,17 @@ export function useExpenseGroup(groupId: string | undefined) {
     },
   });
 
+  // Get payers for a specific expense
+  const getExpensePayers = (expenseId: string): ExpensePayer[] => {
+    return payers.filter(p => p.expense_id === expenseId);
+  };
+
   return {
     group,
     members,
     expenses,
     splits,
+    payers,
     settlements,
     balances,
     settlementSuggestions,
@@ -462,5 +525,6 @@ export function useExpenseGroup(groupId: string | undefined) {
     addMember,
     addExpense,
     settleUp,
+    getExpensePayers,
   };
 }
