@@ -817,7 +817,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_expense_group_creator: {
+        Args: { p_group_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_expense_group_member: {
+        Args: { p_group_id: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       liquidity_level: "L1" | "L2" | "L3" | "NL"
