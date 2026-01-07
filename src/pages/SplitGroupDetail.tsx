@@ -1002,25 +1002,49 @@ export default function SplitGroupDetail() {
               <div className="grid gap-3">
                 {balances.map((balance) => (
                   <Card key={balance.memberId}>
-                    <CardContent className="py-4 flex items-center justify-between">
+                    <CardContent className="py-4 space-y-3">
+                      {/* Member Header */}
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarFallback>{balance.memberName.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div>
-                          <p className="font-medium">{balance.memberName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Paid: {group.currency} {balance.paid.toLocaleString()} · 
-                            Share: {group.currency} {balance.owes.toLocaleString()}
-                          </p>
+                        <p className="font-medium">{balance.memberName}</p>
+                      </div>
+                      
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="p-2 rounded-md bg-muted/50">
+                          <p className="text-muted-foreground text-xs">Total Paid</p>
+                          <p className="font-medium">{group.currency} {balance.paid.toLocaleString()}</p>
+                        </div>
+                        <div className="p-2 rounded-md bg-muted/50">
+                          <p className="text-muted-foreground text-xs">Your Share</p>
+                          <p className="font-medium">{group.currency} {balance.owes.toLocaleString()}</p>
+                        </div>
+                        <div className="p-2 rounded-md bg-muted/50">
+                          <p className="text-muted-foreground text-xs">Settled (Paid)</p>
+                          <p className="font-medium">{group.currency} {balance.settledPaid.toLocaleString()}</p>
+                        </div>
+                        <div className="p-2 rounded-md bg-muted/50">
+                          <p className="text-muted-foreground text-xs">Settled (Received)</p>
+                          <p className="font-medium">{group.currency} {balance.settledReceived.toLocaleString()}</p>
                         </div>
                       </div>
+                      
+                      {/* Pending Balance */}
                       <div className={cn(
-                        "text-lg font-semibold",
-                        balance.balance > 0 && "text-green-500",
-                        balance.balance < 0 && "text-red-500"
+                        "p-3 rounded-md text-center font-semibold",
+                        balance.balance > 0.01 && "bg-green-500/10 text-green-600 dark:text-green-400",
+                        balance.balance < -0.01 && "bg-red-500/10 text-red-600 dark:text-red-400",
+                        Math.abs(balance.balance) <= 0.01 && "bg-muted text-muted-foreground"
                       )}>
-                        {balance.balance > 0 ? '+' : ''}{group.currency} {balance.balance.toLocaleString()}
+                        {Math.abs(balance.balance) <= 0.01 ? (
+                          <span>Settled Up ✓</span>
+                        ) : balance.balance > 0 ? (
+                          <span>To Receive: {group.currency} {balance.balance.toLocaleString()}</span>
+                        ) : (
+                          <span>To Pay: {group.currency} {Math.abs(balance.balance).toLocaleString()}</span>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

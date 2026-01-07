@@ -73,6 +73,8 @@ export interface MemberBalance {
   memberName: string;
   paid: number;
   owes: number;
+  settledPaid: number;
+  settledReceived: number;
   balance: number;
 }
 
@@ -297,6 +299,8 @@ export function useExpenseGroup(groupId: string | undefined) {
       memberName: member.name,
       paid,
       owes,
+      settledPaid,
+      settledReceived,
       balance: paid - owes - settledPaid + settledReceived,
     };
   });
