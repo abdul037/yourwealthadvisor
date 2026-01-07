@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, memberNames, currency } = await req.json();
+    const { text, memberNames, currency, currentUserName } = await req.json();
 
     if (!text || typeof text !== 'string') {
       return new Response(
@@ -28,20 +28,28 @@ serve(async (req) => {
     const systemPrompt = `You are a financial expense parser for group expense splitting. Parse user input into structured expense data.
 
 Available group members: ${memberNames?.join(', ') || 'Unknown'}
+Current user (the person typing): ${currentUserName || 'Unknown'}
 Group currency: ${currency || 'USD'}
 
+CRITICAL RULES:
+- When user says "I paid", "I", "me", or "my", it refers to the current user: "${currentUserName}"
+- Match member names case-insensitively and fuzzy match (e.g., "abdul" matches "Abdul", "Muwahabdul")
+- If no payer is mentioned, set paid_by to null
+- Default split_type is "equal" unless user specifies otherwise
+
 Parse the input text and extract:
-1. description: What the expense is for (e.g., "Dinner", "Uber", "Groceries")
+1. description: What the expense is for (e.g., "Dinner", "Uber", "Groceries", "Mandi")
 2. amount: The numeric amount (just the number, no currency symbol)
-3. paid_by: The member name who paid (must match one of the available members, or null if not specified)
+3. paid_by: The member name who paid. Use "${currentUserName}" if user says "I paid" or "me". Must match one of the available members exactly, or null if not specified.
 4. split_type: How to split - "equal" (default), "percentage", or "custom"
 5. notes: Any additional context from the input
 
-Examples:
-- "Dinner 250 Ahmed paid" → description: "Dinner", amount: 250, paid_by: "Ahmed", split_type: "equal"
+Examples with current user "${currentUserName || 'Me'}":
+- "Dinner 250 I paid" → description: "Dinner", amount: 250, paid_by: "${currentUserName || 'Me'}", split_type: "equal"
+- "Mandi 200 I paid" → description: "Mandi", amount: 200, paid_by: "${currentUserName || 'Me'}", split_type: "equal"
 - "Uber 85" → description: "Uber", amount: 85, paid_by: null, split_type: "equal"
-- "Groceries 320 split with Sara only" → description: "Groceries", amount: 320, paid_by: null, split_type: "custom", notes: "split with Sara only"
-- "Netflix subscription 55" → description: "Netflix subscription", amount: 55, paid_by: null, split_type: "equal"`;
+- "Groceries 320 Abdul paid split equally" → description: "Groceries", amount: 320, paid_by: "Abdul", split_type: "equal"
+- "Netflix 55 me" → description: "Netflix", amount: 55, paid_by: "${currentUserName || 'Me'}", split_type: "equal"`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
