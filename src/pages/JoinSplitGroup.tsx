@@ -41,10 +41,18 @@ export default function JoinSplitGroup() {
     
     const fetchGroup = async () => {
       setLoading(true);
+      
+      // Extract actual invite code - support both formats:
+      // New: "group-name-abc123" -> extract "abc123"
+      // Old: "abc123" -> use as-is
+      const actualCode = inviteCode.includes('-') 
+        ? inviteCode.split('-').pop() 
+        : inviteCode;
+      
       const { data, error } = await supabase
         .from('expense_groups')
         .select('id, name, description')
-        .eq('invite_code', inviteCode)
+        .eq('invite_code', actualCode)
         .maybeSingle();
       
       if (error || !data) {
