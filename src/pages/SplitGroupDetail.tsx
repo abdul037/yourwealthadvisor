@@ -768,10 +768,8 @@ export default function SplitGroupDetail() {
           </Card>
           <Card>
             <CardContent className="pt-4">
-              <div className="text-2xl font-bold">
-                {group.currency} {members.length > 0 ? Math.round(totalExpenses / members.length).toLocaleString() : 0}
-              </div>
-              <p className="text-sm text-muted-foreground">Per Person</p>
+              <div className="text-2xl font-bold">{settlements.length}</div>
+              <p className="text-sm text-muted-foreground">Settlements</p>
             </CardContent>
           </Card>
         </div>
@@ -937,6 +935,14 @@ export default function SplitGroupDetail() {
           <TabsList>
             <TabsTrigger value="balances">Balances</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
+            <TabsTrigger value="settlements" className="gap-1.5">
+              Settlements
+              {settlements.length > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                  {settlements.length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
           </TabsList>
 
@@ -1027,69 +1033,6 @@ export default function SplitGroupDetail() {
               </Card>
             )}
 
-            {/* Settlement History */}
-            {settlements.length > 0 && (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Settlement History
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {settlements.map((settlement) => {
-                    const fromMember = members.find(m => m.id === settlement.from_member_id);
-                    const toMember = members.find(m => m.id === settlement.to_member_id);
-                    return (
-                      <div 
-                        key={settlement.id} 
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                      >
-                        <div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="font-medium">{fromMember?.name || 'Unknown'}</span>
-                            <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
-                            <span className="font-medium">{toMember?.name || 'Unknown'}</span>
-                            <span className="text-green-600 font-semibold">
-                              {group.currency} {Number(settlement.amount).toFixed(2)}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {format(new Date(settlement.settled_at), 'MMM d, yyyy h:mm a')}
-                          </p>
-                        </div>
-                        {isGroupAdmin && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete settlement?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will remove this settlement record. The associated transaction will also be deleted.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => deleteSettlement.mutate(settlement.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
 
           <TabsContent value="expenses" className="space-y-4">
@@ -1243,6 +1186,104 @@ export default function SplitGroupDetail() {
                   );
                 })}
               </div>
+            )}
+          </TabsContent>
+
+          {/* Settlements Tab */}
+          <TabsContent value="settlements" className="space-y-4">
+            {settlements.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="py-8 text-center">
+                  <ArrowRightLeft className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground mb-4">No settlements recorded yet</p>
+                  {settlementSuggestions.length > 0 && (
+                    <Button onClick={() => setIsSettleOpen(true)} className="gap-2">
+                      <ArrowRightLeft className="h-4 w-4" />
+                      Record First Settlement
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  {settlements.map((s) => {
+                    const fromMember = members.find(m => m.id === s.from_member_id);
+                    const toMember = members.find(m => m.id === s.to_member_id);
+                    const displayDate = s.settlement_date || s.settled_at.split('T')[0];
+                    return (
+                      <Card key={s.id}>
+                        <CardContent className="py-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                                <ArrowRightLeft className="h-5 w-5 text-green-600" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{fromMember?.name || 'Unknown'}</span>
+                                  <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                                  <span className="font-medium">{toMember?.name || 'Unknown'}</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {format(new Date(displayDate), 'MMMM d, yyyy')}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Recorded: {format(new Date(s.settled_at), 'MMM d, yyyy h:mm a')}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg font-semibold text-green-600">
+                                {group.currency} {Number(s.amount).toFixed(2)}
+                              </span>
+                              {isGroupAdmin && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete settlement?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This will remove this settlement record. The associated transaction will also be deleted.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => deleteSettlement.mutate(s.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* Total Settled Summary */}
+                <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                  <CardContent className="py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Check className="h-5 w-5 text-green-600" />
+                      <span className="font-medium">Total Settled</span>
+                    </div>
+                    <span className="text-xl font-bold text-green-600">
+                      {group.currency} {settlements.reduce((sum, s) => sum + Number(s.amount), 0).toFixed(2)}
+                    </span>
+                  </CardContent>
+                </Card>
+              </>
             )}
           </TabsContent>
 
