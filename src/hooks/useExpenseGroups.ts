@@ -33,6 +33,8 @@ export interface ExpenseGroupExpense {
   description: string;
   amount: number;
   split_type: 'equal' | 'percentage' | 'custom';
+  expense_date: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -70,7 +72,7 @@ export interface MemberBalance {
   memberName: string;
   paid: number;
   owes: number;
-  balance: number; // positive = gets money back, negative = owes money
+  balance: number;
 }
 
 export interface SettlementSuggestion {
@@ -107,14 +109,12 @@ export function useExpenseGroups() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Get user's profile for name
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name')
         .eq('id', user.id)
         .maybeSingle();
 
-      // Create the group
       const { data, error } = await supabase
         .from('expense_groups')
         .insert({ ...group, user_id: user.id })
@@ -123,7 +123,6 @@ export function useExpenseGroups() {
       
       if (error) throw error;
 
-      // Auto-add creator as first member
       const { error: memberError } = await supabase
         .from('expense_group_members')
         .insert({
@@ -209,7 +208,7 @@ export function useExpenseGroup(groupId: string | undefined) {
         .from('expense_group_expenses')
         .select('*')
         .eq('group_id', groupId)
-        .order('created_at', { ascending: false });
+        .order('expense_date', { ascending: false, nullsFirst: false });
       
       if (error) throw error;
       return data as ExpenseGroupExpense[];
@@ -265,18 +264,15 @@ export function useExpenseGroup(groupId: string | undefined) {
     enabled: !!groupId,
   });
 
-  // Calculate balances - now supporting multi-payer
+  // Calculate balances
   const balances: MemberBalance[] = members.map(member => {
-    // Calculate what this member paid (sum from expense_payers, fallback to paid_by_member_id)
     let paid = 0;
     expenses.forEach(expense => {
       const expensePayers = payers.filter(p => p.expense_id === expense.id);
       if (expensePayers.length > 0) {
-        // Multi-payer: sum what this member contributed
         const memberPayment = expensePayers.find(p => p.member_id === member.id);
         paid += memberPayment ? Number(memberPayment.amount) : 0;
       } else {
-        // Single payer fallback
         if (expense.paid_by_member_id === member.id) {
           paid += Number(expense.amount);
         }
@@ -287,7 +283,6 @@ export function useExpenseGroup(groupId: string | undefined) {
       .filter(s => s.member_id === member.id)
       .reduce((sum, s) => sum + Number(s.amount), 0);
     
-    // Factor in settlements
     const settledPaid = settlements
       .filter(s => s.from_member_id === member.id)
       .reduce((sum, s) => sum + Number(s.amount), 0);
@@ -305,14 +300,10 @@ export function useExpenseGroup(groupId: string | undefined) {
     };
   });
 
-  // Calculate smart settlement suggestions (minimize number of transactions)
+  // Calculate settlement suggestions
   const settlementSuggestions: SettlementSuggestion[] = (() => {
     const suggestions: SettlementSuggestion[] = [];
-    
-    // Create working copy of balances
     const workingBalances = balances.map(b => ({ ...b }));
-    
-    // Sort: debtors (negative balance) and creditors (positive balance)
     const debtors = workingBalances.filter(b => b.balance < -0.01).sort((a, b) => a.balance - b.balance);
     const creditors = workingBalances.filter(b => b.balance > 0.01).sort((a, b) => b.balance - a.balance);
     
@@ -320,7 +311,6 @@ export function useExpenseGroup(groupId: string | undefined) {
     while (i < debtors.length && j < creditors.length) {
       const debtor = debtors[i];
       const creditor = creditors[j];
-      
       const amount = Math.min(Math.abs(debtor.balance), creditor.balance);
       
       if (amount > 0.01) {
@@ -331,7 +321,6 @@ export function useExpenseGroup(groupId: string | undefined) {
           toMemberName: creditor.memberName,
           amount: Math.round(amount * 100) / 100,
         });
-        
         debtor.balance += amount;
         creditor.balance -= amount;
       }
@@ -354,17 +343,18 @@ export function useExpenseGroup(groupId: string | undefined) {
 
   const isGroupAdmin = group?.user_id === currentUser?.id;
 
+  // Get current user's member entry
+  const currentUserMember = members.find(m => m.user_id === currentUser?.id);
+
   const addMember = useMutation({
     mutationFn: async ({ name, email, userId }: { name: string; email?: string; userId?: string }) => {
       if (!groupId) throw new Error('No group ID');
       
-      // Check for duplicate member by name (case-insensitive)
       const existingByName = members.find(m => m.name.toLowerCase() === name.toLowerCase());
       if (existingByName) {
         throw new Error(`A member named "${name}" already exists`);
       }
       
-      // Check for duplicate by email if provided
       if (email) {
         const existingByEmail = members.find(m => m.email?.toLowerCase() === email.toLowerCase());
         if (existingByEmail) {
@@ -399,7 +389,6 @@ export function useExpenseGroup(groupId: string | undefined) {
       if (!member) throw new Error('Member not found');
       if (member.is_creator) throw new Error('Cannot remove the group creator');
       
-      // Check if member has any expenses as payer
       const memberExpenses = expenses.filter(e => e.paid_by_member_id === memberId);
       const memberPayers = payers.filter(p => p.member_id === memberId);
       
@@ -429,13 +418,9 @@ export function useExpenseGroup(groupId: string | undefined) {
       if (!groupId) throw new Error('No group ID');
       if (!isGroupAdmin) throw new Error('Only group admin can delete expenses');
       
-      // Delete payers first
       await supabase.from('expense_payers').delete().eq('expense_id', expenseId);
-      
-      // Delete splits
       await supabase.from('expense_splits').delete().eq('expense_id', expenseId);
       
-      // Delete expense
       const { error } = await supabase
         .from('expense_group_expenses')
         .delete()
@@ -461,22 +446,24 @@ export function useExpenseGroup(groupId: string | undefined) {
       paidByMemberId,
       payers: expensePayers,
       splitType,
-      customSplits 
+      customSplits,
+      expenseDate,
+      notes
     }: { 
       description: string; 
       amount: number; 
-      paidByMemberId?: string; // Single payer (legacy)
-      payers?: PayerEntry[]; // Multi-payer support
+      paidByMemberId?: string;
+      payers?: PayerEntry[];
       splitType: 'equal' | 'percentage' | 'custom';
       customSplits?: { memberId: string; amount?: number; percentage?: number }[];
+      expenseDate?: string;
+      notes?: string;
     }) => {
       if (!groupId) throw new Error('No group ID');
 
-      // Determine primary payer for the expense record
       const primaryPayerId = paidByMemberId || (expensePayers && expensePayers.length > 0 ? expensePayers[0].memberId : null);
       if (!primaryPayerId) throw new Error('At least one payer is required');
 
-      // Create expense
       const { data: expense, error: expenseError } = await supabase
         .from('expense_group_expenses')
         .insert({ 
@@ -484,14 +471,15 @@ export function useExpenseGroup(groupId: string | undefined) {
           description, 
           amount, 
           paid_by_member_id: primaryPayerId,
-          split_type: splitType 
+          split_type: splitType,
+          expense_date: expenseDate || new Date().toISOString().split('T')[0],
+          notes: notes || null,
         })
         .select()
         .single();
       
       if (expenseError) throw expenseError;
 
-      // If multi-payer, insert into expense_payers table
       if (expensePayers && expensePayers.length > 0) {
         const payersToInsert = expensePayers.map(p => ({
           expense_id: expense.id,
@@ -508,7 +496,6 @@ export function useExpenseGroup(groupId: string | undefined) {
         }
       }
 
-      // Create splits
       let splitsToInsert: { expense_id: string; member_id: string; amount: number; percentage?: number }[] = [];
       
       if (splitType === 'equal') {
@@ -545,6 +532,109 @@ export function useExpenseGroup(groupId: string | undefined) {
     },
   });
 
+  const updateExpense = useMutation({
+    mutationFn: async ({
+      expenseId,
+      description,
+      amount,
+      expenseDate,
+      notes,
+      payers: expensePayers,
+      splitType,
+      customSplits
+    }: {
+      expenseId: string;
+      description?: string;
+      amount?: number;
+      expenseDate?: string;
+      notes?: string;
+      payers?: PayerEntry[];
+      splitType?: 'equal' | 'percentage' | 'custom';
+      customSplits?: { memberId: string; amount?: number; percentage?: number }[];
+    }) => {
+      if (!groupId) throw new Error('No group ID');
+      if (!isGroupAdmin) throw new Error('Only group admin can edit expenses');
+
+      const expense = expenses.find(e => e.id === expenseId);
+      if (!expense) throw new Error('Expense not found');
+
+      const finalAmount = amount ?? expense.amount;
+      const finalSplitType = splitType ?? expense.split_type;
+
+      // Update expense record
+      const updateData: Record<string, unknown> = {};
+      if (description !== undefined) updateData.description = description;
+      if (amount !== undefined) updateData.amount = amount;
+      if (expenseDate !== undefined) updateData.expense_date = expenseDate;
+      if (notes !== undefined) updateData.notes = notes;
+      if (splitType !== undefined) updateData.split_type = splitType;
+
+      if (Object.keys(updateData).length > 0) {
+        const { error } = await supabase
+          .from('expense_group_expenses')
+          .update(updateData)
+          .eq('id', expenseId);
+        if (error) throw error;
+      }
+
+      // Update payers if provided
+      if (expensePayers !== undefined) {
+        await supabase.from('expense_payers').delete().eq('expense_id', expenseId);
+        
+        if (expensePayers.length > 0) {
+          const primaryPayerId = expensePayers[0].memberId;
+          await supabase
+            .from('expense_group_expenses')
+            .update({ paid_by_member_id: primaryPayerId })
+            .eq('id', expenseId);
+
+          const payersToInsert = expensePayers.map(p => ({
+            expense_id: expenseId,
+            member_id: p.memberId,
+            amount: p.amount,
+          }));
+          await supabase.from('expense_payers').insert(payersToInsert);
+        }
+      }
+
+      // Update splits if amount or split type changed
+      if (amount !== undefined || splitType !== undefined || customSplits !== undefined) {
+        await supabase.from('expense_splits').delete().eq('expense_id', expenseId);
+
+        let splitsToInsert: { expense_id: string; member_id: string; amount: number; percentage?: number }[] = [];
+
+        if (finalSplitType === 'equal') {
+          const splitAmount = finalAmount / members.length;
+          splitsToInsert = members.map(m => ({
+            expense_id: expenseId,
+            member_id: m.id,
+            amount: splitAmount,
+          }));
+        } else if (customSplits) {
+          splitsToInsert = customSplits.map(s => ({
+            expense_id: expenseId,
+            member_id: s.memberId,
+            amount: s.amount ?? (s.percentage ? (finalAmount * s.percentage / 100) : 0),
+            percentage: s.percentage,
+          }));
+        }
+
+        if (splitsToInsert.length > 0) {
+          await supabase.from('expense_splits').insert(splitsToInsert);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-group-expenses', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-splits', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-payers', groupId] });
+      toast({ title: 'Expense updated' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
   const settleUp = useMutation({
     mutationFn: async ({ fromMemberId, toMemberId, amount }: { fromMemberId: string; toMemberId: string; amount: number }) => {
       if (!groupId || !group) throw new Error('No group ID');
@@ -552,11 +642,9 @@ export function useExpenseGroup(groupId: string | undefined) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Get member names for transaction description
       const fromMember = members.find(m => m.id === fromMemberId);
       const toMember = members.find(m => m.id === toMemberId);
 
-      // Create transaction record for the settlement
       const { data: transaction, error: txError } = await supabase
         .from('transactions')
         .insert({
@@ -577,7 +665,6 @@ export function useExpenseGroup(groupId: string | undefined) {
         console.error('Failed to create transaction:', txError);
       }
 
-      // Create settlement record
       const { data, error } = await supabase
         .from('expense_settlements')
         .insert({ 
@@ -600,7 +687,141 @@ export function useExpenseGroup(groupId: string | undefined) {
     },
   });
 
-  // Get payers for a specific expense
+  const deleteSettlement = useMutation({
+    mutationFn: async (settlementId: string) => {
+      if (!groupId) throw new Error('No group ID');
+      if (!isGroupAdmin) throw new Error('Only group admin can delete settlements');
+
+      const settlement = settlements.find(s => s.id === settlementId);
+      if (!settlement) throw new Error('Settlement not found');
+
+      // Delete the linked transaction if exists
+      if (settlement.transaction_id) {
+        await supabase
+          .from('transactions')
+          .delete()
+          .eq('id', settlement.transaction_id);
+      }
+
+      const { error } = await supabase
+        .from('expense_settlements')
+        .delete()
+        .eq('id', settlementId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-settlements', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      toast({ title: 'Settlement deleted' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const updateGroup = useMutation({
+    mutationFn: async (data: { name?: string; description?: string; category?: string; currency?: string }) => {
+      if (!groupId) throw new Error('No group ID');
+      if (!isGroupAdmin) throw new Error('Only group admin can update group settings');
+
+      const { error } = await supabase
+        .from('expense_groups')
+        .update(data)
+        .eq('id', groupId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-group', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-groups'] });
+      toast({ title: 'Group updated' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const markGroupSettled = useMutation({
+    mutationFn: async () => {
+      if (!groupId) throw new Error('No group ID');
+      if (!isGroupAdmin) throw new Error('Only group admin can mark group as settled');
+
+      const hasOutstandingBalances = balances.some(b => Math.abs(b.balance) > 0.01);
+      if (hasOutstandingBalances) {
+        throw new Error('Cannot mark as settled while there are outstanding balances');
+      }
+
+      const { error } = await supabase
+        .from('expense_groups')
+        .update({ is_settled: true })
+        .eq('id', groupId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-group', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-groups'] });
+      toast({ title: 'Group marked as settled' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const leaveGroup = useMutation({
+    mutationFn: async () => {
+      if (!groupId) throw new Error('No group ID');
+      if (!currentUserMember) throw new Error('You are not a member of this group');
+      if (currentUserMember.is_creator) throw new Error('Group admin cannot leave. Delete the group instead.');
+
+      const userBalance = balances.find(b => b.memberId === currentUserMember.id);
+      if (userBalance && Math.abs(userBalance.balance) > 0.01) {
+        throw new Error('Cannot leave group with outstanding balance. Settle up first.');
+      }
+
+      const { error } = await supabase
+        .from('expense_group_members')
+        .delete()
+        .eq('id', currentUserMember.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-groups'] });
+      toast({ title: 'Left group successfully' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const sendInviteEmail = useMutation({
+    mutationFn: async ({ memberId }: { memberId: string }) => {
+      if (!groupId) throw new Error('No group ID');
+      
+      const member = members.find(m => m.id === memberId);
+      if (!member?.email) throw new Error('Member has no email');
+
+      const { data, error } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          groupId,
+          recipientEmail: member.email,
+          recipientName: member.name,
+        },
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: 'Invite email sent' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
   const getExpensePayers = (expenseId: string): ExpensePayer[] => {
     return payers.filter(p => p.expense_id === expenseId);
   };
@@ -616,11 +837,18 @@ export function useExpenseGroup(groupId: string | undefined) {
     settlementSuggestions,
     isLoading: groupLoading || membersLoading || expensesLoading,
     isGroupAdmin,
+    currentUserMember,
     addMember,
     removeMember,
     addExpense,
+    updateExpense,
     deleteExpense,
     settleUp,
+    deleteSettlement,
+    updateGroup,
+    markGroupSettled,
+    leaveGroup,
+    sendInviteEmail,
     getExpensePayers,
   };
 }

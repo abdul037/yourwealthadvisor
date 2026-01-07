@@ -3,15 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Users, Receipt, Share2, Copy, Check, 
   UserPlus, DollarSign, Percent, Equal, ArrowRightLeft, ChevronDown, ChevronUp, AlertCircle,
-  Mail, Send, Trash2, MoreVertical
+  Mail, Send, Trash2, MoreVertical, Settings, Edit2, LogOut, Calendar, Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AppLayout } from '@/components/AppLayout';
-import { useExpenseGroup, ExpenseSplit, PayerEntry } from '@/hooks/useExpenseGroups';
+import { useExpenseGroup, ExpenseSplit, PayerEntry, ExpenseGroupExpense } from '@/hooks/useExpenseGroups';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -41,21 +42,29 @@ export default function SplitGroupDetail() {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const { 
-    group, members, expenses, splits, payers, balances, settlementSuggestions,
-    isLoading, isGroupAdmin, addMember, removeMember, addExpense, deleteExpense, settleUp, getExpensePayers 
+    group, members, expenses, splits, payers, settlements, balances, settlementSuggestions,
+    isLoading, isGroupAdmin, currentUserMember,
+    addMember, removeMember, addExpense, updateExpense, deleteExpense, 
+    settleUp, deleteSettlement, updateGroup, markGroupSettled, leaveGroup, sendInviteEmail,
+    getExpensePayers 
   } = useExpenseGroup(groupId);
 
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [isEditExpenseOpen, setIsEditExpenseOpen] = useState(false);
   const [isSettleOpen, setIsSettleOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [expandedExpenses, setExpandedExpenses] = useState<Set<string>>(new Set());
+  const [editingExpense, setEditingExpense] = useState<ExpenseGroupExpense | null>(null);
 
   const [newMember, setNewMember] = useState({ name: '', email: '' });
   const [newExpense, setNewExpense] = useState({
     description: '',
     amount: '',
     splitType: 'equal' as 'equal' | 'percentage' | 'custom',
+    expenseDate: new Date().toISOString().split('T')[0],
+    notes: '',
   });
   const [payerEntries, setPayerEntries] = useState<PayerFormEntry[]>([]);
   const [customSplits, setCustomSplits] = useState<CustomSplitEntry[]>([]);
@@ -64,22 +73,62 @@ export default function SplitGroupDetail() {
     toMemberId: '',
     amount: '',
   });
+  const [groupSettings, setGroupSettings] = useState({
+    name: '',
+    description: '',
+    category: '',
+    currency: '',
+  });
 
   // Initialize payer entries when members change or dialog opens
   useEffect(() => {
-    if (isAddExpenseOpen && members.length > 0) {
-      setPayerEntries(members.map((m, i) => ({
-        memberId: m.id,
-        amount: '',
-        selected: i === 0, // Default first member as payer
-      })));
-      setCustomSplits(members.map(m => ({
-        memberId: m.id,
-        amount: '',
-        percentage: (100 / members.length).toFixed(2),
-      })));
+    if ((isAddExpenseOpen || isEditExpenseOpen) && members.length > 0) {
+      if (editingExpense) {
+        const expensePayers = getExpensePayers(editingExpense.id);
+        setPayerEntries(members.map(m => {
+          const payer = expensePayers.find(p => p.member_id === m.id);
+          return {
+            memberId: m.id,
+            amount: payer ? payer.amount.toString() : '',
+            selected: payer ? true : (expensePayers.length === 0 && m.id === editingExpense.paid_by_member_id),
+          };
+        }));
+        
+        const expenseSplits = splits.filter(s => s.expense_id === editingExpense.id);
+        setCustomSplits(members.map(m => {
+          const split = expenseSplits.find(s => s.member_id === m.id);
+          return {
+            memberId: m.id,
+            amount: split ? split.amount.toString() : '',
+            percentage: split?.percentage ? split.percentage.toString() : (100 / members.length).toFixed(2),
+          };
+        }));
+      } else {
+        setPayerEntries(members.map((m, i) => ({
+          memberId: m.id,
+          amount: '',
+          selected: i === 0,
+        })));
+        setCustomSplits(members.map(m => ({
+          memberId: m.id,
+          amount: '',
+          percentage: (100 / members.length).toFixed(2),
+        })));
+      }
     }
-  }, [isAddExpenseOpen, members]);
+  }, [isAddExpenseOpen, isEditExpenseOpen, members, editingExpense]);
+
+  // Initialize group settings when dialog opens
+  useEffect(() => {
+    if (isSettingsOpen && group) {
+      setGroupSettings({
+        name: group.name,
+        description: group.description || '',
+        category: group.category,
+        currency: group.currency,
+      });
+    }
+  }, [isSettingsOpen, group]);
 
   const handleCopyInvite = () => {
     if (!group) return;
@@ -157,13 +206,10 @@ export default function SplitGroupDetail() {
     const expenseAmount = parseFloat(newExpense.amount);
     const selectedPayers = payerEntries.filter(p => p.selected);
     
-    // Build payers array
     let payersData: PayerEntry[] | undefined;
     if (selectedPayers.length === 1) {
-      // Single payer - use full amount
       payersData = [{ memberId: selectedPayers[0].memberId, amount: expenseAmount }];
     } else {
-      // Multi-payer
       payersData = selectedPayers.map(p => ({
         memberId: p.memberId,
         amount: parseFloat(p.amount) || 0,
@@ -191,9 +237,72 @@ export default function SplitGroupDetail() {
       payers: payersData,
       splitType: newExpense.splitType,
       customSplits: splitData,
+      expenseDate: newExpense.expenseDate,
+      notes: newExpense.notes || undefined,
     });
     setIsAddExpenseOpen(false);
-    setNewExpense({ description: '', amount: '', splitType: 'equal' });
+    setNewExpense({ description: '', amount: '', splitType: 'equal', expenseDate: new Date().toISOString().split('T')[0], notes: '' });
+  };
+
+  const handleEditExpense = async () => {
+    if (!editingExpense || !newExpense.description.trim() || !newExpense.amount) return;
+    
+    if (!validatePayers()) return;
+    if (newExpense.splitType !== 'equal' && !validateSplits()) return;
+
+    const expenseAmount = parseFloat(newExpense.amount);
+    const selectedPayers = payerEntries.filter(p => p.selected);
+    
+    let payersData: PayerEntry[] | undefined;
+    if (selectedPayers.length === 1) {
+      payersData = [{ memberId: selectedPayers[0].memberId, amount: expenseAmount }];
+    } else {
+      payersData = selectedPayers.map(p => ({
+        memberId: p.memberId,
+        amount: parseFloat(p.amount) || 0,
+      }));
+    }
+
+    let splitData: { memberId: string; amount?: number; percentage?: number }[] | undefined;
+
+    if (newExpense.splitType === 'percentage') {
+      splitData = customSplits.map(s => ({
+        memberId: s.memberId,
+        percentage: parseFloat(s.percentage) || 0,
+        amount: (expenseAmount * (parseFloat(s.percentage) || 0)) / 100,
+      }));
+    } else if (newExpense.splitType === 'custom') {
+      splitData = customSplits.map(s => ({
+        memberId: s.memberId,
+        amount: parseFloat(s.amount) || 0,
+      }));
+    }
+
+    await updateExpense.mutateAsync({
+      expenseId: editingExpense.id,
+      description: newExpense.description,
+      amount: expenseAmount,
+      payers: payersData,
+      splitType: newExpense.splitType,
+      customSplits: splitData,
+      expenseDate: newExpense.expenseDate,
+      notes: newExpense.notes || undefined,
+    });
+    setIsEditExpenseOpen(false);
+    setEditingExpense(null);
+    setNewExpense({ description: '', amount: '', splitType: 'equal', expenseDate: new Date().toISOString().split('T')[0], notes: '' });
+  };
+
+  const openEditExpense = (expense: ExpenseGroupExpense) => {
+    setEditingExpense(expense);
+    setNewExpense({
+      description: expense.description,
+      amount: expense.amount.toString(),
+      splitType: expense.split_type,
+      expenseDate: expense.expense_date || expense.created_at.split('T')[0],
+      notes: expense.notes || '',
+    });
+    setIsEditExpenseOpen(true);
   };
 
   const handleSettle = async () => {
@@ -205,6 +314,20 @@ export default function SplitGroupDetail() {
     });
     setIsSettleOpen(false);
     setSettlement({ fromMemberId: '', toMemberId: '', amount: '' });
+  };
+
+  const handleUpdateSettings = async () => {
+    await updateGroup.mutateAsync(groupSettings);
+    setIsSettingsOpen(false);
+  };
+
+  const handleLeaveGroup = async () => {
+    await leaveGroup.mutateAsync();
+    navigate('/split');
+  };
+
+  const handleMarkSettled = async () => {
+    await markGroupSettled.mutateAsync();
   };
 
   const toggleExpenseExpanded = (expenseId: string) => {
@@ -240,6 +363,8 @@ export default function SplitGroupDetail() {
   const getTotalPayerAmount = () => payerEntries.filter(p => p.selected).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
   const getSelectedPayerCount = () => payerEntries.filter(p => p.selected).length;
 
+  const allBalancesZero = balances.every(b => Math.abs(b.balance) < 0.01);
+
   if (isLoading) {
     return (
       <AppLayout>
@@ -266,6 +391,188 @@ export default function SplitGroupDetail() {
   const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
   const hasNoMembers = members.length === 0;
 
+  // Expense Form Component (reused for add and edit)
+  const ExpenseForm = ({ isEdit = false }: { isEdit?: boolean }) => (
+    <div className="space-y-4 pt-4">
+      <div className="space-y-2">
+        <Label>Description</Label>
+        <Input
+          placeholder="What was this for?"
+          value={newExpense.description}
+          onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label>Amount ({group.currency})</Label>
+          <Input
+            type="number"
+            placeholder="0.00"
+            value={newExpense.amount}
+            onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Date</Label>
+          <Input
+            type="date"
+            value={newExpense.expenseDate}
+            onChange={(e) => setNewExpense({ ...newExpense, expenseDate: e.target.value })}
+          />
+        </div>
+      </div>
+
+      {/* Multi-Payer Selection */}
+      <div className="space-y-3 p-3 border rounded-lg">
+        <div className="flex justify-between text-sm">
+          <span className="font-medium">Who paid?</span>
+          {getSelectedPayerCount() > 1 && (
+            <span className={cn(
+              "font-medium",
+              Math.abs(getTotalPayerAmount() - (parseFloat(newExpense.amount) || 0)) < 0.01 
+                ? "text-green-500" 
+                : "text-destructive"
+            )}>
+              Total: {group.currency} {getTotalPayerAmount().toFixed(2)} / {parseFloat(newExpense.amount || '0').toFixed(2)}
+            </span>
+          )}
+        </div>
+        {members.map((member) => {
+          const entry = payerEntries.find(p => p.memberId === member.id);
+          return (
+            <div key={member.id} className="flex items-center gap-3">
+              <Checkbox
+                checked={entry?.selected || false}
+                onCheckedChange={(checked) => updatePayerEntry(member.id, 'selected', checked as boolean)}
+              />
+              <span className="flex-1 text-sm truncate">{member.name}</span>
+              {getSelectedPayerCount() > 1 && entry?.selected && (
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground text-xs">{group.currency}</span>
+                  <Input
+                    type="number"
+                    className="w-24 h-8 text-right text-sm"
+                    value={entry?.amount || ''}
+                    onChange={(e) => updatePayerEntry(member.id, 'amount', e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="space-y-2">
+        <Label>Split type</Label>
+        <div className="grid grid-cols-3 gap-2">
+          {(['equal', 'percentage', 'custom'] as const).map((type) => (
+            <Button
+              key={type}
+              type="button"
+              variant={newExpense.splitType === type ? 'default' : 'outline'}
+              className="gap-1"
+              onClick={() => setNewExpense({ ...newExpense, splitType: type })}
+            >
+              {type === 'equal' && <Equal className="h-4 w-4" />}
+              {type === 'percentage' && <Percent className="h-4 w-4" />}
+              {type === 'custom' && <DollarSign className="h-4 w-4" />}
+              {type.charAt(0).toUpperCase() + type.slice(1)}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Percentage Split UI */}
+      {newExpense.splitType === 'percentage' && (
+        <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
+          <div className="flex justify-between text-sm">
+            <span className="font-medium">Split by Percentage</span>
+            <span className={cn(
+              "font-medium",
+              Math.abs(getTotalPercentage() - 100) < 0.01 ? "text-green-500" : "text-destructive"
+            )}>
+              Total: {getTotalPercentage().toFixed(1)}%
+            </span>
+          </div>
+          {members.map((member) => {
+            const split = customSplits.find(s => s.memberId === member.id);
+            return (
+              <div key={member.id} className="flex items-center gap-3">
+                <span className="flex-1 text-sm truncate">{member.name}</span>
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    className="w-20 text-right"
+                    value={split?.percentage || ''}
+                    onChange={(e) => updateCustomSplit(member.id, 'percentage', e.target.value)}
+                    placeholder="0"
+                  />
+                  <span className="text-muted-foreground">%</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Custom Amount Split UI */}
+      {newExpense.splitType === 'custom' && (
+        <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
+          <div className="flex justify-between text-sm">
+            <span className="font-medium">Split by Amount</span>
+            <span className={cn(
+              "font-medium",
+              Math.abs(getTotalCustomAmount() - (parseFloat(newExpense.amount) || 0)) < 0.01 ? "text-green-500" : "text-destructive"
+            )}>
+              Total: {group.currency} {getTotalCustomAmount().toFixed(2)} / {parseFloat(newExpense.amount || '0').toFixed(2)}
+            </span>
+          </div>
+          {members.map((member) => {
+            const split = customSplits.find(s => s.memberId === member.id);
+            return (
+              <div key={member.id} className="flex items-center gap-3">
+                <span className="flex-1 text-sm truncate">{member.name}</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">{group.currency}</span>
+                  <Input
+                    type="number"
+                    className="w-24 text-right"
+                    value={split?.amount || ''}
+                    onChange={(e) => updateCustomSplit(member.id, 'amount', e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Notes */}
+      <div className="space-y-2">
+        <Label>Notes (optional)</Label>
+        <Textarea
+          placeholder="Add any additional details..."
+          value={newExpense.notes}
+          onChange={(e) => setNewExpense({ ...newExpense, notes: e.target.value })}
+          rows={2}
+        />
+      </div>
+
+      <Button 
+        className="w-full" 
+        onClick={isEdit ? handleEditExpense : handleAddExpense} 
+        disabled={(isEdit ? updateExpense.isPending : addExpense.isPending) || members.length === 0}
+      >
+        {isEdit 
+          ? (updateExpense.isPending ? 'Saving...' : 'Save Changes')
+          : (addExpense.isPending ? 'Adding...' : 'Add Expense')
+        }
+      </Button>
+    </div>
+  );
+
   return (
     <AppLayout>
       <div className="container py-6 space-y-6">
@@ -275,7 +582,15 @@ export default function SplitGroupDetail() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold">{group.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold">{group.name}</h1>
+              {group.is_settled && (
+                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                  <Check className="h-3 w-3 mr-1" />
+                  Settled
+                </Badge>
+              )}
+            </div>
             {group.description && (
               <p className="text-muted-foreground">{group.description}</p>
             )}
@@ -289,6 +604,131 @@ export default function SplitGroupDetail() {
               <Mail className="h-4 w-4" />
               Email
             </Button>
+            <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Group Settings</DialogTitle>
+                  <DialogDescription>Update group details or manage the group</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  {isGroupAdmin ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Group Name</Label>
+                        <Input
+                          value={groupSettings.name}
+                          onChange={(e) => setGroupSettings({ ...groupSettings, name: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Description</Label>
+                        <Textarea
+                          value={groupSettings.description}
+                          onChange={(e) => setGroupSettings({ ...groupSettings, description: e.target.value })}
+                          rows={2}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label>Category</Label>
+                          <Select 
+                            value={groupSettings.category} 
+                            onValueChange={(v) => setGroupSettings({ ...groupSettings, category: v })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="trip">Trip</SelectItem>
+                              <SelectItem value="household">Household</SelectItem>
+                              <SelectItem value="event">Event</SelectItem>
+                              <SelectItem value="project">Project</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Currency</Label>
+                          <Select 
+                            value={groupSettings.currency} 
+                            onValueChange={(v) => setGroupSettings({ ...groupSettings, currency: v })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="AED">AED</SelectItem>
+                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="EUR">EUR</SelectItem>
+                              <SelectItem value="GBP">GBP</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <Button 
+                        className="w-full" 
+                        onClick={handleUpdateSettings}
+                        disabled={updateGroup.isPending}
+                      >
+                        {updateGroup.isPending ? 'Saving...' : 'Save Settings'}
+                      </Button>
+                      {allBalancesZero && !group.is_settled && (
+                        <Button 
+                          variant="outline" 
+                          className="w-full gap-2 border-green-500 text-green-600 hover:bg-green-50"
+                          onClick={handleMarkSettled}
+                          disabled={markGroupSettled.isPending}
+                        >
+                          <Check className="h-4 w-4" />
+                          {markGroupSettled.isPending ? 'Marking...' : 'Mark Group as Settled'}
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-muted-foreground">Only the group admin can edit settings</p>
+                    </div>
+                  )}
+                  
+                  {!isGroupAdmin && currentUserMember && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" className="w-full gap-2">
+                          <LogOut className="h-4 w-4" />
+                          Leave Group
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Leave this group?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {balances.find(b => b.memberId === currentUserMember.id)?.balance !== 0
+                              ? "You have an outstanding balance. Please settle up before leaving."
+                              : "You will no longer have access to this group's expenses and settlements."
+                            }
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={handleLeaveGroup}
+                            disabled={Math.abs(balances.find(b => b.memberId === currentUserMember.id)?.balance || 0) > 0.01}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Leave Group
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -381,160 +821,23 @@ export default function SplitGroupDetail() {
               <DialogHeader>
                 <DialogTitle>Add Expense</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input
-                    placeholder="What was this for?"
-                    value={newExpense.description}
-                    onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Amount ({group.currency})</Label>
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    value={newExpense.amount}
-                    onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
-                  />
-                </div>
+              <ExpenseForm />
+            </DialogContent>
+          </Dialog>
 
-                {/* Multi-Payer Selection */}
-                <div className="space-y-3 p-3 border rounded-lg">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium">Who paid?</span>
-                    {getSelectedPayerCount() > 1 && (
-                      <span className={cn(
-                        "font-medium",
-                        Math.abs(getTotalPayerAmount() - (parseFloat(newExpense.amount) || 0)) < 0.01 
-                          ? "text-green-500" 
-                          : "text-destructive"
-                      )}>
-                        Total: {group.currency} {getTotalPayerAmount().toFixed(2)} / {parseFloat(newExpense.amount || '0').toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-                  {members.map((member) => {
-                    const entry = payerEntries.find(p => p.memberId === member.id);
-                    return (
-                      <div key={member.id} className="flex items-center gap-3">
-                        <Checkbox
-                          checked={entry?.selected || false}
-                          onCheckedChange={(checked) => updatePayerEntry(member.id, 'selected', checked as boolean)}
-                        />
-                        <span className="flex-1 text-sm truncate">{member.name}</span>
-                        {getSelectedPayerCount() > 1 && entry?.selected && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground text-xs">{group.currency}</span>
-                            <Input
-                              type="number"
-                              className="w-24 h-8 text-right text-sm"
-                              value={entry?.amount || ''}
-                              onChange={(e) => updatePayerEntry(member.id, 'amount', e.target.value)}
-                              placeholder="0.00"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Split type</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(['equal', 'percentage', 'custom'] as const).map((type) => (
-                      <Button
-                        key={type}
-                        type="button"
-                        variant={newExpense.splitType === type ? 'default' : 'outline'}
-                        className="gap-1"
-                        onClick={() => setNewExpense({ ...newExpense, splitType: type })}
-                      >
-                        {type === 'equal' && <Equal className="h-4 w-4" />}
-                        {type === 'percentage' && <Percent className="h-4 w-4" />}
-                        {type === 'custom' && <DollarSign className="h-4 w-4" />}
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Percentage Split UI */}
-                {newExpense.splitType === 'percentage' && (
-                  <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">Split by Percentage</span>
-                      <span className={cn(
-                        "font-medium",
-                        Math.abs(getTotalPercentage() - 100) < 0.01 ? "text-green-500" : "text-destructive"
-                      )}>
-                        Total: {getTotalPercentage().toFixed(1)}%
-                      </span>
-                    </div>
-                    {members.map((member) => {
-                      const split = customSplits.find(s => s.memberId === member.id);
-                      return (
-                        <div key={member.id} className="flex items-center gap-3">
-                          <span className="flex-1 text-sm truncate">{member.name}</span>
-                          <div className="flex items-center gap-1">
-                            <Input
-                              type="number"
-                              className="w-20 text-right"
-                              value={split?.percentage || ''}
-                              onChange={(e) => updateCustomSplit(member.id, 'percentage', e.target.value)}
-                              placeholder="0"
-                            />
-                            <span className="text-muted-foreground">%</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Custom Amount Split UI */}
-                {newExpense.splitType === 'custom' && (
-                  <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">Split by Amount</span>
-                      <span className={cn(
-                        "font-medium",
-                        Math.abs(getTotalCustomAmount() - (parseFloat(newExpense.amount) || 0)) < 0.01 ? "text-green-500" : "text-destructive"
-                      )}>
-                        Total: {group.currency} {getTotalCustomAmount().toFixed(2)} / {parseFloat(newExpense.amount || '0').toFixed(2)}
-                      </span>
-                    </div>
-                    {members.map((member) => {
-                      const split = customSplits.find(s => s.memberId === member.id);
-                      return (
-                        <div key={member.id} className="flex items-center gap-3">
-                          <span className="flex-1 text-sm truncate">{member.name}</span>
-                          <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">{group.currency}</span>
-                            <Input
-                              type="number"
-                              className="w-24 text-right"
-                              value={split?.amount || ''}
-                              onChange={(e) => updateCustomSplit(member.id, 'amount', e.target.value)}
-                              placeholder="0.00"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <Button 
-                  className="w-full" 
-                  onClick={handleAddExpense} 
-                  disabled={addExpense.isPending || members.length === 0}
-                >
-                  {addExpense.isPending ? 'Adding...' : 'Add Expense'}
-                </Button>
-              </div>
+          {/* Edit Expense Dialog */}
+          <Dialog open={isEditExpenseOpen} onOpenChange={(open) => {
+            setIsEditExpenseOpen(open);
+            if (!open) {
+              setEditingExpense(null);
+              setNewExpense({ description: '', amount: '', splitType: 'equal', expenseDate: new Date().toISOString().split('T')[0], notes: '' });
+            }
+          }}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Expense</DialogTitle>
+              </DialogHeader>
+              <ExpenseForm isEdit />
             </DialogContent>
           </Dialog>
 
@@ -692,6 +995,70 @@ export default function SplitGroupDetail() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Settlement History */}
+            {settlements.length > 0 && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Settlement History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {settlements.map((settlement) => {
+                    const fromMember = members.find(m => m.id === settlement.from_member_id);
+                    const toMember = members.find(m => m.id === settlement.to_member_id);
+                    return (
+                      <div 
+                        key={settlement.id} 
+                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="font-medium">{fromMember?.name || 'Unknown'}</span>
+                            <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                            <span className="font-medium">{toMember?.name || 'Unknown'}</span>
+                            <span className="text-green-600 font-semibold">
+                              {group.currency} {Number(settlement.amount).toFixed(2)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {format(new Date(settlement.settled_at), 'MMM d, yyyy h:mm a')}
+                          </p>
+                        </div>
+                        {isGroupAdmin && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete settlement?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will remove this settlement record. The associated transaction will also be deleted.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => deleteSettlement.mutate(settlement.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="expenses" className="space-y-4">
@@ -708,8 +1075,8 @@ export default function SplitGroupDetail() {
                   const expensePayers = getExpensePayers(expense.id);
                   const expenseSplits = getExpenseSplits(expense.id);
                   const isExpanded = expandedExpenses.has(expense.id);
+                  const isEdited = expense.updated_at && new Date(expense.updated_at) > new Date(expense.created_at);
 
-                  // Determine who paid
                   let paidByText = '';
                   if (expensePayers.length > 1) {
                     paidByText = `${expensePayers.length} people`;
@@ -721,7 +1088,9 @@ export default function SplitGroupDetail() {
                     paidByText = paidBy?.name || 'Unknown';
                   }
 
-                    return (
+                  const displayDate = expense.expense_date || expense.created_at.split('T')[0];
+
+                  return (
                     <Collapsible key={expense.id} open={isExpanded} onOpenChange={() => toggleExpenseExpanded(expense.id)}>
                       <Card>
                         <CollapsibleTrigger className="w-full">
@@ -731,9 +1100,14 @@ export default function SplitGroupDetail() {
                                 <Receipt className="h-5 w-5 text-primary" />
                               </div>
                               <div className="text-left">
-                                <p className="font-medium">{expense.description}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium">{expense.description}</p>
+                                  {isEdited && (
+                                    <Badge variant="outline" className="text-xs">Edited</Badge>
+                                  )}
+                                </div>
                                 <p className="text-sm text-muted-foreground">
-                                  Paid by {paidByText} · {format(new Date(expense.created_at), 'MMM d')}
+                                  Paid by {paidByText} · {format(new Date(displayDate), 'MMM d, yyyy')}
                                 </p>
                               </div>
                             </div>
@@ -751,6 +1125,11 @@ export default function SplitGroupDetail() {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEditExpense(expense); }}>
+                                      <Edit2 className="h-4 w-4 mr-2" />
+                                      Edit Expense
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
                                     <AlertDialog>
                                       <AlertDialogTrigger asChild>
                                         <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
@@ -784,6 +1163,12 @@ export default function SplitGroupDetail() {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <div className="px-4 pb-4 border-t pt-3 space-y-3">
+                            {/* Notes */}
+                            {expense.notes && (
+                              <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+                                {expense.notes}
+                              </div>
+                            )}
                             {/* Show payers if multi-payer */}
                             {expensePayers.length > 1 && (
                               <div>
@@ -844,62 +1229,90 @@ export default function SplitGroupDetail() {
               </Card>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
-                {members.map((member) => (
-                  <Card key={member.id}>
-                    <CardContent className="py-4 flex items-center gap-3">
-                      <Avatar>
-                        <AvatarFallback>{member.name.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium">{member.name}</p>
-                        {member.email && (
-                          <p className="text-sm text-muted-foreground truncate">{member.email}</p>
-                        )}
-                        {!member.user_id && member.email && (
-                          <Badge variant="outline" className="text-xs mt-1">
-                            <Mail className="h-3 w-3 mr-1" />
-                            Invited
-                          </Badge>
-                        )}
-                      </div>
-                      {member.is_creator && (
-                        <Badge variant="secondary">Admin</Badge>
-                      )}
-                      {member.user_id && !member.is_creator && (
-                        <Badge variant="outline" className="text-green-600 border-green-600">
-                          <Check className="h-3 w-3 mr-1" />
-                          Joined
-                        </Badge>
-                      )}
-                      {isGroupAdmin && !member.is_creator && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
+                {members.map((member) => {
+                  const memberBalance = balances.find(b => b.memberId === member.id);
+                  return (
+                    <Card key={member.id}>
+                      <CardContent className="py-4 flex items-center gap-3">
+                        <Avatar>
+                          <AvatarFallback>{member.name.charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium">{member.name}</p>
+                          {member.email && (
+                            <p className="text-sm text-muted-foreground truncate">{member.email}</p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            Joined {format(new Date(member.joined_at), 'MMM d, yyyy')}
+                          </p>
+                          {memberBalance && (
+                            <p className={cn(
+                              "text-xs font-medium",
+                              memberBalance.balance > 0 && "text-green-600",
+                              memberBalance.balance < 0 && "text-red-600"
+                            )}>
+                              Balance: {memberBalance.balance > 0 ? '+' : ''}{group.currency} {memberBalance.balance.toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {!member.user_id && member.email && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8"
+                              onClick={() => sendInviteEmail.mutate({ memberId: member.id })}
+                              disabled={sendInviteEmail.isPending}
+                            >
+                              <Send className="h-4 w-4" />
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Remove member?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will remove {member.name} from the group. If they have paid for any expenses, you'll need to delete those expenses first.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => removeMember.mutate(member.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Remove
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+                          )}
+                          {member.is_creator && (
+                            <Badge variant="secondary">Admin</Badge>
+                          )}
+                          {member.user_id && !member.is_creator && (
+                            <Badge variant="outline" className="text-green-600 border-green-600">
+                              <Check className="h-3 w-3 mr-1" />
+                              Joined
+                            </Badge>
+                          )}
+                          {!member.user_id && member.email && (
+                            <Badge variant="outline" className="text-xs">
+                              <Mail className="h-3 w-3 mr-1" />
+                              Invited
+                            </Badge>
+                          )}
+                          {isGroupAdmin && !member.is_creator && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Remove member?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will remove {member.name} from the group. If they have paid for any expenses, you'll need to delete those expenses first.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => removeMember.mutate(member.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Remove
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </TabsContent>

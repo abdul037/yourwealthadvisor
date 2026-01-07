@@ -1,13 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { toast } from '@/hooks/use-toast';
+
+interface GroupMember {
+  id: string;
+  name: string;
+  email: string | null;
+  user_id: string | null;
+}
 
 export default function JoinSplitGroup() {
   const { inviteCode } = useParams<{ inviteCode: string }>();
@@ -15,10 +23,12 @@ export default function JoinSplitGroup() {
   const { user, profile, isAuthenticated, loading: authLoading } = useUserProfile();
   
   const [group, setGroup] = useState<{ id: string; name: string; description: string | null } | null>(null);
+  const [existingMembers, setExistingMembers] = useState<GroupMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [memberName, setMemberName] = useState('');
+  const [nameConflict, setNameConflict] = useState<GroupMember | null>(null);
 
   useEffect(() => {
     if (profile?.full_name) {
@@ -39,14 +49,37 @@ export default function JoinSplitGroup() {
       
       if (error || !data) {
         setError('Invalid or expired invite link');
-      } else {
-        setGroup(data);
+        setLoading(false);
+        return;
       }
+      
+      setGroup(data);
+
+      // Fetch existing members
+      const { data: members } = await supabase
+        .from('expense_group_members')
+        .select('id, name, email, user_id')
+        .eq('group_id', data.id);
+      
+      setExistingMembers(members || []);
       setLoading(false);
     };
 
     fetchGroup();
   }, [inviteCode]);
+
+  // Check for name conflicts as user types
+  useEffect(() => {
+    if (!memberName.trim() || existingMembers.length === 0) {
+      setNameConflict(null);
+      return;
+    }
+
+    const conflict = existingMembers.find(
+      m => m.name.toLowerCase() === memberName.trim().toLowerCase() && !m.user_id
+    );
+    setNameConflict(conflict || null);
+  }, [memberName, existingMembers]);
 
   const handleJoin = async () => {
     if (!group || !memberName.trim()) return;
@@ -54,14 +87,8 @@ export default function JoinSplitGroup() {
     setJoining(true);
     try {
       // Check if user already has a linked member entry
-      const { data: existingMemberByUserId } = await supabase
-        .from('expense_group_members')
-        .select('id')
-        .eq('group_id', group.id)
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
-      if (existingMemberByUserId) {
+      const existingByUserId = existingMembers.find(m => m.user_id === user?.id);
+      if (existingByUserId) {
         toast({ title: 'Already a member', description: 'You are already part of this group' });
         navigate(`/split/${group.id}`);
         return;
@@ -70,19 +97,15 @@ export default function JoinSplitGroup() {
       // Check if there's an invited member entry with matching email that we can link
       const userEmail = user?.email;
       if (userEmail) {
-        const { data: existingMemberByEmail } = await supabase
-          .from('expense_group_members')
-          .select('id, user_id')
-          .eq('group_id', group.id)
-          .ilike('email', userEmail)
-          .maybeSingle();
+        const existingByEmail = existingMembers.find(
+          m => m.email?.toLowerCase() === userEmail.toLowerCase() && !m.user_id
+        );
 
-        if (existingMemberByEmail && !existingMemberByEmail.user_id) {
-          // Link existing invited member to this user
+        if (existingByEmail) {
           const { error: updateError } = await supabase
             .from('expense_group_members')
             .update({ user_id: user?.id, name: memberName.trim() })
-            .eq('id', existingMemberByEmail.id);
+            .eq('id', existingByEmail.id);
 
           if (updateError) throw updateError;
 
@@ -90,6 +113,34 @@ export default function JoinSplitGroup() {
           navigate(`/split/${group.id}`);
           return;
         }
+      }
+
+      // If there's a name conflict with an unlinked member, link to that member
+      if (nameConflict) {
+        const { error: updateError } = await supabase
+          .from('expense_group_members')
+          .update({ user_id: user?.id })
+          .eq('id', nameConflict.id);
+
+        if (updateError) throw updateError;
+
+        toast({ title: 'Joined successfully!', description: `Linked to existing member "${nameConflict.name}"` });
+        navigate(`/split/${group.id}`);
+        return;
+      }
+
+      // Check if name already exists for a linked member (different person)
+      const linkedMemberWithSameName = existingMembers.find(
+        m => m.name.toLowerCase() === memberName.trim().toLowerCase() && m.user_id
+      );
+      if (linkedMemberWithSameName) {
+        toast({ 
+          title: 'Name already taken', 
+          description: 'Someone else is using this name. Please choose a different name.',
+          variant: 'destructive'
+        });
+        setJoining(false);
+        return;
       }
 
       // Add as new member
@@ -184,6 +235,17 @@ export default function JoinSplitGroup() {
             />
             <p className="text-xs text-muted-foreground">This name will be shown to other group members</p>
           </div>
+
+          {nameConflict && (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                A member named "{nameConflict.name}" already exists but hasn't joined yet. 
+                Clicking "Join" will link your account to this existing member.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Button 
             className="w-full" 
             onClick={handleJoin} 
@@ -194,6 +256,8 @@ export default function JoinSplitGroup() {
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Joining...
               </>
+            ) : nameConflict ? (
+              'Join as Existing Member'
             ) : (
               'Join Group'
             )}
