@@ -155,7 +155,7 @@ export default function SplitGroupDetail() {
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .substring(0, 30);
-    const inviteUrl = `${window.location.origin}/split/join/${slug}-${group.invite_code}`;
+    const inviteUrl = `${window.location.origin}/split/join/${slug}-tharwanet-${group.invite_code}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
     toast({ title: 'Invite link copied!' });
