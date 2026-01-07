@@ -391,8 +391,8 @@ export default function SplitGroupDetail() {
   const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
   const hasNoMembers = members.length === 0;
 
-  // Expense Form Component (reused for add and edit)
-  const ExpenseForm = ({ isEdit = false }: { isEdit?: boolean }) => (
+  // Helper function to render expense form content (NOT a component to avoid focus issues)
+  const renderExpenseFormContent = (isEdit: boolean = false) => (
     <div className="space-y-4 pt-4">
       <div className="space-y-2">
         <Label>Description</Label>
@@ -821,7 +821,7 @@ export default function SplitGroupDetail() {
               <DialogHeader>
                 <DialogTitle>Add Expense</DialogTitle>
               </DialogHeader>
-              <ExpenseForm />
+              {renderExpenseFormContent(false)}
             </DialogContent>
           </Dialog>
 
@@ -837,7 +837,7 @@ export default function SplitGroupDetail() {
               <DialogHeader>
                 <DialogTitle>Edit Expense</DialogTitle>
               </DialogHeader>
-              <ExpenseForm isEdit />
+              {renderExpenseFormContent(true)}
             </DialogContent>
           </Dialog>
 
