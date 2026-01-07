@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Users, Receipt, Share2, Copy, Check, 
   UserPlus, DollarSign, Percent, Equal, ArrowRightLeft, ChevronDown, ChevronUp, AlertCircle,
-  Mail, Send, Trash2, MoreVertical, Settings, Edit2, LogOut, Calendar as CalendarIcon, Clock
+  Mail, Send, Trash2, MoreVertical, Settings, Edit2, LogOut, Calendar as CalendarIcon, Clock,
+  Search, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { AppLayout } from '@/components/AppLayout';
-import { useExpenseGroup, ExpenseSplit, PayerEntry, ExpenseGroupExpense } from '@/hooks/useExpenseGroups';
+import { useExpenseGroup, ExpenseSplit, PayerEntry, ExpenseGroupExpense, ExpenseSettlement } from '@/hooks/useExpenseGroups';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -47,7 +48,7 @@ export default function SplitGroupDetail() {
     group, members, expenses, splits, payers, settlements, balances, settlementSuggestions,
     isLoading, isGroupAdmin, currentUserMember,
     addMember, removeMember, addExpense, updateExpense, deleteExpense, 
-    settleUp, deleteSettlement, updateGroup, markGroupSettled, leaveGroup, sendInviteEmail,
+    settleUp, deleteSettlement, updateSettlement, updateGroup, markGroupSettled, leaveGroup, sendInviteEmail,
     getExpensePayers 
   } = useExpenseGroup(groupId);
 
@@ -55,10 +56,19 @@ export default function SplitGroupDetail() {
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isEditExpenseOpen, setIsEditExpenseOpen] = useState(false);
   const [isSettleOpen, setIsSettleOpen] = useState(false);
+  const [isEditSettlementOpen, setIsEditSettlementOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [expandedExpenses, setExpandedExpenses] = useState<Set<string>>(new Set());
   const [editingExpense, setEditingExpense] = useState<ExpenseGroupExpense | null>(null);
+  const [editingSettlement, setEditingSettlement] = useState<ExpenseSettlement | null>(null);
+
+  // Search and filter states
+  const [expenseSearch, setExpenseSearch] = useState('');
+  const [expenseFilterPaidBy, setExpenseFilterPaidBy] = useState('all');
+  const [expenseFilterSplitType, setExpenseFilterSplitType] = useState('all');
+  const [settlementSearch, setSettlementSearch] = useState('');
+  const [settlementFilterMember, setSettlementFilterMember] = useState('all');
 
   const [newMember, setNewMember] = useState({ name: '', email: '' });
   const [newExpense, setNewExpense] = useState({
@@ -368,6 +378,88 @@ export default function SplitGroupDetail() {
   const getSelectedPayerCount = () => payerEntries.filter(p => p.selected).length;
 
   const allBalancesZero = balances.every(b => Math.abs(b.balance) < 0.01);
+
+  // Filtered expenses
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(expense => {
+      // Search filter
+      const searchMatch = !expenseSearch || 
+        expense.description.toLowerCase().includes(expenseSearch.toLowerCase()) ||
+        expense.notes?.toLowerCase().includes(expenseSearch.toLowerCase());
+      
+      // Paid by filter
+      const expensePayers = payers.filter(p => p.expense_id === expense.id);
+      const payerIds = expensePayers.length > 0 
+        ? expensePayers.map(p => p.member_id) 
+        : [expense.paid_by_member_id];
+      const paidByMatch = expenseFilterPaidBy === 'all' || payerIds.includes(expenseFilterPaidBy);
+      
+      // Split type filter
+      const splitTypeMatch = expenseFilterSplitType === 'all' || expense.split_type === expenseFilterSplitType;
+      
+      return searchMatch && paidByMatch && splitTypeMatch;
+    });
+  }, [expenses, expenseSearch, expenseFilterPaidBy, expenseFilterSplitType, payers]);
+
+  // Filtered settlements
+  const filteredSettlements = useMemo(() => {
+    return settlements.filter(settlement => {
+      const fromMember = members.find(m => m.id === settlement.from_member_id);
+      const toMember = members.find(m => m.id === settlement.to_member_id);
+      
+      // Search filter
+      const searchMatch = !settlementSearch || 
+        fromMember?.name.toLowerCase().includes(settlementSearch.toLowerCase()) ||
+        toMember?.name.toLowerCase().includes(settlementSearch.toLowerCase());
+      
+      // Member filter
+      const memberMatch = settlementFilterMember === 'all' || 
+        settlement.from_member_id === settlementFilterMember ||
+        settlement.to_member_id === settlementFilterMember;
+      
+      return searchMatch && memberMatch;
+    });
+  }, [settlements, settlementSearch, settlementFilterMember, members]);
+
+  // Handle edit settlement
+  const openEditSettlement = (settlement: ExpenseSettlement) => {
+    setEditingSettlement(settlement);
+    setSettlement({
+      fromMemberId: settlement.from_member_id,
+      toMemberId: settlement.to_member_id,
+      amount: settlement.amount.toString(),
+      settlementDate: settlement.settlement_date || settlement.settled_at.split('T')[0],
+    });
+    setIsEditSettlementOpen(true);
+  };
+
+  const handleEditSettlement = async () => {
+    if (!editingSettlement || !settlement.fromMemberId || !settlement.toMemberId || !settlement.amount) return;
+    await updateSettlement.mutateAsync({
+      settlementId: editingSettlement.id,
+      fromMemberId: settlement.fromMemberId,
+      toMemberId: settlement.toMemberId,
+      amount: parseFloat(settlement.amount),
+      settlementDate: settlement.settlementDate,
+    });
+    setIsEditSettlementOpen(false);
+    setEditingSettlement(null);
+    setSettlement({ fromMemberId: '', toMemberId: '', amount: '', settlementDate: new Date().toISOString().split('T')[0] });
+  };
+
+  const clearExpenseFilters = () => {
+    setExpenseSearch('');
+    setExpenseFilterPaidBy('all');
+    setExpenseFilterSplitType('all');
+  };
+
+  const clearSettlementFilters = () => {
+    setSettlementSearch('');
+    setSettlementFilterMember('all');
+  };
+
+  const hasExpenseFilters = expenseSearch || expenseFilterPaidBy !== 'all' || expenseFilterSplitType !== 'all';
+  const hasSettlementFilters = settlementSearch || settlementFilterMember !== 'all';
 
   if (isLoading) {
     return (
@@ -928,6 +1020,98 @@ export default function SplitGroupDetail() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Edit Settlement Dialog */}
+          <Dialog open={isEditSettlementOpen} onOpenChange={(open) => {
+            setIsEditSettlementOpen(open);
+            if (!open) {
+              setEditingSettlement(null);
+              setSettlement({ fromMemberId: '', toMemberId: '', amount: '', settlementDate: new Date().toISOString().split('T')[0] });
+            }
+          }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Settlement</DialogTitle>
+                <DialogDescription>Correct any errors in this settlement record</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label>From</Label>
+                  <Select 
+                    value={settlement.fromMemberId} 
+                    onValueChange={(v) => setSettlement({ ...settlement, fromMemberId: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Who paid?" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>To</Label>
+                  <Select 
+                    value={settlement.toMemberId} 
+                    onValueChange={(v) => setSettlement({ ...settlement, toMemberId: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Who received?" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members.filter(m => m.id !== settlement.fromMemberId).map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Amount ({group.currency})</Label>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={settlement.amount}
+                    onChange={(e) => setSettlement({ ...settlement, amount: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Settlement Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !settlement.settlementDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {settlement.settlementDate ? format(new Date(settlement.settlementDate), 'PPP') : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={settlement.settlementDate ? new Date(settlement.settlementDate) : undefined}
+                        onSelect={(date) => setSettlement({ ...settlement, settlementDate: date ? date.toISOString().split('T')[0] : '' })}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <Button className="w-full" onClick={handleEditSettlement} disabled={updateSettlement.isPending}>
+                  {updateSettlement.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Main Content */}
@@ -1036,6 +1220,46 @@ export default function SplitGroupDetail() {
           </TabsContent>
 
           <TabsContent value="expenses" className="space-y-4">
+            {/* Search & Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search expenses..."
+                  value={expenseSearch}
+                  onChange={(e) => setExpenseSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={expenseFilterPaidBy} onValueChange={setExpenseFilterPaidBy}>
+                <SelectTrigger className="w-full sm:w-[140px]">
+                  <SelectValue placeholder="Paid by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All payers</SelectItem>
+                  {members.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={expenseFilterSplitType} onValueChange={setExpenseFilterSplitType}>
+                <SelectTrigger className="w-full sm:w-[130px]">
+                  <SelectValue placeholder="Split type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All types</SelectItem>
+                  <SelectItem value="equal">Equal</SelectItem>
+                  <SelectItem value="percentage">Percentage</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+              {hasExpenseFilters && (
+                <Button variant="ghost" size="icon" onClick={clearExpenseFilters} className="shrink-0">
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
             {expenses.length === 0 ? (
               <Card className="border-dashed">
                 <CardContent className="py-8 text-center">
@@ -1043,9 +1267,19 @@ export default function SplitGroupDetail() {
                   <p className="text-muted-foreground">No expenses yet. Add one to get started!</p>
                 </CardContent>
               </Card>
+            ) : filteredExpenses.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="py-8 text-center">
+                  <Search className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground mb-2">No expenses match your filters</p>
+                  <Button variant="outline" size="sm" onClick={clearExpenseFilters}>
+                    Clear filters
+                  </Button>
+                </CardContent>
+              </Card>
             ) : (
               <div className="space-y-3">
-                {expenses.map((expense) => {
+                {filteredExpenses.map((expense) => {
                   const expensePayers = getExpensePayers(expense.id);
                   const expenseSplits = getExpenseSplits(expense.id);
                   const isExpanded = expandedExpenses.has(expense.id);
@@ -1191,6 +1425,35 @@ export default function SplitGroupDetail() {
 
           {/* Settlements Tab */}
           <TabsContent value="settlements" className="space-y-4">
+            {/* Search & Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by member name..."
+                  value={settlementSearch}
+                  onChange={(e) => setSettlementSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={settlementFilterMember} onValueChange={setSettlementFilterMember}>
+                <SelectTrigger className="w-full sm:w-[150px]">
+                  <SelectValue placeholder="Involving" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All members</SelectItem>
+                  {members.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {hasSettlementFilters && (
+                <Button variant="ghost" size="icon" onClick={clearSettlementFilters} className="shrink-0">
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
             {settlements.length === 0 ? (
               <Card className="border-dashed">
                 <CardContent className="py-8 text-center">
@@ -1204,10 +1467,20 @@ export default function SplitGroupDetail() {
                   )}
                 </CardContent>
               </Card>
+            ) : filteredSettlements.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="py-8 text-center">
+                  <Search className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground mb-2">No settlements match your filters</p>
+                  <Button variant="outline" size="sm" onClick={clearSettlementFilters}>
+                    Clear filters
+                  </Button>
+                </CardContent>
+              </Card>
             ) : (
               <>
                 <div className="space-y-3">
-                  {settlements.map((s) => {
+                  {filteredSettlements.map((s) => {
                     const fromMember = members.find(m => m.id === s.from_member_id);
                     const toMember = members.find(m => m.id === s.to_member_id);
                     const displayDate = s.settlement_date || s.settled_at.split('T')[0];
@@ -1233,35 +1506,45 @@ export default function SplitGroupDetail() {
                                 </p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                               <span className="text-lg font-semibold text-green-600">
                                 {group.currency} {Number(s.amount).toFixed(2)}
                               </span>
                               {isGroupAdmin && (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete settlement?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        This will remove this settlement record. The associated transaction will also be deleted.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction 
-                                        onClick={() => deleteSettlement.mutate(s.id)}
-                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                      >
-                                        Delete
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
+                                <>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    onClick={() => openEditSettlement(s)}
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete settlement?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          This will remove this settlement record. The associated transaction will also be deleted.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction 
+                                          onClick={() => deleteSettlement.mutate(s.id)}
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          Delete
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </>
                               )}
                             </div>
                           </div>
@@ -1279,7 +1562,7 @@ export default function SplitGroupDetail() {
                       <span className="font-medium">Total Settled</span>
                     </div>
                     <span className="text-xl font-bold text-green-600">
-                      {group.currency} {settlements.reduce((sum, s) => sum + Number(s.amount), 0).toFixed(2)}
+                      {group.currency} {filteredSettlements.reduce((sum, s) => sum + Number(s.amount), 0).toFixed(2)}
                     </span>
                   </CardContent>
                 </Card>
