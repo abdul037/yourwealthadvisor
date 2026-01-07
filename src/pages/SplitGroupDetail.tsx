@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Users, Receipt, Share2, Copy, Check, 
   UserPlus, DollarSign, Percent, Equal, ArrowRightLeft, ChevronDown, ChevronUp, AlertCircle,
-  Mail, Send
+  Mail, Send, Trash2, MoreVertical
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -40,7 +42,7 @@ export default function SplitGroupDetail() {
   const navigate = useNavigate();
   const { 
     group, members, expenses, splits, payers, balances, settlementSuggestions,
-    isLoading, addMember, addExpense, settleUp, getExpensePayers 
+    isLoading, isGroupAdmin, addMember, removeMember, addExpense, deleteExpense, settleUp, getExpensePayers 
   } = useExpenseGroup(groupId);
 
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
@@ -719,7 +721,7 @@ export default function SplitGroupDetail() {
                     paidByText = paidBy?.name || 'Unknown';
                   }
 
-                  return (
+                    return (
                     <Collapsible key={expense.id} open={isExpanded} onOpenChange={() => toggleExpenseExpanded(expense.id)}>
                       <Card>
                         <CollapsibleTrigger className="w-full">
@@ -741,6 +743,42 @@ export default function SplitGroupDetail() {
                                 <Badge variant="outline" className="text-xs">{expense.split_type}</Badge>
                               </div>
                               {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                              {isGroupAdmin && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          Delete Expense
+                                        </DropdownMenuItem>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Delete expense?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            This will permanently delete "{expense.description}" and all its splits. This action cannot be undone.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogAction 
+                                            onClick={() => deleteExpense.mutate(expense.id)}
+                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                          >
+                                            Delete
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
                             </div>
                           </CardContent>
                         </CollapsibleTrigger>
@@ -825,13 +863,39 @@ export default function SplitGroupDetail() {
                         )}
                       </div>
                       {member.is_creator && (
-                        <Badge variant="secondary">Creator</Badge>
+                        <Badge variant="secondary">Admin</Badge>
                       )}
                       {member.user_id && !member.is_creator && (
                         <Badge variant="outline" className="text-green-600 border-green-600">
                           <Check className="h-3 w-3 mr-1" />
                           Joined
                         </Badge>
+                      )}
+                      {isGroupAdmin && !member.is_creator && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remove member?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will remove {member.name} from the group. If they have paid for any expenses, you'll need to delete those expenses first.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => removeMember.mutate(member.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Remove
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                     </CardContent>
                   </Card>

@@ -343,9 +343,35 @@ export function useExpenseGroup(groupId: string | undefined) {
     return suggestions;
   })();
 
+  // Check if current user is the group admin
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
+  });
+
+  const isGroupAdmin = group?.user_id === currentUser?.id;
+
   const addMember = useMutation({
     mutationFn: async ({ name, email, userId }: { name: string; email?: string; userId?: string }) => {
       if (!groupId) throw new Error('No group ID');
+      
+      // Check for duplicate member by name (case-insensitive)
+      const existingByName = members.find(m => m.name.toLowerCase() === name.toLowerCase());
+      if (existingByName) {
+        throw new Error(`A member named "${name}" already exists`);
+      }
+      
+      // Check for duplicate by email if provided
+      if (email) {
+        const existingByEmail = members.find(m => m.email?.toLowerCase() === email.toLowerCase());
+        if (existingByEmail) {
+          throw new Error(`A member with email "${email}" already exists`);
+        }
+      }
+      
       const { data, error } = await supabase
         .from('expense_group_members')
         .insert({ group_id: groupId, name, email, user_id: userId })
@@ -358,6 +384,73 @@ export function useExpenseGroup(groupId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expense-group-members', groupId] });
       toast({ title: 'Member added' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const removeMember = useMutation({
+    mutationFn: async (memberId: string) => {
+      if (!groupId) throw new Error('No group ID');
+      if (!isGroupAdmin) throw new Error('Only group admin can remove members');
+      
+      const member = members.find(m => m.id === memberId);
+      if (!member) throw new Error('Member not found');
+      if (member.is_creator) throw new Error('Cannot remove the group creator');
+      
+      // Check if member has any expenses as payer
+      const memberExpenses = expenses.filter(e => e.paid_by_member_id === memberId);
+      const memberPayers = payers.filter(p => p.member_id === memberId);
+      
+      if (memberExpenses.length > 0 || memberPayers.length > 0) {
+        throw new Error('Cannot remove member who has paid for expenses. Delete their expenses first.');
+      }
+      
+      const { error } = await supabase
+        .from('expense_group_members')
+        .delete()
+        .eq('id', memberId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-group-members', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-splits', groupId] });
+      toast({ title: 'Member removed' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const deleteExpense = useMutation({
+    mutationFn: async (expenseId: string) => {
+      if (!groupId) throw new Error('No group ID');
+      if (!isGroupAdmin) throw new Error('Only group admin can delete expenses');
+      
+      // Delete payers first
+      await supabase.from('expense_payers').delete().eq('expense_id', expenseId);
+      
+      // Delete splits
+      await supabase.from('expense_splits').delete().eq('expense_id', expenseId);
+      
+      // Delete expense
+      const { error } = await supabase
+        .from('expense_group_expenses')
+        .delete()
+        .eq('id', expenseId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-group-expenses', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-splits', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-payers', groupId] });
+      toast({ title: 'Expense deleted' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -522,8 +615,11 @@ export function useExpenseGroup(groupId: string | undefined) {
     balances,
     settlementSuggestions,
     isLoading: groupLoading || membersLoading || expensesLoading,
+    isGroupAdmin,
     addMember,
+    removeMember,
     addExpense,
+    deleteExpense,
     settleUp,
     getExpensePayers,
   };
