@@ -149,13 +149,13 @@ export default function SplitGroupDetail() {
 
   const handleCopyInvite = () => {
     if (!group) return;
-    // Create URL-friendly slug from group name
+    // Use short branded URL format: /s/{group-slug}-tharwanet-{code}
     const slug = group.name
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
-      .substring(0, 30);
-    const inviteUrl = `${window.location.origin}/split/join/${slug}-tharwanet-${group.invite_code}`;
+      .substring(0, 20);
+    const inviteUrl = `${window.location.origin}/s/${slug}-tharwanet-${group.invite_code}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
     toast({ title: 'Invite link copied!' });
