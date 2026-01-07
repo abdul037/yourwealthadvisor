@@ -19,7 +19,8 @@ interface UseSplitExpenseParserReturn {
 
 export function useSplitExpenseParser(
   memberNames: string[],
-  currency: string
+  currency: string,
+  currentUserName?: string
 ): UseSplitExpenseParserReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +38,7 @@ export function useSplitExpenseParser(
 
     try {
       const { data, error: invokeError } = await supabase.functions.invoke('parse-split-expense', {
-        body: { text, memberNames, currency }
+        body: { text, memberNames, currency, currentUserName }
       });
 
       if (invokeError) {
@@ -62,7 +63,7 @@ export function useSplitExpenseParser(
     } finally {
       setIsLoading(false);
     }
-  }, [memberNames, currency]);
+  }, [memberNames, currency, currentUserName]);
 
   const reset = useCallback(() => {
     setResult(null);

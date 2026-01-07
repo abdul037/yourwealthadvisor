@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,13 +28,6 @@ interface QuickSplitExpenseInputProps {
   onEditExpense: (data: ParsedSplitExpense, paidByMemberId: string | null) => void;
 }
 
-const EXAMPLES = [
-  "Dinner 250 Ahmed paid",
-  "Uber 85",
-  "Groceries 120 Sara paid",
-  "Netflix 55"
-];
-
 export function QuickSplitExpenseInput({
   members,
   currency,
@@ -45,8 +38,24 @@ export function QuickSplitExpenseInput({
   const [input, setInput] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   
+  // Get current user's name for AI context
+  const currentUserName = useMemo(() => 
+    members.find(m => m.id === currentUserMemberId)?.name,
+    [members, currentUserMemberId]
+  );
+  
+  // Generate dynamic examples based on actual members
+  const dynamicExamples = useMemo(() => {
+    const otherMember = members.find(m => m.id !== currentUserMemberId)?.name || 'Friend';
+    return [
+      "Dinner 250 I paid",
+      `Uber 85 ${otherMember} paid`,
+      "Groceries 120 split equally"
+    ];
+  }, [members, currentUserMemberId]);
+  
   const memberNames = members.map(m => m.name);
-  const { parse, isLoading, error, result, reset } = useSplitExpenseParser(memberNames, currency);
+  const { parse, isLoading, error, result, reset } = useSplitExpenseParser(memberNames, currency, currentUserName);
   const { isListening, isSupported, transcript, interimTranscript, startListening, stopListening } = useVoiceInput();
 
   // Handle voice transcript
@@ -241,7 +250,7 @@ export function QuickSplitExpenseInput({
 
           <div className="flex flex-wrap gap-1.5">
             <span className="text-xs text-muted-foreground">Try:</span>
-            {EXAMPLES.slice(0, 3).map((example) => (
+            {dynamicExamples.map((example) => (
               <button
                 key={example}
                 type="button"
