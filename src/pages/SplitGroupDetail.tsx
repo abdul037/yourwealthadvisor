@@ -29,6 +29,8 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ExpenseFormContent } from '@/components/ExpenseFormContent';
+import { QuickSplitExpenseInput } from '@/components/QuickSplitExpenseInput';
+import { ParsedSplitExpense } from '@/hooks/useSplitExpenseParser';
 
 interface CustomSplitEntry {
   memberId: string;
@@ -956,7 +958,14 @@ export default function SplitGroupDetail() {
         <Tabs defaultValue="balances" className="space-y-4">
           <TabsList>
             <TabsTrigger value="balances">Balances</TabsTrigger>
-            <TabsTrigger value="expenses">Expenses</TabsTrigger>
+            <TabsTrigger value="expenses" className="gap-1.5">
+              Expenses
+              {expenses.length > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                  {expenses.length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="settlements" className="gap-1.5">
               Settlements
               {settlements.length > 0 && (
@@ -965,7 +974,14 @@ export default function SplitGroupDetail() {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsTrigger value="members" className="gap-1.5">
+              Members
+              {members.length > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                  {members.length}
+                </Badge>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="balances" className="space-y-4">
@@ -1058,6 +1074,57 @@ export default function SplitGroupDetail() {
           </TabsContent>
 
           <TabsContent value="expenses" className="space-y-4">
+            {/* Quick AI Input */}
+            <QuickSplitExpenseInput
+              members={members}
+              currency={group.currency}
+              currentUserMemberId={currentUserMember?.id}
+              onAddExpense={async (data) => {
+                try {
+                  // Prepare splits for equal distribution
+                  const equalAmount = data.amount / members.length;
+                  const customSplits = members.map(m => ({
+                    memberId: m.id,
+                    amount: equalAmount,
+                    percentage: 100 / members.length
+                  }));
+                  
+                  await addExpense.mutateAsync({
+                    description: data.description,
+                    amount: data.amount,
+                    splitType: data.splitType,
+                    notes: data.notes,
+                    expenseDate: new Date().toISOString().split('T')[0],
+                    customSplits,
+                    payers: [{ memberId: data.paidByMemberId, amount: data.amount }]
+                  });
+                  toast({ title: 'Expense added!' });
+                } catch (err) {
+                  toast({ title: 'Failed to add expense', variant: 'destructive' });
+                }
+              }}
+              onEditExpense={(parsed: ParsedSplitExpense, paidByMemberId: string | null) => {
+                // Pre-fill and open the expense dialog
+                setNewExpense({
+                  description: parsed.description,
+                  amount: parsed.amount.toString(),
+                  splitType: parsed.split_type,
+                  expenseDate: new Date().toISOString().split('T')[0],
+                  notes: parsed.notes || '',
+                });
+                
+                // Set up payers
+                const newPayers = members.map(m => ({
+                  memberId: m.id,
+                  amount: m.id === paidByMemberId ? parsed.amount.toString() : '',
+                  selected: m.id === paidByMemberId
+                }));
+                setPayerEntries(newPayers);
+                
+                setIsAddExpenseOpen(true);
+              }}
+            />
+
             {/* Search & Filter Bar */}
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
