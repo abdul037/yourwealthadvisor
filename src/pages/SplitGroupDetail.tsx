@@ -28,6 +28,7 @@ import { useExpenseGroup, ExpenseSplit, PayerEntry, ExpenseGroupExpense, Expense
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { ExpenseFormContent } from '@/components/ExpenseFormContent';
 
 interface CustomSplitEntry {
   memberId: string;
@@ -117,10 +118,11 @@ export default function SplitGroupDetail() {
           };
         }));
       } else {
-        setPayerEntries(members.map((m, i) => ({
+        // Smart default: select current user as payer
+        setPayerEntries(members.map(m => ({
           memberId: m.id,
           amount: '',
-          selected: i === 0,
+          selected: currentUserMember ? m.id === currentUserMember.id : false,
         })));
         setCustomSplits(members.map(m => ({
           memberId: m.id,
@@ -129,7 +131,7 @@ export default function SplitGroupDetail() {
         })));
       }
     }
-  }, [isAddExpenseOpen, isEditExpenseOpen, members, editingExpense]);
+  }, [isAddExpenseOpen, isEditExpenseOpen, members, editingExpense, currentUserMember]);
 
   // Initialize group settings when dialog opens
   useEffect(() => {
@@ -487,186 +489,22 @@ export default function SplitGroupDetail() {
   const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
   const hasNoMembers = members.length === 0;
 
-  // Helper function to render expense form content (NOT a component to avoid focus issues)
+  // Render expense form using the new component
   const renderExpenseFormContent = (isEdit: boolean = false) => (
-    <div className="space-y-4 pt-4">
-      <div className="space-y-2">
-        <Label>Description</Label>
-        <Input
-          placeholder="What was this for?"
-          value={newExpense.description}
-          onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Label>Amount ({group.currency})</Label>
-          <Input
-            type="number"
-            placeholder="0.00"
-            value={newExpense.amount}
-            onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Date</Label>
-          <Input
-            type="date"
-            value={newExpense.expenseDate}
-            onChange={(e) => setNewExpense({ ...newExpense, expenseDate: e.target.value })}
-          />
-        </div>
-      </div>
-
-      {/* Multi-Payer Selection */}
-      <div className="space-y-3 p-3 border rounded-lg">
-        <div className="flex justify-between text-sm">
-          <span className="font-medium">Who paid?</span>
-          {getSelectedPayerCount() > 1 && (
-            <span className={cn(
-              "font-medium",
-              Math.abs(getTotalPayerAmount() - (parseFloat(newExpense.amount) || 0)) < 0.01 
-                ? "text-green-500" 
-                : "text-destructive"
-            )}>
-              Total: {group.currency} {getTotalPayerAmount().toFixed(2)} / {parseFloat(newExpense.amount || '0').toFixed(2)}
-            </span>
-          )}
-        </div>
-        {members.map((member) => {
-          const entry = payerEntries.find(p => p.memberId === member.id);
-          return (
-            <div key={member.id} className="flex items-center gap-3">
-              <Checkbox
-                checked={entry?.selected || false}
-                onCheckedChange={(checked) => updatePayerEntry(member.id, 'selected', checked as boolean)}
-              />
-              <span className="flex-1 text-sm truncate">{member.name}</span>
-              {getSelectedPayerCount() > 1 && entry?.selected && (
-                <div className="flex items-center gap-1">
-                  <span className="text-muted-foreground text-xs">{group.currency}</span>
-                  <Input
-                    type="number"
-                    className="w-24 h-8 text-right text-sm"
-                    value={entry?.amount || ''}
-                    onChange={(e) => updatePayerEntry(member.id, 'amount', e.target.value)}
-                    placeholder="0.00"
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="space-y-2">
-        <Label>Split type</Label>
-        <div className="grid grid-cols-3 gap-2">
-          {(['equal', 'percentage', 'custom'] as const).map((type) => (
-            <Button
-              key={type}
-              type="button"
-              variant={newExpense.splitType === type ? 'default' : 'outline'}
-              className="gap-1"
-              onClick={() => setNewExpense({ ...newExpense, splitType: type })}
-            >
-              {type === 'equal' && <Equal className="h-4 w-4" />}
-              {type === 'percentage' && <Percent className="h-4 w-4" />}
-              {type === 'custom' && <DollarSign className="h-4 w-4" />}
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Percentage Split UI */}
-      {newExpense.splitType === 'percentage' && (
-        <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
-          <div className="flex justify-between text-sm">
-            <span className="font-medium">Split by Percentage</span>
-            <span className={cn(
-              "font-medium",
-              Math.abs(getTotalPercentage() - 100) < 0.01 ? "text-green-500" : "text-destructive"
-            )}>
-              Total: {getTotalPercentage().toFixed(1)}%
-            </span>
-          </div>
-          {members.map((member) => {
-            const split = customSplits.find(s => s.memberId === member.id);
-            return (
-              <div key={member.id} className="flex items-center gap-3">
-                <span className="flex-1 text-sm truncate">{member.name}</span>
-                <div className="flex items-center gap-1">
-                  <Input
-                    type="number"
-                    className="w-20 text-right"
-                    value={split?.percentage || ''}
-                    onChange={(e) => updateCustomSplit(member.id, 'percentage', e.target.value)}
-                    placeholder="0"
-                  />
-                  <span className="text-muted-foreground">%</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Custom Amount Split UI */}
-      {newExpense.splitType === 'custom' && (
-        <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
-          <div className="flex justify-between text-sm">
-            <span className="font-medium">Split by Amount</span>
-            <span className={cn(
-              "font-medium",
-              Math.abs(getTotalCustomAmount() - (parseFloat(newExpense.amount) || 0)) < 0.01 ? "text-green-500" : "text-destructive"
-            )}>
-              Total: {group.currency} {getTotalCustomAmount().toFixed(2)} / {parseFloat(newExpense.amount || '0').toFixed(2)}
-            </span>
-          </div>
-          {members.map((member) => {
-            const split = customSplits.find(s => s.memberId === member.id);
-            return (
-              <div key={member.id} className="flex items-center gap-3">
-                <span className="flex-1 text-sm truncate">{member.name}</span>
-                <div className="flex items-center gap-1">
-                  <span className="text-muted-foreground">{group.currency}</span>
-                  <Input
-                    type="number"
-                    className="w-24 text-right"
-                    value={split?.amount || ''}
-                    onChange={(e) => updateCustomSplit(member.id, 'amount', e.target.value)}
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Notes */}
-      <div className="space-y-2">
-        <Label>Notes (optional)</Label>
-        <Textarea
-          placeholder="Add any additional details..."
-          value={newExpense.notes}
-          onChange={(e) => setNewExpense({ ...newExpense, notes: e.target.value })}
-          rows={2}
-        />
-      </div>
-
-      <Button 
-        className="w-full" 
-        onClick={isEdit ? handleEditExpense : handleAddExpense} 
-        disabled={(isEdit ? updateExpense.isPending : addExpense.isPending) || members.length === 0}
-      >
-        {isEdit 
-          ? (updateExpense.isPending ? 'Saving...' : 'Save Changes')
-          : (addExpense.isPending ? 'Adding...' : 'Add Expense')
-        }
-      </Button>
-    </div>
+    <ExpenseFormContent
+      isEdit={isEdit}
+      expense={newExpense}
+      setExpense={setNewExpense}
+      members={members}
+      currentUserMember={currentUserMember}
+      payerEntries={payerEntries}
+      setPayerEntries={setPayerEntries}
+      customSplits={customSplits}
+      setCustomSplits={setCustomSplits}
+      currency={group.currency}
+      onSubmit={isEdit ? handleEditExpense : handleAddExpense}
+      isPending={isEdit ? updateExpense.isPending : addExpense.isPending}
+    />
   );
 
   return (
