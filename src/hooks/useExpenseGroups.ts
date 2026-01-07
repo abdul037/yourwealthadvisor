@@ -86,6 +86,14 @@ export function useExpenseGroups() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Get user's profile for name
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      // Create the group
       const { data, error } = await supabase
         .from('expense_groups')
         .insert({ ...group, user_id: user.id })
@@ -93,6 +101,21 @@ export function useExpenseGroups() {
         .single();
       
       if (error) throw error;
+
+      // Auto-add creator as first member
+      const { error: memberError } = await supabase
+        .from('expense_group_members')
+        .insert({
+          group_id: data.id,
+          user_id: user.id,
+          name: profile?.full_name || user.email?.split('@')[0] || 'Me',
+          is_creator: true,
+        });
+      
+      if (memberError) {
+        console.error('Failed to add creator as member:', memberError);
+      }
+
       return data as ExpenseGroup;
     },
     onSuccess: (data) => {
@@ -320,15 +343,45 @@ export function useExpenseGroup(groupId: string | undefined) {
 
   const settleUp = useMutation({
     mutationFn: async ({ fromMemberId, toMemberId, amount }: { fromMemberId: string; toMemberId: string; amount: number }) => {
-      if (!groupId) throw new Error('No group ID');
+      if (!groupId || !group) throw new Error('No group ID');
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Get member names for transaction description
+      const fromMember = members.find(m => m.id === fromMemberId);
+      const toMember = members.find(m => m.id === toMemberId);
+
+      // Create transaction record for the settlement
+      const { data: transaction, error: txError } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: user.id,
+          type: 'expense',
+          category: 'Transfer',
+          subcategory: 'Split Settlement',
+          amount,
+          currency: group.currency,
+          description: `Settlement: ${fromMember?.name || 'Unknown'} → ${toMember?.name || 'Unknown'}`,
+          notes: `Split group: ${group.name}`,
+          transaction_date: new Date().toISOString().split('T')[0],
+        })
+        .select()
+        .single();
+
+      if (txError) {
+        console.error('Failed to create transaction:', txError);
+      }
+
+      // Create settlement record
       const { data, error } = await supabase
         .from('expense_settlements')
         .insert({ 
           group_id: groupId, 
           from_member_id: fromMemberId, 
           to_member_id: toMemberId, 
-          amount 
+          amount,
+          transaction_id: transaction?.id || null,
         })
         .select()
         .single();
@@ -338,6 +391,7 @@ export function useExpenseGroup(groupId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expense-settlements', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast({ title: 'Settlement recorded' });
     },
   });
