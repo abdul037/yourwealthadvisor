@@ -65,6 +65,7 @@ export interface ExpenseSettlement {
   amount: number;
   transaction_id: string | null;
   settled_at: string;
+  settlement_date: string | null;
 }
 
 export interface MemberBalance {
