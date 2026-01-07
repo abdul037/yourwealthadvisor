@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Users, Receipt, Share2, Copy, Check, 
-  UserPlus, DollarSign, Percent, Equal, ArrowRightLeft 
+  UserPlus, DollarSign, Percent, Equal, ArrowRightLeft, ChevronDown, ChevronUp, AlertCircle 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,18 +13,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AppLayout } from '@/components/AppLayout';
-import { useExpenseGroup } from '@/hooks/useExpenseGroups';
+import { useExpenseGroup, ExpenseSplit } from '@/hooks/useExpenseGroups';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+
+interface CustomSplitEntry {
+  memberId: string;
+  amount: string;
+  percentage: string;
+}
 
 export default function SplitGroupDetail() {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const { 
-    group, members, expenses, balances, 
+    group, members, expenses, splits, balances, 
     isLoading, addMember, addExpense, settleUp 
   } = useExpenseGroup(groupId);
 
@@ -32,6 +39,7 @@ export default function SplitGroupDetail() {
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isSettleOpen, setIsSettleOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [expandedExpenses, setExpandedExpenses] = useState<Set<string>>(new Set());
 
   const [newMember, setNewMember] = useState({ name: '', email: '' });
   const [newExpense, setNewExpense] = useState({
@@ -40,11 +48,23 @@ export default function SplitGroupDetail() {
     paidByMemberId: '',
     splitType: 'equal' as 'equal' | 'percentage' | 'custom',
   });
+  const [customSplits, setCustomSplits] = useState<CustomSplitEntry[]>([]);
   const [settlement, setSettlement] = useState({
     fromMemberId: '',
     toMemberId: '',
     amount: '',
   });
+
+  // Initialize custom splits when members change or dialog opens
+  useEffect(() => {
+    if (isAddExpenseOpen && members.length > 0) {
+      setCustomSplits(members.map(m => ({
+        memberId: m.id,
+        amount: '',
+        percentage: (100 / members.length).toFixed(2),
+      })));
+    }
+  }, [isAddExpenseOpen, members]);
 
   const handleCopyInvite = () => {
     if (!group) return;
@@ -62,13 +82,52 @@ export default function SplitGroupDetail() {
     setNewMember({ name: '', email: '' });
   };
 
+  const validateSplits = (): boolean => {
+    const expenseAmount = parseFloat(newExpense.amount) || 0;
+    
+    if (newExpense.splitType === 'percentage') {
+      const totalPercentage = customSplits.reduce((sum, s) => sum + (parseFloat(s.percentage) || 0), 0);
+      if (Math.abs(totalPercentage - 100) > 0.01) {
+        toast({ title: 'Invalid split', description: `Percentages must total 100% (currently ${totalPercentage.toFixed(2)}%)`, variant: 'destructive' });
+        return false;
+      }
+    } else if (newExpense.splitType === 'custom') {
+      const totalAmount = customSplits.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+      if (Math.abs(totalAmount - expenseAmount) > 0.01) {
+        toast({ title: 'Invalid split', description: `Amounts must total ${group?.currency} ${expenseAmount.toFixed(2)} (currently ${totalAmount.toFixed(2)})`, variant: 'destructive' });
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleAddExpense = async () => {
     if (!newExpense.description.trim() || !newExpense.amount || !newExpense.paidByMemberId) return;
+    
+    if (newExpense.splitType !== 'equal' && !validateSplits()) return;
+
+    const expenseAmount = parseFloat(newExpense.amount);
+    let splitData: { memberId: string; amount?: number; percentage?: number }[] | undefined;
+
+    if (newExpense.splitType === 'percentage') {
+      splitData = customSplits.map(s => ({
+        memberId: s.memberId,
+        percentage: parseFloat(s.percentage) || 0,
+        amount: (expenseAmount * (parseFloat(s.percentage) || 0)) / 100,
+      }));
+    } else if (newExpense.splitType === 'custom') {
+      splitData = customSplits.map(s => ({
+        memberId: s.memberId,
+        amount: parseFloat(s.amount) || 0,
+      }));
+    }
+
     await addExpense.mutateAsync({
       description: newExpense.description,
-      amount: parseFloat(newExpense.amount),
+      amount: expenseAmount,
       paidByMemberId: newExpense.paidByMemberId,
       splitType: newExpense.splitType,
+      customSplits: splitData,
     });
     setIsAddExpenseOpen(false);
     setNewExpense({ description: '', amount: '', paidByMemberId: '', splitType: 'equal' });
@@ -84,6 +143,31 @@ export default function SplitGroupDetail() {
     setIsSettleOpen(false);
     setSettlement({ fromMemberId: '', toMemberId: '', amount: '' });
   };
+
+  const toggleExpenseExpanded = (expenseId: string) => {
+    setExpandedExpenses(prev => {
+      const next = new Set(prev);
+      if (next.has(expenseId)) {
+        next.delete(expenseId);
+      } else {
+        next.add(expenseId);
+      }
+      return next;
+    });
+  };
+
+  const getExpenseSplits = (expenseId: string): ExpenseSplit[] => {
+    return splits.filter(s => s.expense_id === expenseId);
+  };
+
+  const updateCustomSplit = (memberId: string, field: 'amount' | 'percentage', value: string) => {
+    setCustomSplits(prev => prev.map(s => 
+      s.memberId === memberId ? { ...s, [field]: value } : s
+    ));
+  };
+
+  const getTotalPercentage = () => customSplits.reduce((sum, s) => sum + (parseFloat(s.percentage) || 0), 0);
+  const getTotalCustomAmount = () => customSplits.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
 
   if (isLoading) {
     return (
@@ -109,6 +193,7 @@ export default function SplitGroupDetail() {
   }
 
   const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+  const hasNoMembers = members.length === 0;
 
   return (
     <AppLayout>
@@ -129,6 +214,16 @@ export default function SplitGroupDetail() {
             {copied ? 'Copied!' : 'Invite'}
           </Button>
         </div>
+
+        {/* No members alert */}
+        {hasNoMembers && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              No members in this group yet. Add members to start tracking expenses.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -200,12 +295,12 @@ export default function SplitGroupDetail() {
 
           <Dialog open={isAddExpenseOpen} onOpenChange={setIsAddExpenseOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2" disabled={hasNoMembers}>
                 <Plus className="h-4 w-4" />
                 Add Expense
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add Expense</DialogTitle>
               </DialogHeader>
@@ -262,6 +357,73 @@ export default function SplitGroupDetail() {
                     ))}
                   </div>
                 </div>
+
+                {/* Percentage Split UI */}
+                {newExpense.splitType === 'percentage' && (
+                  <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">Split by Percentage</span>
+                      <span className={cn(
+                        "font-medium",
+                        Math.abs(getTotalPercentage() - 100) < 0.01 ? "text-green-500" : "text-destructive"
+                      )}>
+                        Total: {getTotalPercentage().toFixed(1)}%
+                      </span>
+                    </div>
+                    {members.map((member) => {
+                      const split = customSplits.find(s => s.memberId === member.id);
+                      return (
+                        <div key={member.id} className="flex items-center gap-3">
+                          <span className="flex-1 text-sm truncate">{member.name}</span>
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              className="w-20 text-right"
+                              value={split?.percentage || ''}
+                              onChange={(e) => updateCustomSplit(member.id, 'percentage', e.target.value)}
+                              placeholder="0"
+                            />
+                            <span className="text-muted-foreground">%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Custom Amount Split UI */}
+                {newExpense.splitType === 'custom' && (
+                  <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">Split by Amount</span>
+                      <span className={cn(
+                        "font-medium",
+                        Math.abs(getTotalCustomAmount() - (parseFloat(newExpense.amount) || 0)) < 0.01 ? "text-green-500" : "text-destructive"
+                      )}>
+                        Total: {group.currency} {getTotalCustomAmount().toFixed(2)} / {parseFloat(newExpense.amount || '0').toFixed(2)}
+                      </span>
+                    </div>
+                    {members.map((member) => {
+                      const split = customSplits.find(s => s.memberId === member.id);
+                      return (
+                        <div key={member.id} className="flex items-center gap-3">
+                          <span className="flex-1 text-sm truncate">{member.name}</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">{group.currency}</span>
+                            <Input
+                              type="number"
+                              className="w-24 text-right"
+                              value={split?.amount || ''}
+                              onChange={(e) => updateCustomSplit(member.id, 'amount', e.target.value)}
+                              placeholder="0.00"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <Button 
                   className="w-full" 
                   onClick={handleAddExpense} 
@@ -275,7 +437,7 @@ export default function SplitGroupDetail() {
 
           <Dialog open={isSettleOpen} onOpenChange={setIsSettleOpen}>
             <DialogTrigger asChild>
-              <Button variant="secondary" className="gap-2">
+              <Button variant="secondary" className="gap-2" disabled={hasNoMembers}>
                 <ArrowRightLeft className="h-4 w-4" />
                 Settle Up
               </Button>
@@ -393,26 +555,55 @@ export default function SplitGroupDetail() {
               <div className="space-y-3">
                 {expenses.map((expense) => {
                   const paidBy = members.find(m => m.id === expense.paid_by_member_id);
+                  const expenseSplits = getExpenseSplits(expense.id);
+                  const isExpanded = expandedExpenses.has(expense.id);
+
                   return (
-                    <Card key={expense.id}>
-                      <CardContent className="py-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10">
-                            <Receipt className="h-5 w-5 text-primary" />
+                    <Collapsible key={expense.id} open={isExpanded} onOpenChange={() => toggleExpenseExpanded(expense.id)}>
+                      <Card>
+                        <CollapsibleTrigger className="w-full">
+                          <CardContent className="py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-primary/10">
+                                <Receipt className="h-5 w-5 text-primary" />
+                              </div>
+                              <div className="text-left">
+                                <p className="font-medium">{expense.description}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Paid by {paidBy?.name || 'Unknown'} · {format(new Date(expense.created_at), 'MMM d')}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="text-right">
+                                <p className="font-semibold">{group.currency} {Number(expense.amount).toLocaleString()}</p>
+                                <Badge variant="outline" className="text-xs">{expense.split_type}</Badge>
+                              </div>
+                              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </div>
+                          </CardContent>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="px-4 pb-4 border-t pt-3">
+                            <p className="text-sm font-medium mb-2">Split Details:</p>
+                            <div className="space-y-1">
+                              {expenseSplits.map((split) => {
+                                const member = members.find(m => m.id === split.member_id);
+                                return (
+                                  <div key={split.id} className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">{member?.name || 'Unknown'}</span>
+                                    <span>
+                                      {group.currency} {Number(split.amount).toFixed(2)}
+                                      {split.percentage && ` (${split.percentage}%)`}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium">{expense.description}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Paid by {paidBy?.name || 'Unknown'} · {format(new Date(expense.created_at), 'MMM d')}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">{group.currency} {Number(expense.amount).toLocaleString()}</p>
-                          <Badge variant="outline" className="text-xs">{expense.split_type}</Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CollapsibleContent>
+                      </Card>
+                    </Collapsible>
                   );
                 })}
               </div>
@@ -424,7 +615,11 @@ export default function SplitGroupDetail() {
               <Card className="border-dashed">
                 <CardContent className="py-8 text-center">
                   <Users className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">No members yet. Add people to this group!</p>
+                  <p className="text-muted-foreground mb-4">No members yet. Add people to this group!</p>
+                  <Button onClick={() => setIsAddMemberOpen(true)} className="gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    Add First Member
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
