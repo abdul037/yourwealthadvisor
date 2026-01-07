@@ -31,7 +31,7 @@ export default function SplitGroupDetail() {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const { 
-    group, members, expenses, splits, balances, 
+    group, members, expenses, splits, balances, settlementSuggestions,
     isLoading, addMember, addExpense, settleUp 
   } = useExpenseGroup(groupId);
 
@@ -540,6 +540,54 @@ export default function SplitGroupDetail() {
                   </Card>
                 ))}
               </div>
+            )}
+
+            {/* Smart Settlement Suggestions */}
+            {settlementSuggestions.length > 0 && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ArrowRightLeft className="h-4 w-4" />
+                    Suggested Settlements
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Minimum transactions to settle all balances
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {settlementSuggestions.map((suggestion, idx) => (
+                    <div 
+                      key={idx} 
+                      className="flex items-center justify-between p-3 bg-background rounded-lg border"
+                    >
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="font-medium">{suggestion.fromMemberName}</span>
+                        <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                        <span className="font-medium">{suggestion.toMemberName}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-primary">
+                          {group.currency} {suggestion.amount.toLocaleString()}
+                        </span>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setSettlement({
+                              fromMemberId: suggestion.fromMemberId,
+                              toMemberId: suggestion.toMemberId,
+                              amount: suggestion.amount.toString(),
+                            });
+                            setIsSettleOpen(true);
+                          }}
+                        >
+                          Settle
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
 

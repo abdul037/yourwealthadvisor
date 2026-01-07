@@ -65,6 +65,22 @@ export interface MemberBalance {
   balance: number; // positive = gets money back, negative = owes money
 }
 
+export interface SettlementSuggestion {
+  fromMemberId: string;
+  fromMemberName: string;
+  toMemberId: string;
+  toMemberName: string;
+  amount: number;
+}
+
+export interface MemberBalance {
+  memberId: string;
+  memberName: string;
+  paid: number;
+  owes: number;
+  balance: number; // positive = gets money back, negative = owes money
+}
+
 export function useExpenseGroups() {
   const queryClient = useQueryClient();
 
@@ -256,6 +272,44 @@ export function useExpenseGroup(groupId: string | undefined) {
     };
   });
 
+  // Calculate smart settlement suggestions (minimize number of transactions)
+  const settlementSuggestions: SettlementSuggestion[] = (() => {
+    const suggestions: SettlementSuggestion[] = [];
+    
+    // Create working copy of balances
+    const workingBalances = balances.map(b => ({ ...b }));
+    
+    // Sort: debtors (negative balance) and creditors (positive balance)
+    const debtors = workingBalances.filter(b => b.balance < -0.01).sort((a, b) => a.balance - b.balance);
+    const creditors = workingBalances.filter(b => b.balance > 0.01).sort((a, b) => b.balance - a.balance);
+    
+    let i = 0, j = 0;
+    while (i < debtors.length && j < creditors.length) {
+      const debtor = debtors[i];
+      const creditor = creditors[j];
+      
+      const amount = Math.min(Math.abs(debtor.balance), creditor.balance);
+      
+      if (amount > 0.01) {
+        suggestions.push({
+          fromMemberId: debtor.memberId,
+          fromMemberName: debtor.memberName,
+          toMemberId: creditor.memberId,
+          toMemberName: creditor.memberName,
+          amount: Math.round(amount * 100) / 100,
+        });
+        
+        debtor.balance += amount;
+        creditor.balance -= amount;
+      }
+      
+      if (Math.abs(debtor.balance) < 0.01) i++;
+      if (creditor.balance < 0.01) j++;
+    }
+    
+    return suggestions;
+  })();
+
   const addMember = useMutation({
     mutationFn: async ({ name, email, userId }: { name: string; email?: string; userId?: string }) => {
       if (!groupId) throw new Error('No group ID');
@@ -403,6 +457,7 @@ export function useExpenseGroup(groupId: string | undefined) {
     splits,
     settlements,
     balances,
+    settlementSuggestions,
     isLoading: groupLoading || membersLoading || expensesLoading,
     addMember,
     addExpense,
