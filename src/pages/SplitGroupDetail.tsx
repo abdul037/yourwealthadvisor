@@ -149,7 +149,13 @@ export default function SplitGroupDetail() {
 
   const handleCopyInvite = () => {
     if (!group) return;
-    const inviteUrl = `${window.location.origin}/split/join/${group.invite_code}`;
+    // Create URL-friendly slug from group name
+    const slug = group.name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .substring(0, 30);
+    const inviteUrl = `${window.location.origin}/split/join/${slug}-${group.invite_code}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
     toast({ title: 'Invite link copied!' });
