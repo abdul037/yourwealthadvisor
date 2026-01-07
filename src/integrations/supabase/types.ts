@@ -221,8 +221,10 @@ export type Database = {
           amount: number
           created_at: string | null
           description: string
+          expense_date: string | null
           group_id: string
           id: string
+          notes: string | null
           paid_by_member_id: string
           split_type: string
           updated_at: string | null
@@ -231,8 +233,10 @@ export type Database = {
           amount: number
           created_at?: string | null
           description: string
+          expense_date?: string | null
           group_id: string
           id?: string
+          notes?: string | null
           paid_by_member_id: string
           split_type?: string
           updated_at?: string | null
@@ -241,8 +245,10 @@ export type Database = {
           amount?: number
           created_at?: string | null
           description?: string
+          expense_date?: string | null
           group_id?: string
           id?: string
+          notes?: string | null
           paid_by_member_id?: string
           split_type?: string
           updated_at?: string | null

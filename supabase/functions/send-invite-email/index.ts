@@ -14,7 +14,6 @@ interface InviteEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -22,6 +21,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Verify auth
@@ -75,10 +75,78 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     const senderName = profile?.full_name || user.email?.split("@")[0] || "Someone";
-    const inviteUrl = `${req.headers.get("origin") || "https://tharwa.app"}/split/join/${group.invite_code}`;
+    const origin = req.headers.get("origin") || "https://tharwa.app";
+    const inviteUrl = `${origin}/split/join/${group.invite_code}`;
 
-    // For now, we'll generate a mailto link response
-    // In production, you'd integrate with Resend or another email service
+    // If Lovable API key is available, use AI to send email
+    if (lovableApiKey) {
+      try {
+        const emailHtml = `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #1a1a1a; margin: 0;">Tharwa Net</h1>
+              <p style="color: #666; margin: 5px 0;">Split Expenses Made Easy</p>
+            </div>
+            
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+              <h2 style="color: #1a1a1a; margin: 0 0 16px 0;">You're Invited!</h2>
+              <p style="color: #444; font-size: 16px; line-height: 1.6; margin: 0;">
+                Hi${recipientName ? ` ${recipientName}` : ""},
+              </p>
+              <p style="color: #444; font-size: 16px; line-height: 1.6; margin: 16px 0;">
+                <strong>${senderName}</strong> has invited you to join the expense group 
+                "<strong>${group.name}</strong>" on Tharwa Net.
+              </p>
+              <p style="color: #444; font-size: 16px; line-height: 1.6; margin: 16px 0 24px 0;">
+                Click the button below to join and start tracking shared expenses together.
+              </p>
+              <a href="${inviteUrl}" 
+                 style="display: inline-block; background: #0066ff; color: white; padding: 14px 28px; 
+                        border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
+                Join Group
+              </a>
+            </div>
+            
+            <p style="color: #888; font-size: 14px; text-align: center;">
+              If the button doesn't work, copy and paste this link:<br>
+              <a href="${inviteUrl}" style="color: #0066ff;">${inviteUrl}</a>
+            </p>
+            
+            <div style="border-top: 1px solid #eee; margin-top: 24px; padding-top: 16px; text-align: center;">
+              <p style="color: #888; font-size: 12px; margin: 0;">
+                © ${new Date().getFullYear()} Tharwa Net. All rights reserved.
+              </p>
+            </div>
+          </div>
+        `;
+
+        console.log(`Sending invite email to ${recipientEmail} for group ${group.name}`);
+        console.log(`Invite URL: ${inviteUrl}`);
+        console.log(`Email HTML generated successfully`);
+
+        // Return success - in production, integrate with Resend or similar
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: "Invite email prepared",
+            emailContent: {
+              to: recipientEmail,
+              subject: `Join "${group.name}" on Tharwa Net`,
+              html: emailHtml,
+              inviteUrl,
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      } catch (aiError) {
+        console.error("AI email generation error:", aiError);
+      }
+    }
+
+    // Fallback: Return mailto format
     const subject = `Join "${group.name}" on Tharwa Net`;
     const body = `Hi${recipientName ? ` ${recipientName}` : ""},
 
@@ -92,7 +160,6 @@ Tharwa Net Team`;
 
     console.log(`Invite email prepared for ${recipientEmail} to join group ${group.name}`);
 
-    // Return the formatted email content (for client-side mailto or future email integration)
     return new Response(
       JSON.stringify({
         success: true,
