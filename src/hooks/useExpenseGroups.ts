@@ -723,6 +723,64 @@ export function useExpenseGroup(groupId: string | undefined) {
     },
   });
 
+  const updateSettlement = useMutation({
+    mutationFn: async ({ 
+      settlementId, 
+      fromMemberId, 
+      toMemberId, 
+      amount, 
+      settlementDate 
+    }: { 
+      settlementId: string; 
+      fromMemberId: string; 
+      toMemberId: string; 
+      amount: number; 
+      settlementDate: string; 
+    }) => {
+      if (!groupId || !group) throw new Error('No group ID');
+      if (!isGroupAdmin) throw new Error('Only group admin can edit settlements');
+
+      const settlement = settlements.find(s => s.id === settlementId);
+      if (!settlement) throw new Error('Settlement not found');
+
+      const fromMember = members.find(m => m.id === fromMemberId);
+      const toMember = members.find(m => m.id === toMemberId);
+
+      // Update the settlement record
+      const { error: settlementError } = await supabase
+        .from('expense_settlements')
+        .update({ 
+          from_member_id: fromMemberId, 
+          to_member_id: toMemberId, 
+          amount, 
+          settlement_date: settlementDate 
+        })
+        .eq('id', settlementId);
+      
+      if (settlementError) throw settlementError;
+
+      // Update linked transaction if exists
+      if (settlement.transaction_id) {
+        await supabase
+          .from('transactions')
+          .update({
+            amount,
+            description: `Settlement: ${fromMember?.name || 'Unknown'} → ${toMember?.name || 'Unknown'}`,
+            transaction_date: settlementDate,
+          })
+          .eq('id', settlement.transaction_id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-settlements', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      toast({ title: 'Settlement updated' });
+    },
+    onError: (error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
   const updateGroup = useMutation({
     mutationFn: async (data: { name?: string; description?: string; category?: string; currency?: string }) => {
       if (!groupId) throw new Error('No group ID');
@@ -848,6 +906,7 @@ export function useExpenseGroup(groupId: string | undefined) {
     deleteExpense,
     settleUp,
     deleteSettlement,
+    updateSettlement,
     updateGroup,
     markGroupSettled,
     leaveGroup,
