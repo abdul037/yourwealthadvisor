@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Users, Receipt, Share2, Copy, Check, 
-  UserPlus, DollarSign, Percent, Equal, ArrowRightLeft, ChevronDown, ChevronUp, AlertCircle 
+  UserPlus, DollarSign, Percent, Equal, ArrowRightLeft, ChevronDown, ChevronUp, AlertCircle,
+  Mail, Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,8 +16,9 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Checkbox } from '@/components/ui/checkbox';
 import { AppLayout } from '@/components/AppLayout';
-import { useExpenseGroup, ExpenseSplit } from '@/hooks/useExpenseGroups';
+import { useExpenseGroup, ExpenseSplit, PayerEntry } from '@/hooks/useExpenseGroups';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -27,12 +29,18 @@ interface CustomSplitEntry {
   percentage: string;
 }
 
+interface PayerFormEntry {
+  memberId: string;
+  amount: string;
+  selected: boolean;
+}
+
 export default function SplitGroupDetail() {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const { 
-    group, members, expenses, splits, balances, settlementSuggestions,
-    isLoading, addMember, addExpense, settleUp 
+    group, members, expenses, splits, payers, balances, settlementSuggestions,
+    isLoading, addMember, addExpense, settleUp, getExpensePayers 
   } = useExpenseGroup(groupId);
 
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
@@ -45,9 +53,9 @@ export default function SplitGroupDetail() {
   const [newExpense, setNewExpense] = useState({
     description: '',
     amount: '',
-    paidByMemberId: '',
     splitType: 'equal' as 'equal' | 'percentage' | 'custom',
   });
+  const [payerEntries, setPayerEntries] = useState<PayerFormEntry[]>([]);
   const [customSplits, setCustomSplits] = useState<CustomSplitEntry[]>([]);
   const [settlement, setSettlement] = useState({
     fromMemberId: '',
@@ -55,9 +63,14 @@ export default function SplitGroupDetail() {
     amount: '',
   });
 
-  // Initialize custom splits when members change or dialog opens
+  // Initialize payer entries when members change or dialog opens
   useEffect(() => {
     if (isAddExpenseOpen && members.length > 0) {
+      setPayerEntries(members.map((m, i) => ({
+        memberId: m.id,
+        amount: '',
+        selected: i === 0, // Default first member as payer
+      })));
       setCustomSplits(members.map(m => ({
         memberId: m.id,
         amount: '',
@@ -73,6 +86,15 @@ export default function SplitGroupDetail() {
     setCopied(true);
     toast({ title: 'Invite link copied!' });
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopyEmailInvite = () => {
+    if (!group) return;
+    const inviteUrl = `${window.location.origin}/split/join/${group.invite_code}`;
+    const subject = encodeURIComponent(`Join "${group.name}" on Tharwa Net`);
+    const body = encodeURIComponent(`You've been invited to join the expense group "${group.name}".\n\nClick here to join: ${inviteUrl}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    toast({ title: 'Email compose opened' });
   };
 
   const handleAddMember = async () => {
@@ -101,12 +123,51 @@ export default function SplitGroupDetail() {
     return true;
   };
 
-  const handleAddExpense = async () => {
-    if (!newExpense.description.trim() || !newExpense.amount || !newExpense.paidByMemberId) return;
+  const validatePayers = (): boolean => {
+    const expenseAmount = parseFloat(newExpense.amount) || 0;
+    const selectedPayers = payerEntries.filter(p => p.selected);
     
+    if (selectedPayers.length === 0) {
+      toast({ title: 'Invalid payers', description: 'Select at least one payer', variant: 'destructive' });
+      return false;
+    }
+    
+    if (selectedPayers.length > 1) {
+      const totalPaid = selectedPayers.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      if (Math.abs(totalPaid - expenseAmount) > 0.01) {
+        toast({ 
+          title: 'Invalid payer amounts', 
+          description: `Payer amounts must total ${group?.currency} ${expenseAmount.toFixed(2)} (currently ${totalPaid.toFixed(2)})`, 
+          variant: 'destructive' 
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleAddExpense = async () => {
+    if (!newExpense.description.trim() || !newExpense.amount) return;
+    
+    if (!validatePayers()) return;
     if (newExpense.splitType !== 'equal' && !validateSplits()) return;
 
     const expenseAmount = parseFloat(newExpense.amount);
+    const selectedPayers = payerEntries.filter(p => p.selected);
+    
+    // Build payers array
+    let payersData: PayerEntry[] | undefined;
+    if (selectedPayers.length === 1) {
+      // Single payer - use full amount
+      payersData = [{ memberId: selectedPayers[0].memberId, amount: expenseAmount }];
+    } else {
+      // Multi-payer
+      payersData = selectedPayers.map(p => ({
+        memberId: p.memberId,
+        amount: parseFloat(p.amount) || 0,
+      }));
+    }
+
     let splitData: { memberId: string; amount?: number; percentage?: number }[] | undefined;
 
     if (newExpense.splitType === 'percentage') {
@@ -125,12 +186,12 @@ export default function SplitGroupDetail() {
     await addExpense.mutateAsync({
       description: newExpense.description,
       amount: expenseAmount,
-      paidByMemberId: newExpense.paidByMemberId,
+      payers: payersData,
       splitType: newExpense.splitType,
       customSplits: splitData,
     });
     setIsAddExpenseOpen(false);
-    setNewExpense({ description: '', amount: '', paidByMemberId: '', splitType: 'equal' });
+    setNewExpense({ description: '', amount: '', splitType: 'equal' });
   };
 
   const handleSettle = async () => {
@@ -166,8 +227,16 @@ export default function SplitGroupDetail() {
     ));
   };
 
+  const updatePayerEntry = (memberId: string, field: 'amount' | 'selected', value: string | boolean) => {
+    setPayerEntries(prev => prev.map(p => 
+      p.memberId === memberId ? { ...p, [field]: value } : p
+    ));
+  };
+
   const getTotalPercentage = () => customSplits.reduce((sum, s) => sum + (parseFloat(s.percentage) || 0), 0);
   const getTotalCustomAmount = () => customSplits.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+  const getTotalPayerAmount = () => payerEntries.filter(p => p.selected).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  const getSelectedPayerCount = () => payerEntries.filter(p => p.selected).length;
 
   if (isLoading) {
     return (
@@ -209,10 +278,16 @@ export default function SplitGroupDetail() {
               <p className="text-muted-foreground">{group.description}</p>
             )}
           </div>
-          <Button variant="outline" size="sm" className="gap-2" onClick={handleCopyInvite}>
-            {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-            {copied ? 'Copied!' : 'Invite'}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleCopyInvite}>
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? 'Copied!' : 'Copy Link'}
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleCopyEmailInvite}>
+              <Mail className="h-4 w-4" />
+              Email
+            </Button>
+          </div>
         </div>
 
         {/* No members alert */}
@@ -322,22 +397,48 @@ export default function SplitGroupDetail() {
                     onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Paid by</Label>
-                  <Select 
-                    value={newExpense.paidByMemberId} 
-                    onValueChange={(v) => setNewExpense({ ...newExpense, paidByMemberId: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Who paid?" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {members.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+
+                {/* Multi-Payer Selection */}
+                <div className="space-y-3 p-3 border rounded-lg">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium">Who paid?</span>
+                    {getSelectedPayerCount() > 1 && (
+                      <span className={cn(
+                        "font-medium",
+                        Math.abs(getTotalPayerAmount() - (parseFloat(newExpense.amount) || 0)) < 0.01 
+                          ? "text-green-500" 
+                          : "text-destructive"
+                      )}>
+                        Total: {group.currency} {getTotalPayerAmount().toFixed(2)} / {parseFloat(newExpense.amount || '0').toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                  {members.map((member) => {
+                    const entry = payerEntries.find(p => p.memberId === member.id);
+                    return (
+                      <div key={member.id} className="flex items-center gap-3">
+                        <Checkbox
+                          checked={entry?.selected || false}
+                          onCheckedChange={(checked) => updatePayerEntry(member.id, 'selected', checked as boolean)}
+                        />
+                        <span className="flex-1 text-sm truncate">{member.name}</span>
+                        {getSelectedPayerCount() > 1 && entry?.selected && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground text-xs">{group.currency}</span>
+                            <Input
+                              type="number"
+                              className="w-24 h-8 text-right text-sm"
+                              value={entry?.amount || ''}
+                              onChange={(e) => updatePayerEntry(member.id, 'amount', e.target.value)}
+                              placeholder="0.00"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
+
                 <div className="space-y-2">
                   <Label>Split type</Label>
                   <div className="grid grid-cols-3 gap-2">
@@ -602,9 +703,21 @@ export default function SplitGroupDetail() {
             ) : (
               <div className="space-y-3">
                 {expenses.map((expense) => {
-                  const paidBy = members.find(m => m.id === expense.paid_by_member_id);
+                  const expensePayers = getExpensePayers(expense.id);
                   const expenseSplits = getExpenseSplits(expense.id);
                   const isExpanded = expandedExpenses.has(expense.id);
+
+                  // Determine who paid
+                  let paidByText = '';
+                  if (expensePayers.length > 1) {
+                    paidByText = `${expensePayers.length} people`;
+                  } else if (expensePayers.length === 1) {
+                    const payer = members.find(m => m.id === expensePayers[0].member_id);
+                    paidByText = payer?.name || 'Unknown';
+                  } else {
+                    const paidBy = members.find(m => m.id === expense.paid_by_member_id);
+                    paidByText = paidBy?.name || 'Unknown';
+                  }
 
                   return (
                     <Collapsible key={expense.id} open={isExpanded} onOpenChange={() => toggleExpenseExpanded(expense.id)}>
@@ -618,7 +731,7 @@ export default function SplitGroupDetail() {
                               <div className="text-left">
                                 <p className="font-medium">{expense.description}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  Paid by {paidBy?.name || 'Unknown'} · {format(new Date(expense.created_at), 'MMM d')}
+                                  Paid by {paidByText} · {format(new Date(expense.created_at), 'MMM d')}
                                 </p>
                               </div>
                             </div>
@@ -632,21 +745,42 @@ export default function SplitGroupDetail() {
                           </CardContent>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <div className="px-4 pb-4 border-t pt-3">
-                            <p className="text-sm font-medium mb-2">Split Details:</p>
-                            <div className="space-y-1">
-                              {expenseSplits.map((split) => {
-                                const member = members.find(m => m.id === split.member_id);
-                                return (
-                                  <div key={split.id} className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">{member?.name || 'Unknown'}</span>
-                                    <span>
-                                      {group.currency} {Number(split.amount).toFixed(2)}
-                                      {split.percentage && ` (${split.percentage}%)`}
-                                    </span>
-                                  </div>
-                                );
-                              })}
+                          <div className="px-4 pb-4 border-t pt-3 space-y-3">
+                            {/* Show payers if multi-payer */}
+                            {expensePayers.length > 1 && (
+                              <div>
+                                <p className="text-sm font-medium mb-2">Paid by:</p>
+                                <div className="space-y-1">
+                                  {expensePayers.map((payer) => {
+                                    const member = members.find(m => m.id === payer.member_id);
+                                    return (
+                                      <div key={payer.id} className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">{member?.name || 'Unknown'}</span>
+                                        <span className="text-green-600">
+                                          {group.currency} {Number(payer.amount).toFixed(2)}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-sm font-medium mb-2">Split Details:</p>
+                              <div className="space-y-1">
+                                {expenseSplits.map((split) => {
+                                  const member = members.find(m => m.id === split.member_id);
+                                  return (
+                                    <div key={split.id} className="flex justify-between text-sm">
+                                      <span className="text-muted-foreground">{member?.name || 'Unknown'}</span>
+                                      <span>
+                                        {group.currency} {Number(split.amount).toFixed(2)}
+                                        {split.percentage && ` (${split.percentage}%)`}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
                         </CollapsibleContent>
@@ -678,14 +812,26 @@ export default function SplitGroupDetail() {
                       <Avatar>
                         <AvatarFallback>{member.name.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <p className="font-medium">{member.name}</p>
                         {member.email && (
-                          <p className="text-sm text-muted-foreground">{member.email}</p>
+                          <p className="text-sm text-muted-foreground truncate">{member.email}</p>
+                        )}
+                        {!member.user_id && member.email && (
+                          <Badge variant="outline" className="text-xs mt-1">
+                            <Mail className="h-3 w-3 mr-1" />
+                            Invited
+                          </Badge>
                         )}
                       </div>
                       {member.is_creator && (
-                        <Badge variant="secondary" className="ml-auto">Creator</Badge>
+                        <Badge variant="secondary">Creator</Badge>
+                      )}
+                      {member.user_id && !member.is_creator && (
+                        <Badge variant="outline" className="text-green-600 border-green-600">
+                          <Check className="h-3 w-3 mr-1" />
+                          Joined
+                        </Badge>
                       )}
                     </CardContent>
                   </Card>
