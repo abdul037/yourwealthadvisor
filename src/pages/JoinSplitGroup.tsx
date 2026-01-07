@@ -53,21 +53,46 @@ export default function JoinSplitGroup() {
     
     setJoining(true);
     try {
-      // Check if already a member
-      const { data: existingMember } = await supabase
+      // Check if user already has a linked member entry
+      const { data: existingMemberByUserId } = await supabase
         .from('expense_group_members')
         .select('id')
         .eq('group_id', group.id)
         .eq('user_id', user?.id)
         .maybeSingle();
 
-      if (existingMember) {
+      if (existingMemberByUserId) {
         toast({ title: 'Already a member', description: 'You are already part of this group' });
         navigate(`/split/${group.id}`);
         return;
       }
 
-      // Add as member
+      // Check if there's an invited member entry with matching email that we can link
+      const userEmail = user?.email;
+      if (userEmail) {
+        const { data: existingMemberByEmail } = await supabase
+          .from('expense_group_members')
+          .select('id, user_id')
+          .eq('group_id', group.id)
+          .ilike('email', userEmail)
+          .maybeSingle();
+
+        if (existingMemberByEmail && !existingMemberByEmail.user_id) {
+          // Link existing invited member to this user
+          const { error: updateError } = await supabase
+            .from('expense_group_members')
+            .update({ user_id: user?.id, name: memberName.trim() })
+            .eq('id', existingMemberByEmail.id);
+
+          if (updateError) throw updateError;
+
+          toast({ title: 'Joined successfully!', description: `You are now part of ${group.name}` });
+          navigate(`/split/${group.id}`);
+          return;
+        }
+      }
+
+      // Add as new member
       const { error } = await supabase
         .from('expense_group_members')
         .insert({
