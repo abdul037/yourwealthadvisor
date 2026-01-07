@@ -396,6 +396,7 @@ export type Database = {
           group_id: string
           id: string
           settled_at: string | null
+          settlement_date: string | null
           to_member_id: string
           transaction_id: string | null
         }
@@ -405,6 +406,7 @@ export type Database = {
           group_id: string
           id?: string
           settled_at?: string | null
+          settlement_date?: string | null
           to_member_id: string
           transaction_id?: string | null
         }
@@ -414,6 +416,7 @@ export type Database = {
           group_id?: string
           id?: string
           settled_at?: string | null
+          settlement_date?: string | null
           to_member_id?: string
           transaction_id?: string | null
         }

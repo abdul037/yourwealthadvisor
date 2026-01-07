@@ -636,7 +636,7 @@ export function useExpenseGroup(groupId: string | undefined) {
   });
 
   const settleUp = useMutation({
-    mutationFn: async ({ fromMemberId, toMemberId, amount }: { fromMemberId: string; toMemberId: string; amount: number }) => {
+    mutationFn: async ({ fromMemberId, toMemberId, amount, settlementDate }: { fromMemberId: string; toMemberId: string; amount: number; settlementDate?: string }) => {
       if (!groupId || !group) throw new Error('No group ID');
       
       const { data: { user } } = await supabase.auth.getUser();
@@ -644,6 +644,7 @@ export function useExpenseGroup(groupId: string | undefined) {
 
       const fromMember = members.find(m => m.id === fromMemberId);
       const toMember = members.find(m => m.id === toMemberId);
+      const dateToUse = settlementDate || new Date().toISOString().split('T')[0];
 
       const { data: transaction, error: txError } = await supabase
         .from('transactions')
@@ -656,7 +657,7 @@ export function useExpenseGroup(groupId: string | undefined) {
           currency: group.currency,
           description: `Settlement: ${fromMember?.name || 'Unknown'} → ${toMember?.name || 'Unknown'}`,
           notes: `Split group: ${group.name}`,
-          transaction_date: new Date().toISOString().split('T')[0],
+          transaction_date: dateToUse,
         })
         .select()
         .single();
@@ -673,6 +674,7 @@ export function useExpenseGroup(groupId: string | undefined) {
           to_member_id: toMemberId, 
           amount,
           transaction_id: transaction?.id || null,
+          settlement_date: dateToUse,
         })
         .select()
         .single();

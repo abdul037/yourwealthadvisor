@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Users, Receipt, Share2, Copy, Check, 
   UserPlus, DollarSign, Percent, Equal, ArrowRightLeft, ChevronDown, ChevronUp, AlertCircle,
-  Mail, Send, Trash2, MoreVertical, Settings, Edit2, LogOut, Calendar, Clock
+  Mail, Send, Trash2, MoreVertical, Settings, Edit2, LogOut, Calendar as CalendarIcon, Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +20,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { AppLayout } from '@/components/AppLayout';
 import { useExpenseGroup, ExpenseSplit, PayerEntry, ExpenseGroupExpense } from '@/hooks/useExpenseGroups';
 import { toast } from '@/hooks/use-toast';
@@ -72,6 +74,7 @@ export default function SplitGroupDetail() {
     fromMemberId: '',
     toMemberId: '',
     amount: '',
+    settlementDate: new Date().toISOString().split('T')[0],
   });
   const [groupSettings, setGroupSettings] = useState({
     name: '',
@@ -311,9 +314,10 @@ export default function SplitGroupDetail() {
       fromMemberId: settlement.fromMemberId,
       toMemberId: settlement.toMemberId,
       amount: parseFloat(settlement.amount),
+      settlementDate: settlement.settlementDate,
     });
     setIsSettleOpen(false);
-    setSettlement({ fromMemberId: '', toMemberId: '', amount: '' });
+    setSettlement({ fromMemberId: '', toMemberId: '', amount: '', settlementDate: new Date().toISOString().split('T')[0] });
   };
 
   const handleUpdateSettings = async () => {
@@ -894,6 +898,32 @@ export default function SplitGroupDetail() {
                     onChange={(e) => setSettlement({ ...settlement, amount: e.target.value })}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Settlement Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !settlement.settlementDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {settlement.settlementDate ? format(new Date(settlement.settlementDate), 'PPP') : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={settlement.settlementDate ? new Date(settlement.settlementDate) : undefined}
+                        onSelect={(date) => setSettlement({ ...settlement, settlementDate: date ? date.toISOString().split('T')[0] : '' })}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <Button className="w-full" onClick={handleSettle} disabled={settleUp.isPending}>
                   {settleUp.isPending ? 'Recording...' : 'Record Settlement'}
                 </Button>
@@ -983,6 +1013,7 @@ export default function SplitGroupDetail() {
                               fromMemberId: suggestion.fromMemberId,
                               toMemberId: suggestion.toMemberId,
                               amount: suggestion.amount.toString(),
+                              settlementDate: new Date().toISOString().split('T')[0],
                             });
                             setIsSettleOpen(true);
                           }}
