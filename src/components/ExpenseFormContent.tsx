@@ -132,15 +132,27 @@ export function ExpenseFormContent({
 
   // Quick actions
   const handleSplitEqually = () => {
+    const expenseAmount = parseFloat(expense.amount) || 0;
+    const perPerson = members.length > 0 ? expenseAmount / members.length : 0;
+    
+    // Set split type to equal
     setExpense({ ...expense, splitType: 'equal' });
+    
+    // Update custom splits to reflect equal distribution
+    setCustomSplits(prev => prev.map(s => ({
+      ...s,
+      amount: perPerson.toFixed(2),
+      percentage: (100 / members.length).toFixed(2),
+    })));
   };
 
   const handleIPayFull = () => {
     if (currentUserMember) {
+      const expenseAmount = expense.amount || '0';
       setPayerEntries(prev => prev.map(p => ({
         ...p,
         selected: p.memberId === currentUserMember.id,
-        amount: '',
+        amount: p.memberId === currentUserMember.id ? expenseAmount : '',
       })));
     }
   };
