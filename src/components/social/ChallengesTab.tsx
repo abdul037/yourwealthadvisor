@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useChallenges, ChallengeWithParticipation } from '@/hooks/useChallenges';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { ChallengeLeaderboard } from './ChallengeLeaderboard';
 import { 
   Trophy, 
   Users, 
@@ -11,7 +13,8 @@ import {
   Clock, 
   Target,
   Flame,
-  Zap
+  Zap,
+  BarChart3
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -24,9 +27,17 @@ const challengeTypeConfig = {
 
 export function ChallengesTab() {
   const { activeChallenges, myChallenges, isLoading, joinChallenge, leaveChallenge } = useChallenges();
+  const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
 
   return (
     <div className="space-y-6">
+      {/* Leaderboard Sheet */}
+      <ChallengeLeaderboard
+        challengeId={selectedChallengeId}
+        open={!!selectedChallengeId}
+        onOpenChange={(open) => !open && setSelectedChallengeId(null)}
+      />
+
       {/* My Active Challenges */}
       {myChallenges.length > 0 && (
         <div>
@@ -40,6 +51,7 @@ export function ChallengesTab() {
                 key={challenge.id} 
                 challenge={challenge}
                 onLeave={() => leaveChallenge.mutate(challenge.id)}
+                onViewLeaderboard={() => setSelectedChallengeId(challenge.id)}
               />
             ))}
           </div>
@@ -74,6 +86,7 @@ export function ChallengesTab() {
                 key={challenge.id} 
                 challenge={challenge}
                 onJoin={() => joinChallenge.mutate(challenge.id)}
+                onViewLeaderboard={() => setSelectedChallengeId(challenge.id)}
               />
             ))}
           </div>
@@ -85,10 +98,12 @@ export function ChallengesTab() {
 
 function ChallengeCard({ 
   challenge, 
-  onJoin 
+  onJoin,
+  onViewLeaderboard 
 }: { 
   challenge: ChallengeWithParticipation; 
   onJoin: () => void;
+  onViewLeaderboard: () => void;
 }) {
   const config = challengeTypeConfig[challenge.challenge_type] || challengeTypeConfig.savings;
   const Icon = config.icon;
@@ -133,9 +148,14 @@ function ChallengeCard({
           </div>
         </div>
 
-        <Button className="w-full" onClick={onJoin}>
-          Join Challenge
-        </Button>
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={onJoin}>
+            Join Challenge
+          </Button>
+          <Button variant="outline" size="icon" onClick={onViewLeaderboard}>
+            <BarChart3 className="h-4 w-4" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -143,10 +163,12 @@ function ChallengeCard({
 
 function MyChallengeCard({ 
   challenge,
-  onLeave
+  onLeave,
+  onViewLeaderboard
 }: { 
   challenge: ChallengeWithParticipation;
   onLeave: () => void;
+  onViewLeaderboard: () => void;
 }) {
   const config = challengeTypeConfig[challenge.challenge_type] || challengeTypeConfig.savings;
   const progressPercent = challenge.target_value 
@@ -195,9 +217,15 @@ function MyChallengeCard({
             <Users className="w-4 h-4" />
             {challenge.participantCount} participants
           </span>
-          <Button variant="ghost" size="sm" onClick={onLeave}>
-            Leave
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={onViewLeaderboard}>
+              <BarChart3 className="h-4 w-4 mr-1" />
+              Leaderboard
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onLeave}>
+              Leave
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
