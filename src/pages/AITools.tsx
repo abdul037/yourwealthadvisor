@@ -12,6 +12,7 @@ import { AIInsightsPanel } from '@/components/AIInsightsPanel';
 import { NotificationTestPanel } from '@/components/NotificationTestPanel';
 import { ChallengeRecommendations } from '@/components/social/ChallengeRecommendations';
 import { PageHeader } from '@/components/PageHeader';
+import { ModuleGate } from '@/components/ModuleGate';
 // Sample uncategorized transactions for demo
 const sampleUncategorizedTransactions = [
   { id: '1', description: 'ADNOC Petrol Station', amount: 250 },
@@ -58,9 +59,10 @@ const AITools = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
-        {/* Page Header */}
+    <ModuleGate module="ai_tools">
+      <div className="min-h-screen bg-background">
+        <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
+          {/* Page Header */}
         <PageHeader 
           title="AI Tools"
           description="AI-powered insights and transaction categorization"
@@ -249,14 +251,15 @@ const AITools = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Footer */}
-        <footer className="mt-12 pt-8 border-t border-border text-center">
-          <p className="text-xs text-muted-foreground">
-            Tharwa Net • AI-Powered Wealth Management
-          </p>
-        </footer>
-      </main>
-    </div>
+          {/* Footer */}
+          <footer className="mt-12 pt-8 border-t border-border text-center">
+            <p className="text-xs text-muted-foreground">
+              Tharwa Net • AI-Powered Wealth Management
+            </p>
+          </footer>
+        </main>
+      </div>
+    </ModuleGate>
   );
 };
 

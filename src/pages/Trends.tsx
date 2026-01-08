@@ -10,6 +10,7 @@ import { IncomeSourcesChart } from '@/components/IncomeSourcesChart';
 import { PageHeader } from '@/components/PageHeader';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { Leaderboard } from '@/components/Leaderboard';
+import { ModuleGate } from '@/components/ModuleGate';
 import { generateNetWorthHistory, calculateProjection, Milestone } from '@/lib/categoryData';
 import { IncomeSource } from '@/lib/incomeData';
 
@@ -123,8 +124,9 @@ const Trends = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
+    <ModuleGate module="trends">
+      <div className="min-h-screen bg-background">
+        <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
         {/* Page Header */}
         <PageHeader 
           title="Financial Trends"
@@ -173,14 +175,15 @@ const Trends = () => {
           <Leaderboard />
         </div>
         
-        {/* Footer */}
-        <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
-          <p className="text-xs text-muted-foreground">
-            Tharwa Net • Net Worth Trends & Projections
-          </p>
-        </footer>
-      </main>
-    </div>
+          {/* Footer */}
+          <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
+            <p className="text-xs text-muted-foreground">
+              Tharwa Net • Net Worth Trends & Projections
+            </p>
+          </footer>
+        </main>
+      </div>
+    </ModuleGate>
   );
 };
 
