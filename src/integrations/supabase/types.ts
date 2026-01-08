@@ -556,6 +556,57 @@ export type Database = {
           },
         ]
       }
+      leaderboard_entries: {
+        Row: {
+          avatar_url: string | null
+          category: string
+          city: string | null
+          country: string | null
+          created_at: string | null
+          display_name: string
+          id: string
+          is_public: boolean | null
+          percentile: number | null
+          rank: number | null
+          region: string | null
+          score: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          category?: string
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          display_name: string
+          id?: string
+          is_public?: boolean | null
+          percentile?: number | null
+          rank?: number | null
+          region?: string | null
+          score?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          category?: string
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          display_name?: string
+          id?: string
+          is_public?: boolean | null
+          percentile?: number | null
+          rank?: number | null
+          region?: string | null
+          score?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       milestones: {
         Row: {
           achieved_date: string | null
@@ -693,30 +744,45 @@ export type Database = {
       }
       profiles: {
         Row: {
+          achievements: Json | null
           avatar_url: string | null
           created_at: string | null
           full_name: string | null
           id: string
+          last_activity_date: string | null
           onboarding_completed: boolean | null
           onboarding_progress: Json | null
+          preferences: Json | null
+          streak_days: number | null
+          total_points: number | null
           updated_at: string | null
         }
         Insert: {
+          achievements?: Json | null
           avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
           id: string
+          last_activity_date?: string | null
           onboarding_completed?: boolean | null
           onboarding_progress?: Json | null
+          preferences?: Json | null
+          streak_days?: number | null
+          total_points?: number | null
           updated_at?: string | null
         }
         Update: {
+          achievements?: Json | null
           avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
+          last_activity_date?: string | null
           onboarding_completed?: boolean | null
           onboarding_progress?: Json | null
+          preferences?: Json | null
+          streak_days?: number | null
+          total_points?: number | null
           updated_at?: string | null
         }
         Relationships: []
