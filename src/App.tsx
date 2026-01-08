@@ -26,6 +26,7 @@ import ShortInvite from "./pages/ShortInvite";
 import Social from "./pages/Social";
 import Partners from "./pages/Partners";
 import Membership from "./pages/Membership";
+import UserManagement from "./pages/UserManagement";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
 // Protected route wrapper that redirects unauthenticated users to welcome page
@@ -79,6 +80,7 @@ const App = () => (
               <Route path="/split/:groupId" element={<ProtectedRoute><SplitGroupDetail /></ProtectedRoute>} />
               <Route path="/partners" element={<ProtectedRoute><Partners /></ProtectedRoute>} />
               <Route path="/membership" element={<ProtectedRoute><AppLayout><Membership /></AppLayout></ProtectedRoute>} />
+              <Route path="/users" element={<ProtectedRoute><AppLayout><UserManagement /></AppLayout></ProtectedRoute>} />
               <Route path="/s/:code" element={<ShortInvite />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
