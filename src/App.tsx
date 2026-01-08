@@ -23,6 +23,7 @@ import SplitExpenses from "./pages/SplitExpenses";
 import SplitGroupDetail from "./pages/SplitGroupDetail";
 import JoinSplitGroup from "./pages/JoinSplitGroup";
 import ShortInvite from "./pages/ShortInvite";
+import Social from "./pages/Social";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
 // Protected route wrapper that redirects unauthenticated users to welcome page
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="/savings" element={<ProtectedRoute><AppLayout><SavingsGoals /></AppLayout></ProtectedRoute>} />
               <Route path="/ai-tools" element={<ProtectedRoute><AppLayout><AITools /></AppLayout></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><AppLayout><AdminPortal /></AppLayout></ProtectedRoute>} />
+              <Route path="/social" element={<ProtectedRoute><Social /></ProtectedRoute>} />
               <Route path="/split" element={<ProtectedRoute><SplitExpenses /></ProtectedRoute>} />
               <Route path="/split/join/:inviteCode" element={<JoinSplitGroup />} />
               <Route path="/split/:groupId" element={<ProtectedRoute><SplitGroupDetail /></ProtectedRoute>} />

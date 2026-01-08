@@ -156,6 +156,336 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_participants: {
+        Row: {
+          challenge_id: string | null
+          completed_at: string | null
+          id: string
+          joined_at: string | null
+          progress: number | null
+          rank: number | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          id?: string
+          joined_at?: string | null
+          progress?: number | null
+          rank?: number | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          id?: string
+          joined_at?: string | null
+          progress?: number | null
+          rank?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          challenge_type: string
+          circle_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string
+          entry_fee_coins: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          is_sponsored: boolean | null
+          max_participants: number | null
+          name: string
+          prize_pool_coins: number | null
+          sponsor_name: string | null
+          start_date: string
+          target_metric: string
+          target_value: number | null
+        }
+        Insert: {
+          challenge_type: string
+          circle_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date: string
+          entry_fee_coins?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_sponsored?: boolean | null
+          max_participants?: number | null
+          name: string
+          prize_pool_coins?: number | null
+          sponsor_name?: string | null
+          start_date: string
+          target_metric: string
+          target_value?: number | null
+        }
+        Update: {
+          challenge_type?: string
+          circle_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string
+          entry_fee_coins?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_sponsored?: boolean | null
+          max_participants?: number | null
+          name?: string
+          prize_pool_coins?: number | null
+          sponsor_name?: string | null
+          start_date?: string
+          target_metric?: string
+          target_value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenges_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "circles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      circle_memberships: {
+        Row: {
+          circle_id: string | null
+          id: string
+          joined_at: string | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          circle_id?: string | null
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          circle_id?: string | null
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circle_memberships_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "circles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      circles: {
+        Row: {
+          category: string
+          cover_color: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_premium: boolean | null
+          is_private: boolean | null
+          member_count: number | null
+          name: string
+          post_count: number | null
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          cover_color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_premium?: boolean | null
+          is_private?: boolean | null
+          member_count?: number | null
+          name: string
+          post_count?: number | null
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          cover_color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_premium?: boolean | null
+          is_private?: boolean | null
+          member_count?: number | null
+          name?: string
+          post_count?: number | null
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      coin_balances: {
+        Row: {
+          balance: number | null
+          lifetime_earned: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number | null
+          lifetime_earned?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number | null
+          lifetime_earned?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coin_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          id: string
+          source: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          source?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          source?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      comments: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string | null
+          id: string
+          is_anonymous: boolean | null
+          parent_comment_id: string | null
+          post_id: string | null
+          updated_at: string | null
+          upvote_count: number | null
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          parent_comment_id?: string | null
+          post_id?: string | null
+          updated_at?: string | null
+          upvote_count?: number | null
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          parent_comment_id?: string | null
+          post_id?: string | null
+          updated_at?: string | null
+          upvote_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connection_sharing: {
+        Row: {
+          created_at: string | null
+          id: string
+          share_achievements: boolean | null
+          share_challenges: boolean | null
+          share_net_worth_percentile: boolean | null
+          share_savings_rate: boolean | null
+          share_streaks: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          share_achievements?: boolean | null
+          share_challenges?: boolean | null
+          share_net_worth_percentile?: boolean | null
+          share_savings_rate?: boolean | null
+          share_streaks?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          share_achievements?: boolean | null
+          share_challenges?: boolean | null
+          share_net_worth_percentile?: boolean | null
+          share_savings_rate?: boolean | null
+          share_streaks?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       debts: {
         Row: {
           created_at: string | null
@@ -742,6 +1072,59 @@ export type Database = {
         }
         Relationships: []
       }
+      posts: {
+        Row: {
+          author_id: string
+          circle_id: string | null
+          comment_count: number | null
+          content: string
+          created_at: string | null
+          id: string
+          is_anonymous: boolean | null
+          is_pinned: boolean | null
+          post_type: string | null
+          title: string | null
+          updated_at: string | null
+          upvote_count: number | null
+        }
+        Insert: {
+          author_id: string
+          circle_id?: string | null
+          comment_count?: number | null
+          content: string
+          created_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          is_pinned?: boolean | null
+          post_type?: string | null
+          title?: string | null
+          updated_at?: string | null
+          upvote_count?: number | null
+        }
+        Update: {
+          author_id?: string
+          circle_id?: string | null
+          comment_count?: number | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          is_pinned?: boolean | null
+          post_type?: string | null
+          title?: string | null
+          updated_at?: string | null
+          upvote_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "circles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           achievements: Json | null
@@ -925,6 +1308,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      upvotes: {
+        Row: {
+          comment_id: string | null
+          created_at: string | null
+          id: string
+          post_id: string | null
+          user_id: string
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          user_id: string
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upvotes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "upvotes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_connections: {
+        Row: {
+          addressee_id: string
+          connection_type: string | null
+          created_at: string | null
+          id: string
+          requester_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          addressee_id: string
+          connection_type?: string | null
+          created_at?: string | null
+          id?: string
+          requester_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          addressee_id?: string
+          connection_type?: string | null
+          created_at?: string | null
+          id?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

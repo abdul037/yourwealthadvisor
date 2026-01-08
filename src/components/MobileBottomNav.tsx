@@ -25,7 +25,7 @@ const mainNavItems = [
   { path: '/', label: 'Home', icon: LayoutDashboard },
   { path: '/income', label: 'Income', icon: DollarSign },
   { path: '/expenses', label: 'Expenses', icon: Receipt },
-  { path: '/split', label: 'Split', icon: Split },
+  { path: '/social', label: 'Social', icon: Sparkles },
 ];
 
 const moreItems = [
