@@ -4,7 +4,7 @@ import {
   ArrowLeft, Plus, Users, Receipt, Share2, Copy, Check, 
   UserPlus, DollarSign, Percent, Equal, ArrowRightLeft, ChevronDown, ChevronUp, AlertCircle,
   Mail, Send, Trash2, MoreVertical, Settings, Edit2, LogOut, Calendar as CalendarIcon, Clock,
-  Search, X, Filter
+  Search, X, Filter, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -65,6 +65,7 @@ export default function SplitGroupDetail() {
 
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [expenseInputMode, setExpenseInputMode] = useState<'ai' | 'manual'>('ai');
   const [isEditExpenseOpen, setIsEditExpenseOpen] = useState(false);
   const [isSettleOpen, setIsSettleOpen] = useState(false);
   const [isEditSettlementOpen, setIsEditSettlementOpen] = useState(false);
@@ -782,8 +783,85 @@ export default function SplitGroupDetail() {
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add Expense</DialogTitle>
+                {/* Mode toggle */}
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant={expenseInputMode === 'ai' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setExpenseInputMode('ai')}
+                    className="gap-1.5"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Quick AI
+                  </Button>
+                  <Button
+                    variant={expenseInputMode === 'manual' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setExpenseInputMode('manual')}
+                    className="gap-1.5"
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                    Manual
+                  </Button>
+                </div>
               </DialogHeader>
-              {renderExpenseFormContent(false)}
+              
+              {expenseInputMode === 'ai' ? (
+                <div className="py-2">
+                  <QuickSplitExpenseInput
+                    members={members}
+                    currency={group?.currency || 'USD'}
+                    currentUserMemberId={currentUserMember?.id}
+                    onAddExpense={async (data) => {
+                      try {
+                        const equalAmount = data.amount / members.length;
+                        const customSplits = members.map(m => ({
+                          memberId: m.id,
+                          amount: equalAmount,
+                          percentage: 100 / members.length
+                        }));
+                        
+                        await addExpense.mutateAsync({
+                          description: data.description,
+                          amount: data.amount,
+                          splitType: data.splitType,
+                          notes: data.notes,
+                          expenseDate: new Date().toISOString().split('T')[0],
+                          customSplits,
+                          payers: [{ memberId: data.paidByMemberId, amount: data.amount }]
+                        });
+                        toast({ title: 'Expense added!' });
+                        setIsAddExpenseOpen(false);
+                      } catch (err) {
+                        toast({ title: 'Failed to add expense', variant: 'destructive' });
+                      }
+                    }}
+                    onEditExpense={(parsed: ParsedSplitExpense, paidByMemberId: string | null) => {
+                      // Switch to manual mode with pre-filled data
+                      setNewExpense({
+                        description: parsed.description,
+                        amount: parsed.amount.toString(),
+                        splitType: parsed.split_type,
+                        expenseDate: new Date().toISOString().split('T')[0],
+                        notes: parsed.notes || '',
+                      });
+                      
+                      const newPayers = members.map(m => ({
+                        memberId: m.id,
+                        amount: m.id === paidByMemberId ? parsed.amount.toString() : '',
+                        selected: m.id === paidByMemberId
+                      }));
+                      setPayerEntries(newPayers);
+                      setExpenseInputMode('manual');
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Type naturally like "Dinner 120 Ahmed paid" or use voice input
+                  </p>
+                </div>
+              ) : (
+                renderExpenseFormContent(false)
+              )}
             </DialogContent>
           </Dialog>
 
