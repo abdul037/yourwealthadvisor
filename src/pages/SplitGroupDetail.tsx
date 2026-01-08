@@ -4,7 +4,7 @@ import {
   ArrowLeft, Plus, Users, Receipt, Share2, Copy, Check, 
   UserPlus, DollarSign, Percent, Equal, ArrowRightLeft, ChevronDown, ChevronUp, AlertCircle,
   Mail, Send, Trash2, MoreVertical, Settings, Edit2, LogOut, Calendar as CalendarIcon, Clock,
-  Search, X
+  Search, X, Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { AppLayout } from '@/components/AppLayout';
 import { useExpenseGroup, ExpenseSplit, PayerEntry, ExpenseGroupExpense, ExpenseSettlement } from '@/hooks/useExpenseGroups';
 import { toast } from '@/hooks/use-toast';
@@ -517,38 +518,38 @@ export default function SplitGroupDetail() {
 
   return (
     <AppLayout>
-      <div className="container py-6 space-y-6">
+      <div className="container py-4 sm:py-6 px-3 sm:px-4 space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/split')}>
+        <div className="flex items-start gap-3 sm:gap-4">
+          <Button variant="ghost" size="icon" className="shrink-0 mt-0.5" onClick={() => navigate('/split')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">{group.name}</h1>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-lg sm:text-2xl font-bold truncate max-w-[200px] sm:max-w-none">{group.name}</h1>
               {group.is_settled && (
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                <Badge variant="secondary" className="bg-green-100 text-green-700 shrink-0">
                   <Check className="h-3 w-3 mr-1" />
                   Settled
                 </Badge>
               )}
             </div>
             {group.description && (
-              <p className="text-muted-foreground">{group.description}</p>
+              <p className="text-sm text-muted-foreground line-clamp-1 sm:line-clamp-none">{group.description}</p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1 sm:gap-2 shrink-0">
             {/* Mobile: Icon-only buttons */}
-            <div className="flex gap-1 md:hidden">
-              <Button variant="outline" size="icon" onClick={handleCopyInvite}>
+            <div className="flex gap-1 sm:hidden">
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleCopyInvite}>
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </Button>
-              <Button variant="outline" size="icon" onClick={handleCopyEmailInvite}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleCopyEmailInvite}>
                 <Mail className="h-4 w-4" />
               </Button>
             </div>
             {/* Desktop: Full buttons */}
-            <div className="hidden md:flex gap-2">
+            <div className="hidden sm:flex gap-2">
               <Button variant="outline" size="sm" className="gap-2" onClick={handleCopyInvite}>
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 {copied ? 'Copied!' : 'Copy Link'}
@@ -697,40 +698,42 @@ export default function SplitGroupDetail() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
           <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold">{group.currency} {totalExpenses.toLocaleString()}</div>
-              <p className="text-sm text-muted-foreground">Total Expenses</p>
+            <CardContent className="pt-3 sm:pt-4 px-3 sm:px-4">
+              <div className="text-base sm:text-2xl font-bold truncate">
+                <span className="text-xs sm:text-base font-normal">{group.currency}</span> {totalExpenses.toLocaleString()}
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Expenses</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold">{members.length}</div>
-              <p className="text-sm text-muted-foreground">Members</p>
+            <CardContent className="pt-3 sm:pt-4 px-3 sm:px-4">
+              <div className="text-base sm:text-2xl font-bold">{members.length}</div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Members</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold">{expenses.length}</div>
-              <p className="text-sm text-muted-foreground">Expenses</p>
+            <CardContent className="pt-3 sm:pt-4 px-3 sm:px-4">
+              <div className="text-base sm:text-2xl font-bold">{expenses.length}</div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Expenses</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold">{settlements.length}</div>
-              <p className="text-sm text-muted-foreground">Settlements</p>
+            <CardContent className="pt-3 sm:pt-4 px-3 sm:px-4">
+              <div className="text-base sm:text-2xl font-bold">{settlements.length}</div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Settlements</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+        <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2">
           <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <UserPlus className="h-4 w-4" />
-                <span className="hidden sm:inline">Add</span> Member
+              <Button variant="outline" className="gap-1.5 text-xs sm:text-sm h-9 sm:h-10 px-2 sm:px-4">
+                <UserPlus className="h-4 w-4 shrink-0" />
+                <span className="truncate">Member</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -764,9 +767,9 @@ export default function SplitGroupDetail() {
 
           <Dialog open={isAddExpenseOpen} onOpenChange={setIsAddExpenseOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2" disabled={hasNoMembers}>
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Add</span> Expense
+              <Button className="gap-1.5 text-xs sm:text-sm h-9 sm:h-10 px-2 sm:px-4" disabled={hasNoMembers}>
+                <Plus className="h-4 w-4 shrink-0" />
+                <span className="truncate">Expense</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -795,9 +798,9 @@ export default function SplitGroupDetail() {
 
           <Dialog open={isSettleOpen} onOpenChange={setIsSettleOpen}>
             <DialogTrigger asChild>
-              <Button variant="secondary" className="gap-2 col-span-2 sm:col-span-1" disabled={hasNoMembers}>
-                <ArrowRightLeft className="h-4 w-4" />
-                Settle Up
+              <Button variant="secondary" className="gap-1.5 text-xs sm:text-sm h-9 sm:h-10 px-2 sm:px-4" disabled={hasNoMembers}>
+                <ArrowRightLeft className="h-4 w-4 shrink-0" />
+                <span className="truncate">Settle</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -974,31 +977,31 @@ export default function SplitGroupDetail() {
 
         {/* Main Content */}
         <Tabs defaultValue="balances" className="space-y-4">
-          <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
-            <TabsList className="w-max min-w-full md:w-auto">
-              <TabsTrigger value="balances">Balances</TabsTrigger>
-              <TabsTrigger value="expenses" className="gap-1.5">
-                <span className="hidden sm:inline">Expenses</span>
-                <span className="sm:hidden">Exp</span>
+          <div className="overflow-x-auto -mx-3 sm:-mx-4 px-3 sm:px-4 scrollbar-hide">
+            <TabsList className="w-max min-w-full md:w-auto h-auto p-1">
+              <TabsTrigger value="balances" className="text-xs sm:text-sm py-2 px-3">
+                Balance
+              </TabsTrigger>
+              <TabsTrigger value="expenses" className="text-xs sm:text-sm py-2 px-3 gap-1">
+                Expenses
                 {expenses.length > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                  <Badge variant="secondary" className="h-4 px-1 text-[10px] ml-1">
                     {expenses.length}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="settlements" className="gap-1.5">
-                <span className="hidden sm:inline">Settlements</span>
-                <span className="sm:hidden">Settle</span>
+              <TabsTrigger value="settlements" className="text-xs sm:text-sm py-2 px-3 gap-1">
+                Settle
                 {settlements.length > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                  <Badge variant="secondary" className="h-4 px-1 text-[10px] ml-1">
                     {settlements.length}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="members" className="gap-1.5">
+              <TabsTrigger value="members" className="text-xs sm:text-sm py-2 px-3 gap-1">
                 Members
                 {members.length > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                  <Badge variant="secondary" className="h-4 px-1 text-[10px] ml-1">
                     {members.length}
                   </Badge>
                 )}
@@ -1171,8 +1174,71 @@ export default function SplitGroupDetail() {
               }}
             />
 
-            {/* Search & Filter Bar */}
-            <div className="flex flex-col sm:flex-row gap-2">
+            {/* Search & Filter Bar - Mobile */}
+            <div className="flex gap-2 sm:hidden">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search..."
+                  value={expenseSearch}
+                  onChange={(e) => setExpenseSearch(e.target.value)}
+                  className="pl-9 h-9"
+                />
+              </div>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="relative h-9 w-9 shrink-0">
+                    <Filter className="h-4 w-4" />
+                    {hasExpenseFilters && (
+                      <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full" />
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="rounded-t-xl">
+                  <SheetHeader>
+                    <SheetTitle>Filter Expenses</SheetTitle>
+                  </SheetHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Paid by</label>
+                      <Select value={expenseFilterPaidBy} onValueChange={setExpenseFilterPaidBy}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All payers" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All payers</SelectItem>
+                          {members.map(m => (
+                            <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Split type</label>
+                      <Select value={expenseFilterSplitType} onValueChange={setExpenseFilterSplitType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All types" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All types</SelectItem>
+                          <SelectItem value="equal">Equal</SelectItem>
+                          <SelectItem value="percentage">Percentage</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {hasExpenseFilters && (
+                      <Button variant="outline" onClick={clearExpenseFilters} className="w-full">
+                        Clear Filters
+                      </Button>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Search & Filter Bar - Desktop */}
+            <div className="hidden sm:flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -1183,7 +1249,7 @@ export default function SplitGroupDetail() {
                 />
               </div>
               <Select value={expenseFilterPaidBy} onValueChange={setExpenseFilterPaidBy}>
-                <SelectTrigger className="w-full sm:w-[140px]">
+                <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Paid by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1194,7 +1260,7 @@ export default function SplitGroupDetail() {
                 </SelectContent>
               </Select>
               <Select value={expenseFilterSplitType} onValueChange={setExpenseFilterSplitType}>
-                <SelectTrigger className="w-full sm:w-[130px]">
+                <SelectTrigger className="w-[130px]">
                   <SelectValue placeholder="Split type" />
                 </SelectTrigger>
                 <SelectContent>
