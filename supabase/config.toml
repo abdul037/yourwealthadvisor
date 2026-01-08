@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.track-referral]
 verify_jwt = false
+
+[functions.mock-checkout]
+verify_jwt = false
+
+[functions.cancel-subscription]
+verify_jwt = false

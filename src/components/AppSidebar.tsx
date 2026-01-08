@@ -11,7 +11,8 @@ import {
   Target,
   Split,
   Users,
-  Handshake
+  Handshake,
+  Crown
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { TharwaLogo } from '@/components/TharwaLogo';
@@ -40,6 +41,7 @@ const mainNavItems = [
   { path: '/social', label: 'Social', icon: Users },
   { path: '/split', label: 'Split Expenses', icon: Split },
   { path: '/partners', label: 'Partners', icon: Handshake },
+  { path: '/membership', label: 'Membership', icon: Crown },
   { path: '/trends', label: 'Trends', icon: LineChart },
   { path: '/ai-tools', label: 'AI Tools', icon: Sparkles },
 ];
