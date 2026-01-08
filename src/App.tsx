@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { CurrencyProvider } from "@/components/CurrencyConverter";
 import { AppLayout } from "@/components/AppLayout";
+import { AdminRoute } from "@/components/AdminRoute";
+import { ModuleGate } from "@/components/ModuleGate";
 import Index from "./pages/Index";
 import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
@@ -73,14 +75,14 @@ const App = () => (
               <Route path="/trends" element={<ProtectedRoute><AppLayout><Trends /></AppLayout></ProtectedRoute>} />
               <Route path="/savings" element={<ProtectedRoute><AppLayout><SavingsGoals /></AppLayout></ProtectedRoute>} />
               <Route path="/ai-tools" element={<ProtectedRoute><AppLayout><AITools /></AppLayout></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute><AppLayout><AdminPortal /></AppLayout></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute><AppLayout><ModuleGate module="admin"><AdminPortal /></ModuleGate></AppLayout></ProtectedRoute>} />
               <Route path="/social" element={<ProtectedRoute><Social /></ProtectedRoute>} />
               <Route path="/split" element={<ProtectedRoute><SplitExpenses /></ProtectedRoute>} />
               <Route path="/split/join/:inviteCode" element={<JoinSplitGroup />} />
               <Route path="/split/:groupId" element={<ProtectedRoute><SplitGroupDetail /></ProtectedRoute>} />
               <Route path="/partners" element={<ProtectedRoute><Partners /></ProtectedRoute>} />
               <Route path="/membership" element={<ProtectedRoute><AppLayout><Membership /></AppLayout></ProtectedRoute>} />
-              <Route path="/users" element={<ProtectedRoute><AppLayout><UserManagement /></AppLayout></ProtectedRoute>} />
+              <Route path="/users" element={<ProtectedRoute><AdminRoute><AppLayout><UserManagement /></AppLayout></AdminRoute></ProtectedRoute>} />
               <Route path="/s/:code" element={<ShortInvite />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
