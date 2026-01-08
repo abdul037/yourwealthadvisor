@@ -96,8 +96,8 @@ export function ModuleManager() {
         is_live: { from: module.is_live, to: !module.is_live } 
       });
       toast({
-        title: module.is_live ? 'Module Disabled' : 'Module Enabled',
-        description: `${module.display_name} is now ${module.is_live ? 'not live' : 'live'}`,
+        title: module.is_live ? 'Module Unpublished' : 'Module Published',
+        description: `${module.display_name} is now ${module.is_live ? 'unpublished' : 'published'}`,
       });
     } else {
       toast({
@@ -181,7 +181,7 @@ export function ModuleManager() {
       
       toast({
         title: 'Module Created',
-        description: `${newModule.display_name} has been created in Draft mode.`,
+        description: `${newModule.display_name} has been created as Unpublished.`,
       });
       
       setCreateDialogOpen(false);
@@ -286,7 +286,7 @@ export function ModuleManager() {
             <DialogHeader>
               <DialogTitle>Create New Module</DialogTitle>
               <DialogDescription>
-                Add a new feature module to the application. It will be created in Draft mode.
+                Add a new feature module to the application. It will be created as Unpublished.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -456,7 +456,7 @@ export function ModuleManager() {
 
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">
-                      {module.is_live ? 'Live' : 'Draft'}
+                      {module.is_live ? 'Published' : 'Unpublished'}
                     </span>
                     <Switch
                       checked={module.is_live}

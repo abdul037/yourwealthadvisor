@@ -183,7 +183,7 @@ export function AppSidebar() {
                             {!collapsed && getTierBadge(item.requiredTier)}
                             {!item.isLive && isAdmin && !collapsed && (
                               <Badge variant="outline" className="text-[10px] px-1 py-0 border-amber-500/50 text-amber-400">
-                                DRAFT
+                                UNPUBLISHED
                               </Badge>
                             )}
                           </NavLink>
