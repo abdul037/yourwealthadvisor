@@ -1402,6 +1402,66 @@ export type Database = {
           },
         ]
       }
+      subscription_tiers: {
+        Row: {
+          ad_free: boolean
+          ai_insights: boolean
+          badge_style: string | null
+          created_at: string
+          description: string | null
+          display_name: string
+          display_order: number
+          features: Json
+          id: string
+          is_active: boolean
+          max_challenges: number
+          max_circles: number
+          name: string
+          price_monthly: number
+          price_yearly: number
+          priority_support: boolean
+          updated_at: string
+        }
+        Insert: {
+          ad_free?: boolean
+          ai_insights?: boolean
+          badge_style?: string | null
+          created_at?: string
+          description?: string | null
+          display_name: string
+          display_order?: number
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_challenges?: number
+          max_circles?: number
+          name: string
+          price_monthly?: number
+          price_yearly?: number
+          priority_support?: boolean
+          updated_at?: string
+        }
+        Update: {
+          ad_free?: boolean
+          ai_insights?: boolean
+          badge_style?: string | null
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          display_order?: number
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_challenges?: number
+          max_circles?: number
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
+          priority_support?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
@@ -1567,6 +1627,62 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "affiliate_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_subscriptions: {
+        Row: {
+          billing_cycle: string
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string
+          current_period_start: string
+          external_customer_id: string | null
+          external_subscription_id: string | null
+          id: string
+          payment_provider: string
+          status: string
+          tier_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_cycle?: string
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end: string
+          current_period_start?: string
+          external_customer_id?: string | null
+          external_subscription_id?: string | null
+          id?: string
+          payment_provider?: string
+          status?: string
+          tier_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_cycle?: string
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          external_customer_id?: string | null
+          external_subscription_id?: string | null
+          id?: string
+          payment_provider?: string
+          status?: string
+          tier_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_tiers"
             referencedColumns: ["id"]
           },
         ]
