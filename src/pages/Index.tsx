@@ -21,12 +21,17 @@ import { GettingStartedChecklist } from '@/components/GettingStartedChecklist';
 import { DashboardConnectedAccounts } from '@/components/DashboardConnectedAccounts';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { NotificationWidget } from '@/components/SmartNotificationCenter';
+import { FeatureDiscovery } from '@/components/FeatureDiscovery';
+import { ProgressDashboard } from '@/components/ProgressDashboard';
+import { Celebration } from '@/components/Celebration';
+import { GuidedWorkflow } from '@/components/GuidedWorkflow';
 import { useAssets, Asset as DBAsset } from '@/hooks/useAssets';
 import { useTransactions, Transaction as DBTransaction } from '@/hooks/useTransactions';
 import { useIncomes } from '@/hooks/useIncomes';
 import { Transaction, Asset } from '@/lib/portfolioData';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useAchievements } from '@/hooks/useAchievements';
 import { BankAccount, BankTransaction } from '@/lib/mockBankingData';
 
 const quickNavItems = [
@@ -67,6 +72,7 @@ const Index = () => {
   const { totalMonthlyIncome, isLoading: incomesLoading } = useIncomes();
   const { formatAmount } = useFormattedCurrency();
   const { isAuthenticated, profile, loading: profileLoading } = useUserProfile();
+  const { newlyUnlocked, clearNewlyUnlocked, updateStreak, checkTransactionAchievements } = useAchievements();
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [connectedAccounts, setConnectedAccounts] = useState<BankAccount[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('1W');
@@ -76,6 +82,20 @@ const Index = () => {
   // Convert DB data to component format
   const assets: Asset[] = dbAssets.map(adaptAsset);
   const transactions: Transaction[] = dbTransactions.map(adaptTransaction);
+
+  // Update streak on page load
+  useEffect(() => {
+    if (isAuthenticated) {
+      updateStreak();
+    }
+  }, [isAuthenticated, updateStreak]);
+
+  // Check transaction achievements
+  useEffect(() => {
+    if (dbTransactions.length > 0) {
+      checkTransactionAchievements(dbTransactions.length);
+    }
+  }, [dbTransactions.length, checkTransactionAchievements]);
 
   const handleAccountsConnected = (accounts: BankAccount[]) => {
     setConnectedAccounts(prev => [...prev, ...accounts]);
@@ -135,16 +155,28 @@ const Index = () => {
         onAccountsConnected={handleAccountsConnected}
       />
       
+      {/* Achievement Celebration Modal */}
+      <Celebration achievement={newlyUnlocked} onClose={clearNewlyUnlocked} />
+      
+      {/* Guided Workflow Overlay */}
+      <GuidedWorkflow />
+      
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
         {/* Welcome Banner */}
         <div className="mb-6">
           <WelcomeBanner />
         </div>
         
-        {/* Getting Started Checklist & Notifications for new users */}
+        {/* Feature Discovery Tips */}
+        <div className="mb-6">
+          <FeatureDiscovery />
+        </div>
+        
+        {/* Getting Started Checklist, Progress & Notifications */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-4">
             <GettingStartedChecklist />
+            <ProgressDashboard compact />
           </div>
           <div>
             <NotificationWidget />
