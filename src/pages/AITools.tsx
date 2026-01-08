@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   Sparkles, Brain, MessageSquare, TrendingUp, 
-  FileText, Lightbulb, Zap, ArrowRight, Bell
+  FileText, Lightbulb, Zap, ArrowRight, Bell, Trophy
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AICategorizer } from '@/components/AICategorizer';
 import { AIInsightsPanel } from '@/components/AIInsightsPanel';
 import { NotificationTestPanel } from '@/components/NotificationTestPanel';
+import { ChallengeRecommendations } from '@/components/social/ChallengeRecommendations';
 import { PageHeader } from '@/components/PageHeader';
-
 // Sample uncategorized transactions for demo
 const sampleUncategorizedTransactions = [
   { id: '1', description: 'ADNOC Petrol Station', amount: 250 },
@@ -73,7 +73,7 @@ const AITools = () => {
         />
 
         <Tabs defaultValue="insights" className="space-y-6">
-          <TabsList className="grid w-full max-w-xl grid-cols-4">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5">
             <TabsTrigger value="insights" className="gap-2">
               <Lightbulb className="w-4 h-4" />
               Insights
@@ -81,6 +81,10 @@ const AITools = () => {
             <TabsTrigger value="categorizer" className="gap-2">
               <Zap className="w-4 h-4" />
               Categorizer
+            </TabsTrigger>
+            <TabsTrigger value="challenges" className="gap-2">
+              <Trophy className="w-4 h-4" />
+              Challenges
             </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2">
               <Bell className="w-4 h-4" />
@@ -155,6 +159,39 @@ const AITools = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* AI Challenge Builder Tab */}
+          <TabsContent value="challenges" className="space-y-6">
+            <Card className="border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-purple-400" />
+                  AI Challenge Builder
+                </CardTitle>
+                <CardDescription>
+                  Get personalized financial challenges tailored to your spending habits. 
+                  Our AI analyzes your transactions and suggests challenges to help you 
+                  save more and spend smarter.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                  <div>
+                    <p className="font-medium">How it works</p>
+                    <ul className="text-sm text-muted-foreground mt-2 space-y-1">
+                      <li>• AI analyzes your last 30 days of transactions</li>
+                      <li>• Identifies spending patterns and opportunities</li>
+                      <li>• Suggests 3-4 personalized challenges</li>
+                      <li>• Start challenges with one click to track progress</li>
+                      <li>• Progress updates automatically as you transact</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <ChallengeRecommendations />
           </TabsContent>
 
           {/* Notification Test Panel Tab */}
