@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useChallenges, ChallengeWithParticipation } from '@/hooks/useChallenges';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,9 @@ import {
   Target,
   Flame,
   Zap,
-  BarChart3
+  BarChart3,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -41,6 +44,29 @@ export function ChallengesTab() {
 
       {/* AI Recommendations */}
       <ChallengeRecommendations />
+
+      {/* Link to AI Tools */}
+      <Card className="border-purple-500/20 bg-gradient-to-r from-purple-500/10 to-transparent">
+        <CardContent className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-purple-400" />
+            </div>
+            <div>
+              <p className="font-medium">AI Challenge Builder</p>
+              <p className="text-sm text-muted-foreground">
+                Get personalized challenges in the AI Tools hub
+              </p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/ai-tools" className="gap-2">
+              Explore AI Tools
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* My Active Challenges */}
       {myChallenges.length > 0 && (
