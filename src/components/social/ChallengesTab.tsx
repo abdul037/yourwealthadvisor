@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ChallengeLeaderboard } from './ChallengeLeaderboard';
+import { ChallengeRecommendations } from './ChallengeRecommendations';
 import { 
   Trophy, 
   Users, 
@@ -37,6 +38,9 @@ export function ChallengesTab() {
         open={!!selectedChallengeId}
         onOpenChange={(open) => !open && setSelectedChallengeId(null)}
       />
+
+      {/* AI Recommendations */}
+      <ChallengeRecommendations />
 
       {/* My Active Challenges */}
       {myChallenges.length > 0 && (

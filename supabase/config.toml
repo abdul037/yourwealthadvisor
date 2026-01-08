@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.cancel-subscription]
 verify_jwt = false
+
+[functions.recommend-challenges]
+verify_jwt = false
