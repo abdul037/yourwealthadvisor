@@ -16,6 +16,7 @@ import DebtTracker from "./pages/DebtTracker";
 import Trends from "./pages/Trends";
 import SavingsGoals from "./pages/SavingsGoals";
 import AITools from "./pages/AITools";
+import MyAccess from "./pages/MyAccess";
 import AdminPortal from "./pages/AdminPortal";
 import Auth from "./pages/Auth";
 import Welcome from "./pages/Welcome";
@@ -82,6 +83,7 @@ const App = () => (
               <Route path="/split/:groupId" element={<ProtectedRoute><SplitGroupDetail /></ProtectedRoute>} />
               <Route path="/partners" element={<ProtectedRoute><Partners /></ProtectedRoute>} />
               <Route path="/membership" element={<ProtectedRoute><AppLayout><Membership /></AppLayout></ProtectedRoute>} />
+              <Route path="/my-access" element={<ProtectedRoute><AppLayout><MyAccess /></AppLayout></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute><AdminRoute><AppLayout><UserManagement /></AppLayout></AdminRoute></ProtectedRoute>} />
               <Route path="/s/:code" element={<ShortInvite />} />
               
