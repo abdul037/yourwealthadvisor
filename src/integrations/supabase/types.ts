@@ -1096,6 +1096,44 @@ export type Database = {
         }
         Relationships: []
       }
+      module_audit_log: {
+        Row: {
+          action: string
+          changes: Json | null
+          id: string
+          module_id: string | null
+          module_name: string
+          performed_at: string | null
+          performed_by: string | null
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          id?: string
+          module_id?: string | null
+          module_name: string
+          performed_at?: string | null
+          performed_by?: string | null
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          id?: string
+          module_id?: string | null
+          module_name?: string
+          performed_at?: string | null
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_audit_log_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "app_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           action_url: string | null
