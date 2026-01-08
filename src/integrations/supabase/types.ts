@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_partners: {
+        Row: {
+          bonus_coins: number | null
+          bonus_description: string | null
+          category: string
+          commission_type: string | null
+          commission_value: number | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          logo_url: string | null
+          min_deposit: number | null
+          name: string
+          referral_url: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          bonus_coins?: number | null
+          bonus_description?: string | null
+          category: string
+          commission_type?: string | null
+          commission_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          min_deposit?: number | null
+          name: string
+          referral_url: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          bonus_coins?: number | null
+          bonus_description?: string | null
+          category?: string
+          commission_type?: string | null
+          commission_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          min_deposit?: number | null
+          name?: string
+          referral_url?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       assets: {
         Row: {
           amount: number
@@ -1247,6 +1310,98 @@ export type Database = {
           },
         ]
       }
+      referral_clicks: {
+        Row: {
+          clicked_at: string | null
+          id: string
+          ip_address: string | null
+          partner_id: string
+          source: string | null
+          tracking_code: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          id?: string
+          ip_address?: string | null
+          partner_id: string
+          source?: string | null
+          tracking_code: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string | null
+          id?: string
+          ip_address?: string | null
+          partner_id?: string
+          source?: string | null
+          tracking_code?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_clicks_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_conversions: {
+        Row: {
+          approved_at: string | null
+          click_id: string | null
+          coins_rewarded: number | null
+          commission_earned: number | null
+          converted_at: string | null
+          id: string
+          partner_id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          click_id?: string | null
+          coins_rewarded?: number | null
+          commission_earned?: number | null
+          converted_at?: string | null
+          id?: string
+          partner_id: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          click_id?: string | null
+          coins_rewarded?: number | null
+          commission_earned?: number | null
+          converted_at?: string | null
+          id?: string
+          partner_id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_conversions_click_id_fkey"
+            columns: ["click_id"]
+            isOneToOne: false
+            referencedRelation: "referral_clicks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_conversions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
@@ -1377,6 +1532,44 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      user_referral_rewards: {
+        Row: {
+          created_at: string | null
+          id: string
+          partner_id: string
+          reward_type: string | null
+          reward_value: number | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          partner_id: string
+          reward_type?: string | null
+          reward_value?: number | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          partner_id?: string
+          reward_type?: string | null
+          reward_value?: number | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_referral_rewards_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

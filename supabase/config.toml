@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.parse-split-expense]
 verify_jwt = false
+
+[functions.track-referral]
+verify_jwt = false
