@@ -538,14 +538,26 @@ export default function SplitGroupDetail() {
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="gap-2" onClick={handleCopyInvite}>
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? 'Copied!' : 'Copy Link'}
-            </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={handleCopyEmailInvite}>
-              <Mail className="h-4 w-4" />
-              Email
-            </Button>
+            {/* Mobile: Icon-only buttons */}
+            <div className="flex gap-1 md:hidden">
+              <Button variant="outline" size="icon" onClick={handleCopyInvite}>
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </Button>
+              <Button variant="outline" size="icon" onClick={handleCopyEmailInvite}>
+                <Mail className="h-4 w-4" />
+              </Button>
+            </div>
+            {/* Desktop: Full buttons */}
+            <div className="hidden md:flex gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleCopyInvite}>
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copied ? 'Copied!' : 'Copy Link'}
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleCopyEmailInvite}>
+                <Mail className="h-4 w-4" />
+                Email
+              </Button>
+            </div>
             <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="icon">
@@ -713,12 +725,12 @@ export default function SplitGroupDetail() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
           <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <UserPlus className="h-4 w-4" />
-                Add Member
+                <span className="hidden sm:inline">Add</span> Member
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -754,7 +766,7 @@ export default function SplitGroupDetail() {
             <DialogTrigger asChild>
               <Button className="gap-2" disabled={hasNoMembers}>
                 <Plus className="h-4 w-4" />
-                Add Expense
+                <span className="hidden sm:inline">Add</span> Expense
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -783,7 +795,7 @@ export default function SplitGroupDetail() {
 
           <Dialog open={isSettleOpen} onOpenChange={setIsSettleOpen}>
             <DialogTrigger asChild>
-              <Button variant="secondary" className="gap-2" disabled={hasNoMembers}>
+              <Button variant="secondary" className="gap-2 col-span-2 sm:col-span-1" disabled={hasNoMembers}>
                 <ArrowRightLeft className="h-4 w-4" />
                 Settle Up
               </Button>
@@ -962,33 +974,37 @@ export default function SplitGroupDetail() {
 
         {/* Main Content */}
         <Tabs defaultValue="balances" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="balances">Balances</TabsTrigger>
-            <TabsTrigger value="expenses" className="gap-1.5">
-              Expenses
-              {expenses.length > 0 && (
-                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                  {expenses.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="settlements" className="gap-1.5">
-              Settlements
-              {settlements.length > 0 && (
-                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                  {settlements.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="members" className="gap-1.5">
-              Members
-              {members.length > 0 && (
-                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                  {members.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+            <TabsList className="w-max min-w-full md:w-auto">
+              <TabsTrigger value="balances">Balances</TabsTrigger>
+              <TabsTrigger value="expenses" className="gap-1.5">
+                <span className="hidden sm:inline">Expenses</span>
+                <span className="sm:hidden">Exp</span>
+                {expenses.length > 0 && (
+                  <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                    {expenses.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="settlements" className="gap-1.5">
+                <span className="hidden sm:inline">Settlements</span>
+                <span className="sm:hidden">Settle</span>
+                {settlements.length > 0 && (
+                  <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                    {settlements.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="members" className="gap-1.5">
+                Members
+                {members.length > 0 && (
+                  <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                    {members.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="balances" className="space-y-4">
             {balances.length === 0 ? (
@@ -1002,32 +1018,32 @@ export default function SplitGroupDetail() {
               <div className="grid gap-3">
                 {balances.map((balance) => (
                   <Card key={balance.memberId}>
-                    <CardContent className="py-4 space-y-3">
+                    <CardContent className="py-3 sm:py-4 space-y-2 sm:space-y-3">
                       {/* Member Header */}
                       <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarFallback>{balance.memberName.charAt(0).toUpperCase()}</AvatarFallback>
+                        <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                          <AvatarFallback className="text-sm">{balance.memberName.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <p className="font-medium">{balance.memberName}</p>
+                        <p className="font-medium text-sm sm:text-base">{balance.memberName}</p>
                       </div>
                       
                       {/* Stats Grid */}
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="p-2 rounded-md bg-muted/50">
-                          <p className="text-muted-foreground text-xs">Total Paid</p>
-                          <p className="font-medium">{group.currency} {balance.paid.toLocaleString()}</p>
+                      <div className="grid grid-cols-2 gap-2 sm:gap-3 text-sm">
+                        <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
+                          <p className="text-muted-foreground text-[10px] sm:text-xs">Total Paid</p>
+                          <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.paid.toLocaleString()}</p>
                         </div>
-                        <div className="p-2 rounded-md bg-muted/50">
-                          <p className="text-muted-foreground text-xs">Your Share</p>
-                          <p className="font-medium">{group.currency} {balance.owes.toLocaleString()}</p>
+                        <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
+                          <p className="text-muted-foreground text-[10px] sm:text-xs">Your Share</p>
+                          <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.owes.toLocaleString()}</p>
                         </div>
-                        <div className="p-2 rounded-md bg-muted/50">
-                          <p className="text-muted-foreground text-xs">Settled (Paid)</p>
-                          <p className="font-medium">{group.currency} {balance.settledPaid.toLocaleString()}</p>
+                        <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
+                          <p className="text-muted-foreground text-[10px] sm:text-xs">Settled (Paid)</p>
+                          <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.settledPaid.toLocaleString()}</p>
                         </div>
-                        <div className="p-2 rounded-md bg-muted/50">
-                          <p className="text-muted-foreground text-xs">Settled (Received)</p>
-                          <p className="font-medium">{group.currency} {balance.settledReceived.toLocaleString()}</p>
+                        <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
+                          <p className="text-muted-foreground text-[10px] sm:text-xs">Settled (Received)</p>
+                          <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.settledReceived.toLocaleString()}</p>
                         </div>
                       </div>
                       
@@ -1237,70 +1253,75 @@ export default function SplitGroupDetail() {
                     <Collapsible key={expense.id} open={isExpanded} onOpenChange={() => toggleExpenseExpanded(expense.id)}>
                       <Card>
                         <CollapsibleTrigger className="w-full">
-                          <CardContent className="py-4 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 rounded-lg bg-primary/10">
-                                <Receipt className="h-5 w-5 text-primary" />
+                          <CardContent className="py-3 sm:py-4">
+                            {/* Mobile-first layout */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                              <div className="flex items-start sm:items-center gap-3">
+                                <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                                  <Receipt className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                                </div>
+                                <div className="text-left min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="font-medium text-sm sm:text-base truncate">{expense.description}</p>
+                                    {isEdited && (
+                                      <Badge variant="outline" className="text-[10px] sm:text-xs">Edited</Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-xs sm:text-sm text-muted-foreground">
+                                    {paidByText} · {format(new Date(displayDate), 'MMM d')}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="text-left">
+                              <div className="flex items-center justify-between sm:justify-end gap-2 pl-11 sm:pl-0">
                                 <div className="flex items-center gap-2">
-                                  <p className="font-medium">{expense.description}</p>
-                                  {isEdited && (
-                                    <Badge variant="outline" className="text-xs">Edited</Badge>
+                                  <p className="font-semibold text-sm sm:text-base">{group.currency} {Number(expense.amount).toLocaleString()}</p>
+                                  <Badge variant="outline" className="text-[10px] sm:text-xs">{expense.split_type}</Badge>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                  {isGroupAdmin && (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                          <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEditExpense(expense); }}>
+                                          <Edit2 className="h-4 w-4 mr-2" />
+                                          Edit Expense
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                              <Trash2 className="h-4 w-4 mr-2" />
+                                              Delete Expense
+                                            </DropdownMenuItem>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>Delete expense?</AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                This will permanently delete "{expense.description}" and all its splits. This action cannot be undone.
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                              <AlertDialogAction 
+                                                onClick={() => deleteExpense.mutate(expense.id)}
+                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                              >
+                                                Delete
+                                              </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
                                   )}
                                 </div>
-                                <p className="text-sm text-muted-foreground">
-                                  Paid by {paidByText} · {format(new Date(displayDate), 'MMM d, yyyy')}
-                                </p>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="text-right">
-                                <p className="font-semibold">{group.currency} {Number(expense.amount).toLocaleString()}</p>
-                                <Badge variant="outline" className="text-xs">{expense.split_type}</Badge>
-                              </div>
-                              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                              {isGroupAdmin && (
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                      <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEditExpense(expense); }}>
-                                      <Edit2 className="h-4 w-4 mr-2" />
-                                      Edit Expense
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                          <Trash2 className="h-4 w-4 mr-2" />
-                                          Delete Expense
-                                        </DropdownMenuItem>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>Delete expense?</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            This will permanently delete "{expense.description}" and all its splits. This action cannot be undone.
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                          <AlertDialogAction 
-                                            onClick={() => deleteExpense.mutate(expense.id)}
-                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                          >
-                                            Delete
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              )}
                             </div>
                           </CardContent>
                         </CollapsibleTrigger>
