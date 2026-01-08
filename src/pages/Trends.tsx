@@ -9,6 +9,7 @@ import { WealthStats } from '@/components/WealthStats';
 import { IncomeSourcesChart } from '@/components/IncomeSourcesChart';
 import { PageHeader } from '@/components/PageHeader';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
+import { Leaderboard } from '@/components/Leaderboard';
 import { generateNetWorthHistory, calculateProjection, Milestone } from '@/lib/categoryData';
 import { IncomeSource } from '@/lib/incomeData';
 
@@ -165,6 +166,11 @@ const Trends = () => {
             selectedSources={selectedSources}
             onToggleSource={handleToggleSource}
           />
+        </div>
+        
+        {/* Community Leaderboard */}
+        <div className="mb-6 sm:mb-8">
+          <Leaderboard />
         </div>
         
         {/* Footer */}
