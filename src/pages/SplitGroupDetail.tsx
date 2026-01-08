@@ -32,6 +32,10 @@ import { format } from 'date-fns';
 import { ExpenseFormContent } from '@/components/ExpenseFormContent';
 import { QuickSplitExpenseInput } from '@/components/QuickSplitExpenseInput';
 import { ParsedSplitExpense } from '@/hooks/useSplitExpenseParser';
+import { useSwipeableTabs } from '@/hooks/useSwipeableTabs';
+
+const TAB_VALUES = ['balances', 'expenses', 'settlements', 'members'] as const;
+type TabValue = typeof TAB_VALUES[number];
 
 interface CustomSplitEntry {
   memberId: string;
@@ -55,6 +59,9 @@ export default function SplitGroupDetail() {
     settleUp, deleteSettlement, updateSettlement, updateGroup, markGroupSettled, leaveGroup, sendInviteEmail,
     getExpensePayers 
   } = useExpenseGroup(groupId);
+
+  // Swipeable tabs for mobile
+  const { activeTab, setActiveTab, emblaRef, isMobile } = useSwipeableTabs(TAB_VALUES, 'balances');
 
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
@@ -976,8 +983,8 @@ export default function SplitGroupDetail() {
         </div>
 
         {/* Main Content */}
-        <Tabs defaultValue="balances" className="space-y-4">
-          <div className="overflow-x-auto -mx-3 sm:-mx-4 px-3 sm:px-4 scrollbar-hide">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="space-y-4">
+          <div className="overflow-x-auto w-full scrollbar-hide">
             <TabsList className="w-max min-w-full md:w-auto h-auto p-1">
               <TabsTrigger value="balances" className="text-xs sm:text-sm py-2 px-3">
                 Balance
@@ -1009,118 +1016,140 @@ export default function SplitGroupDetail() {
             </TabsList>
           </div>
 
-          <TabsContent value="balances" className="space-y-4">
-            {balances.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="py-8 text-center">
-                  <Users className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">Add members and expenses to see balances</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-3">
-                {balances.map((balance) => (
-                  <Card key={balance.memberId}>
-                    <CardContent className="py-3 sm:py-4 space-y-2 sm:space-y-3">
-                      {/* Member Header */}
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                          <AvatarFallback className="text-sm">{balance.memberName.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <p className="font-medium text-sm sm:text-base">{balance.memberName}</p>
-                      </div>
-                      
-                      {/* Stats Grid */}
-                      <div className="grid grid-cols-2 gap-2 sm:gap-3 text-sm">
-                        <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
-                          <p className="text-muted-foreground text-[10px] sm:text-xs">Total Paid</p>
-                          <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.paid.toLocaleString()}</p>
-                        </div>
-                        <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
-                          <p className="text-muted-foreground text-[10px] sm:text-xs">Your Share</p>
-                          <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.owes.toLocaleString()}</p>
-                        </div>
-                        <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
-                          <p className="text-muted-foreground text-[10px] sm:text-xs">Settled (Paid)</p>
-                          <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.settledPaid.toLocaleString()}</p>
-                        </div>
-                        <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
-                          <p className="text-muted-foreground text-[10px] sm:text-xs">Settled (Received)</p>
-                          <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.settledReceived.toLocaleString()}</p>
-                        </div>
-                      </div>
-                      
-                      {/* Pending Balance */}
-                      <div className={cn(
-                        "p-3 rounded-md text-center font-semibold",
-                        balance.balance > 0.01 && "bg-green-500/10 text-green-600 dark:text-green-400",
-                        balance.balance < -0.01 && "bg-red-500/10 text-red-600 dark:text-red-400",
-                        Math.abs(balance.balance) <= 0.01 && "bg-muted text-muted-foreground"
-                      )}>
-                        {Math.abs(balance.balance) <= 0.01 ? (
-                          <span>Settled Up ✓</span>
-                        ) : balance.balance > 0 ? (
-                          <span>To Receive: {group.currency} {balance.balance.toLocaleString()}</span>
-                        ) : (
-                          <span>To Pay: {group.currency} {Math.abs(balance.balance).toLocaleString()}</span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+          {/* Mobile swipe indicator dots */}
+          {isMobile && (
+            <div className="flex justify-center gap-1.5 -mt-2">
+              {TAB_VALUES.map((tab) => (
+                <div
+                  key={tab}
+                  className={cn(
+                    "w-1.5 h-1.5 rounded-full transition-colors",
+                    activeTab === tab ? "bg-primary" : "bg-muted-foreground/30"
+                  )}
+                />
+              ))}
+            </div>
+          )}
 
-            {/* Smart Settlement Suggestions */}
-            {settlementSuggestions.length > 0 && (
-              <Card className="border-primary/30 bg-primary/5">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <ArrowRightLeft className="h-4 w-4" />
-                    Suggested Settlements
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Minimum transactions to settle all balances
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {settlementSuggestions.map((suggestion, idx) => (
-                    <div 
-                      key={idx} 
-                      className="flex items-center justify-between p-3 bg-background rounded-lg border"
-                    >
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="font-medium">{suggestion.fromMemberName}</span>
-                        <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
-                        <span className="font-medium">{suggestion.toMemberName}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-primary">
-                          {group.currency} {suggestion.amount.toLocaleString()}
-                        </span>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => {
-                            setSettlement({
-                              fromMemberId: suggestion.fromMemberId,
-                              toMemberId: suggestion.toMemberId,
-                              amount: suggestion.amount.toString(),
-                              settlementDate: new Date().toISOString().split('T')[0],
-                            });
-                            setIsSettleOpen(true);
-                          }}
-                        >
-                          Settle
-                        </Button>
-                      </div>
+          {/* Tab Content - Regular TabsContent with swipe gesture overlay for mobile */}
+          <div 
+            ref={isMobile ? emblaRef : undefined}
+            className={cn(
+              isMobile && "overflow-hidden touch-pan-y"
+            )}
+          >
+            <div className={cn(
+              isMobile && "flex transition-transform duration-300 ease-out",
+              !isMobile && "block"
+            )} style={isMobile ? { transform: `translateX(-${TAB_VALUES.indexOf(activeTab) * 100}%)` } : undefined}>
+              
+              {/* Balances Tab */}
+              <div className={cn(
+                isMobile && "min-w-full shrink-0",
+                !isMobile && activeTab !== 'balances' && "hidden"
+              )}>
+                <div className="space-y-4">
+                  {balances.length === 0 ? (
+                    <Card className="border-dashed">
+                      <CardContent className="py-8 text-center">
+                        <Users className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-muted-foreground">Add members and expenses to see balances</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid gap-3">
+                      {balances.map((balance) => (
+                        <Card key={balance.memberId}>
+                          <CardContent className="py-3 sm:py-4 space-y-2 sm:space-y-3">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                                <AvatarFallback className="text-sm">{balance.memberName.charAt(0).toUpperCase()}</AvatarFallback>
+                              </Avatar>
+                              <p className="font-medium text-sm sm:text-base">{balance.memberName}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 sm:gap-3 text-sm">
+                              <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
+                                <p className="text-muted-foreground text-[10px] sm:text-xs">Total Paid</p>
+                                <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.paid.toLocaleString()}</p>
+                              </div>
+                              <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
+                                <p className="text-muted-foreground text-[10px] sm:text-xs">Your Share</p>
+                                <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.owes.toLocaleString()}</p>
+                              </div>
+                              <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
+                                <p className="text-muted-foreground text-[10px] sm:text-xs">Settled (Paid)</p>
+                                <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.settledPaid.toLocaleString()}</p>
+                              </div>
+                              <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
+                                <p className="text-muted-foreground text-[10px] sm:text-xs">Settled (Received)</p>
+                                <p className="font-medium text-xs sm:text-sm">{group.currency} {balance.settledReceived.toLocaleString()}</p>
+                              </div>
+                            </div>
+                            <div className={cn(
+                              "p-3 rounded-md text-center font-semibold",
+                              balance.balance > 0.01 && "bg-green-500/10 text-green-600 dark:text-green-400",
+                              balance.balance < -0.01 && "bg-red-500/10 text-red-600 dark:text-red-400",
+                              Math.abs(balance.balance) <= 0.01 && "bg-muted text-muted-foreground"
+                            )}>
+                              {Math.abs(balance.balance) <= 0.01 ? (
+                                <span>Settled Up ✓</span>
+                              ) : balance.balance > 0 ? (
+                                <span>To Receive: {group.currency} {balance.balance.toLocaleString()}</span>
+                              ) : (
+                                <span>To Pay: {group.currency} {Math.abs(balance.balance).toLocaleString()}</span>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-
-          </TabsContent>
+                  )}
+                  {settlementSuggestions.length > 0 && (
+                    <Card className="border-primary/30 bg-primary/5">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <ArrowRightLeft className="h-4 w-4" />
+                          Suggested Settlements
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Minimum transactions to settle all balances
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {settlementSuggestions.map((suggestion, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-3 bg-background rounded-lg border">
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="font-medium">{suggestion.fromMemberName}</span>
+                              <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                              <span className="font-medium">{suggestion.toMemberName}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-primary">
+                                {group.currency} {suggestion.amount.toLocaleString()}
+                              </span>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => {
+                                  setSettlement({
+                                    fromMemberId: suggestion.fromMemberId,
+                                    toMemberId: suggestion.toMemberId,
+                                    amount: suggestion.amount.toString(),
+                                    settlementDate: new Date().toISOString().split('T')[0],
+                                  });
+                                  setIsSettleOpen(true);
+                                }}
+                              >
+                                Settle
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
 
           <TabsContent value="expenses" className="space-y-4">
             {/* Quick AI Input */}
