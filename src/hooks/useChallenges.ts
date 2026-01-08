@@ -23,6 +23,15 @@ export interface Challenge {
   created_at: string;
 }
 
+export interface CreateChallengeFromRecommendation {
+  name: string;
+  description: string;
+  type: 'savings' | 'no_spend' | 'budget' | 'reduce' | 'streak';
+  target_value: number;
+  duration_days: number;
+  category?: string;
+}
+
 export interface ChallengeParticipant {
   id: string;
   challenge_id: string;
@@ -153,6 +162,70 @@ export function useChallenges() {
     },
   });
 
+  // Create and join a challenge from AI recommendation
+  const createAndJoinChallenge = useMutation({
+    mutationFn: async (recommendation: CreateChallengeFromRecommendation) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Map recommendation type to database challenge_type
+      const typeMapping: Record<string, { challenge_type: 'savings' | 'no_spend' | 'streak' | 'budget'; target_metric: string; icon: string }> = {
+        savings: { challenge_type: 'savings', target_metric: 'savings_amount', icon: '💰' },
+        no_spend: { challenge_type: 'no_spend', target_metric: 'days_without_spending', icon: '🔥' },
+        budget: { challenge_type: 'budget', target_metric: 'budget_category', icon: '💳' },
+        reduce: { challenge_type: 'budget', target_metric: 'category_reduction', icon: '📉' },
+        streak: { challenge_type: 'streak', target_metric: 'streak_days', icon: '📅' },
+      };
+
+      const mapping = typeMapping[recommendation.type] || typeMapping.savings;
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + recommendation.duration_days);
+
+      // Create the challenge
+      const { data: challenge, error: createError } = await supabase
+        .from('challenges')
+        .insert({
+          name: recommendation.name,
+          description: recommendation.description,
+          challenge_type: mapping.challenge_type,
+          target_metric: mapping.target_metric,
+          target_value: recommendation.target_value,
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+          icon: mapping.icon,
+          is_active: true,
+          created_by: user.id,
+          entry_fee_coins: 0,
+          prize_pool_coins: 0,
+        })
+        .select()
+        .single();
+
+      if (createError) throw createError;
+
+      // Join the challenge
+      const { error: joinError } = await supabase
+        .from('challenge_participants')
+        .insert({
+          challenge_id: challenge.id,
+          user_id: user.id,
+          progress: 0,
+        });
+
+      if (joinError) throw joinError;
+
+      return challenge;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['challenges'] });
+      toast({ title: 'Challenge started! Good luck! 🚀' });
+    },
+    onError: () => {
+      toast({ title: 'Error creating challenge', variant: 'destructive' });
+    },
+  });
+
   // Filter helpers
   const activeChallenges = challenges.filter(c => c.daysRemaining > 0);
   const myChallenges = challenges.filter(c => c.isParticipating);
@@ -165,5 +238,6 @@ export function useChallenges() {
     joinChallenge,
     leaveChallenge,
     updateProgress,
+    createAndJoinChallenge,
   };
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Target, Flame, TrendingDown, Wallet, Calendar, RefreshCw, ChevronRight } from 'lucide-react';
+import { Sparkles, Target, Flame, TrendingDown, Wallet, Calendar, RefreshCw, ChevronRight, Loader2, Check } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useChallenges } from '@/hooks/useChallenges';
 
 interface ChallengeRecommendation {
   name: string;
@@ -41,9 +42,33 @@ const difficultyConfig = {
 
 export function ChallengeRecommendations() {
   const { toast } = useToast();
+  const { createAndJoinChallenge } = useChallenges();
   const [recommendations, setRecommendations] = useState<RecommendationsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [startingChallenges, setStartingChallenges] = useState<Set<number>>(new Set());
+  const [startedChallenges, setStartedChallenges] = useState<Set<number>>(new Set());
+
+  const handleStartChallenge = async (challenge: ChallengeRecommendation, index: number) => {
+    setStartingChallenges(prev => new Set([...prev, index]));
+    try {
+      await createAndJoinChallenge.mutateAsync({
+        name: challenge.name,
+        description: challenge.description,
+        type: challenge.type,
+        target_value: challenge.target_value,
+        duration_days: challenge.duration_days,
+        category: challenge.category,
+      });
+      setStartedChallenges(prev => new Set([...prev, index]));
+    } finally {
+      setStartingChallenges(prev => {
+        const next = new Set(prev);
+        next.delete(index);
+        return next;
+      });
+    }
+  };
 
   const fetchRecommendations = async () => {
     setIsLoading(true);
@@ -177,9 +202,32 @@ export function ChallengeRecommendations() {
                     💡 {challenge.reasoning}
                   </p>
 
-                  <Button variant="outline" size="sm" className="mt-3 gap-1">
-                    Start Challenge
-                    <ChevronRight className="w-4 h-4" />
+                  <Button 
+                    variant={startedChallenges.has(index) ? "default" : "outline"} 
+                    size="sm" 
+                    className={cn(
+                      "mt-3 gap-1",
+                      startedChallenges.has(index) && "bg-green-600 hover:bg-green-600"
+                    )}
+                    onClick={() => handleStartChallenge(challenge, index)}
+                    disabled={startingChallenges.has(index) || startedChallenges.has(index)}
+                  >
+                    {startingChallenges.has(index) ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Starting...
+                      </>
+                    ) : startedChallenges.has(index) ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Joined
+                      </>
+                    ) : (
+                      <>
+                        Start Challenge
+                        <ChevronRight className="w-4 h-4" />
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
