@@ -47,6 +47,7 @@ const mainNavItems = [
 ];
 
 const settingsNavItems = [
+  { path: '/users', label: 'User Access', icon: Users },
   { path: '/admin', label: 'Admin Portal', icon: Shield },
   { path: '/install', label: 'Install App', icon: Download },
 ];

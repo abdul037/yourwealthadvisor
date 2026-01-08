@@ -77,6 +77,51 @@ export type Database = {
         }
         Relationships: []
       }
+      app_modules: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_live: boolean | null
+          name: string
+          required_tier: string | null
+          route: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_live?: boolean | null
+          name: string
+          required_tier?: string | null
+          route?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_live?: boolean | null
+          name?: string
+          required_tier?: string | null
+          route?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       assets: {
         Row: {
           amount: number
@@ -1631,6 +1676,30 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_subscriptions: {
         Row: {
           billing_cycle: string
@@ -1692,6 +1761,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_expense_group_creator: {
         Args: { p_group_id: string; p_user_id: string }
         Returns: boolean
@@ -1702,6 +1778,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       liquidity_level: "L1" | "L2" | "L3" | "NL"
     }
     CompositeTypes: {
@@ -1830,6 +1907,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       liquidity_level: ["L1", "L2", "L3", "NL"],
     },
   },
