@@ -1031,23 +1031,8 @@ export default function SplitGroupDetail() {
             </div>
           )}
 
-          {/* Tab Content - Regular TabsContent with swipe gesture overlay for mobile */}
-          <div 
-            ref={isMobile ? emblaRef : undefined}
-            className={cn(
-              isMobile && "overflow-hidden touch-pan-y"
-            )}
-          >
-            <div className={cn(
-              isMobile && "flex transition-transform duration-300 ease-out",
-              !isMobile && "block"
-            )} style={isMobile ? { transform: `translateX(-${TAB_VALUES.indexOf(activeTab) * 100}%)` } : undefined}>
-              
-              {/* Balances Tab */}
-              <div className={cn(
-                isMobile && "min-w-full shrink-0",
-                !isMobile && activeTab !== 'balances' && "hidden"
-              )}>
+          {/* Balances Tab */}
+          <TabsContent value="balances" className="space-y-4">
                 <div className="space-y-4">
                   {balances.length === 0 ? (
                     <Card className="border-dashed">
@@ -1147,10 +1132,11 @@ export default function SplitGroupDetail() {
                         ))}
                       </CardContent>
                     </Card>
-                  )}
+                )}
                 </div>
-              </div>
+          </TabsContent>
 
+          {/* Expenses Tab */}
           <TabsContent value="expenses" className="space-y-4">
             {/* Quick AI Input */}
             <QuickSplitExpenseInput
