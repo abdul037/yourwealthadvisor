@@ -2,7 +2,8 @@ import { useMemo } from 'react';
 import { 
   LayoutDashboard, 
   DollarSign, 
-  Receipt, 
+  Receipt,
+  Eye,
   Wallet, 
   TrendingDown, 
   LineChart, 
@@ -58,6 +59,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Shield,
   Download,
   Box,
+  Eye,
 };
 
 // Fallback for modules not yet in database
@@ -77,9 +79,10 @@ const STATIC_NAV_ITEMS = [
 ];
 
 const SETTINGS_NAV_ITEMS = [
-  { path: '/users', label: 'User Access', icon: Users, module: 'users', adminOnly: true },
-  { path: '/admin', label: 'Admin Portal', icon: Shield, module: 'admin' },
-  { path: '/install', label: 'Install App', icon: Download, module: 'install' },
+  { path: '/my-access', label: 'My Access', icon: Eye, module: 'my_access', adminOnly: false },
+  { path: '/users', label: 'User Management', icon: Users, module: 'users', adminOnly: true },
+  { path: '/admin', label: 'Admin Portal', icon: Shield, module: 'admin', adminOnly: true },
+  { path: '/install', label: 'Install App', icon: Download, module: 'install', adminOnly: false },
 ];
 
 export function AppSidebar() {
