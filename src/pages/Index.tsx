@@ -23,7 +23,6 @@ import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { NotificationWidget } from '@/components/SmartNotificationCenter';
 import { FeatureDiscovery } from '@/components/FeatureDiscovery';
 import { ProgressDashboard } from '@/components/ProgressDashboard';
-import { Celebration } from '@/components/Celebration';
 import { GuidedWorkflow } from '@/components/GuidedWorkflow';
 import { useAssets, Asset as DBAsset } from '@/hooks/useAssets';
 import { useTransactions, Transaction as DBTransaction } from '@/hooks/useTransactions';
@@ -79,7 +78,7 @@ const Index = () => {
   const { accounts: linkedAccounts, isLoading: linkedAccountsLoading } = useLinkedAccounts();
   const { formatAmount } = useFormattedCurrency();
   const { isAuthenticated, profile, loading: profileLoading } = useUserProfile();
-  const { newlyUnlocked, clearNewlyUnlocked, updateStreak, checkTransactionAchievements } = useAchievements();
+  const { updateStreak, checkTransactionAchievements } = useAchievements();
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('1W');
   const [achievementsChecked, setAchievementsChecked] = useState(false);
@@ -209,8 +208,6 @@ const Index = () => {
         onAccountsConnected={handleAccountsConnected}
       />
       
-      {/* Achievement Celebration Modal */}
-      <Celebration achievement={newlyUnlocked} onClose={clearNewlyUnlocked} />
       
       {/* Guided Workflow Overlay */}
       <GuidedWorkflow />

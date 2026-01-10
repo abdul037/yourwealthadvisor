@@ -1,5 +1,6 @@
 import { Asset, formatCurrency, CATEGORY_COLORS, LIQUIDITY_LABELS } from '@/lib/portfolioData';
 import { Building, TrendingUp, Wallet, Car, Shield, Landmark, Coins, PiggyBank, Bitcoin, Gem } from 'lucide-react';
+import { AddAssetDialog } from './AddAssetDialog';
 
 interface AssetListProps {
   assets: Asset[];
@@ -40,7 +41,10 @@ export function AssetList({ assets }: AssetListProps) {
     <div className="wealth-card">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">All Assets</h3>
-        <span className="text-xs text-muted-foreground">{assets.length} items</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{assets.length} items</span>
+          <AddAssetDialog />
+        </div>
       </div>
       
       <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
