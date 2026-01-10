@@ -15,13 +15,18 @@ export function useAssets() {
   const { data: assets = [], isLoading, error, refetch } = useQuery({
     queryKey: ['assets', user?.id],
     queryFn: async () => {
+      console.log('[useAssets] Fetching assets for user:', user?.id);
       const { data, error } = await supabase
         .from('assets')
         .select('*')
         .eq('is_active', true)
         .order('amount', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('[useAssets] Fetch error:', error);
+        throw error;
+      }
+      console.log('[useAssets] Fetched:', data?.length, 'assets');
       return data as Asset[];
     },
     enabled: !!user?.id,

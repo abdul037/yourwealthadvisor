@@ -86,6 +86,17 @@ const Index = () => {
 
   const isLoading = profileLoading || assetsLoading || transactionsLoading || incomesLoading || linkedAccountsLoading;
 
+  // Debug logging
+  console.log('[Dashboard] Data loaded:', {
+    assetsCount: dbAssets.length,
+    transactionsCount: dbTransactions.length,
+    totalMonthlyIncome,
+    linkedAccountsCount: linkedAccounts.length,
+    userId: profile?.id,
+    isAuthenticated,
+    isLoading,
+  });
+
   // Convert DB data to component format
   const assets: Asset[] = dbAssets.map(adaptAsset);
   const transactions: Transaction[] = dbTransactions.map(adaptTransaction);

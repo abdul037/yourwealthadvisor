@@ -21,6 +21,7 @@ export function useTransactions(options: UseTransactionsOptions = {}) {
   const { data: transactions = [], isLoading, error, refetch } = useQuery({
     queryKey: ['transactions', user?.id, type, limit],
     queryFn: async () => {
+      console.log('[useTransactions] Fetching transactions for user:', user?.id, { type, limit });
       let query = supabase
         .from('transactions')
         .select('*')
@@ -36,7 +37,11 @@ export function useTransactions(options: UseTransactionsOptions = {}) {
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('[useTransactions] Fetch error:', error);
+        throw error;
+      }
+      console.log('[useTransactions] Fetched:', data?.length, 'transactions');
       return data as Transaction[];
     },
     enabled: !!user?.id,
