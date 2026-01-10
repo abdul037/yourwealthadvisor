@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Plus, Receipt, Briefcase } from 'lucide-react';
+import { Plus, Receipt, Briefcase, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -10,7 +10,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuickTransactionInput } from '@/components/QuickTransactionInput';
 import { QuickAssetInput } from '@/components/QuickAssetInput';
+import { QuickIncomeInput } from '@/components/QuickIncomeInput';
 import { cn } from '@/lib/utils';
+import { useLocation } from 'react-router-dom';
 
 // Trigger haptic feedback on supported devices
 const triggerHaptic = () => {
@@ -19,22 +21,50 @@ const triggerHaptic = () => {
   }
 };
 
+type TabType = 'transaction' | 'asset' | 'income';
+
 interface FloatingQuickAddProps {
-  defaultTab?: 'transaction' | 'asset';
+  defaultTab?: TabType;
 }
 
-export function FloatingQuickAdd({ defaultTab = 'transaction' }: FloatingQuickAddProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(defaultTab);
+// Map routes to default tabs for context-awareness
+const ROUTE_TAB_MAP: Record<string, TabType> = {
+  '/': 'transaction',
+  '/expenses': 'transaction',
+  '/budget': 'transaction',
+  '/debt': 'transaction',
+  '/investments': 'asset',
+  '/income': 'income',
+  '/savings-goals': 'transaction',
+};
 
-  // Update active tab when defaultTab changes (route change)
+export function FloatingQuickAdd({ defaultTab }: FloatingQuickAddProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  
+  // Determine the active tab based on route or prop
+  const getDefaultTab = useCallback((): TabType => {
+    if (defaultTab) return defaultTab;
+    return ROUTE_TAB_MAP[location.pathname] || 'transaction';
+  }, [defaultTab, location.pathname]);
+
+  const [activeTab, setActiveTab] = useState<TabType>(getDefaultTab());
+
+  // Update active tab when route changes
   useEffect(() => {
-    setActiveTab(defaultTab);
-  }, [defaultTab]);
+    setActiveTab(getDefaultTab());
+  }, [getDefaultTab]);
 
   const handleClick = useCallback(() => {
     triggerHaptic();
     setIsOpen(true);
+  }, []);
+
+  const handleSuccess = useCallback(() => {
+    // Close after a short delay to show success state
+    setTimeout(() => {
+      setIsOpen(false);
+    }, 1500);
   }, []);
 
   return (
@@ -65,20 +95,25 @@ export function FloatingQuickAdd({ defaultTab = 'transaction' }: FloatingQuickAd
 
       {/* Bottom Sheet with tabs */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent side="bottom" className="rounded-t-2xl px-4 pb-8 h-auto max-h-[85vh] overflow-y-auto">
+        <SheetContent side="bottom" className="rounded-t-2xl px-4 pb-8 h-auto max-h-[90vh] overflow-y-auto">
           <SheetHeader className="pb-2">
             <SheetTitle className="text-center">Quick Add</SheetTitle>
           </SheetHeader>
           
-          <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'transaction' | 'asset')} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="transaction" className="gap-2">
+          <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as TabType)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsTrigger value="transaction" className="gap-1.5 text-xs sm:text-sm">
                 <Receipt className="h-4 w-4" />
-                Transaction
+                <span className="hidden sm:inline">Transaction</span>
+                <span className="sm:hidden">Txn</span>
               </TabsTrigger>
-              <TabsTrigger value="asset" className="gap-2">
+              <TabsTrigger value="asset" className="gap-1.5 text-xs sm:text-sm">
                 <Briefcase className="h-4 w-4" />
                 Asset
+              </TabsTrigger>
+              <TabsTrigger value="income" className="gap-1.5 text-xs sm:text-sm">
+                <Wallet className="h-4 w-4" />
+                Income
               </TabsTrigger>
             </TabsList>
             
@@ -87,7 +122,11 @@ export function FloatingQuickAdd({ defaultTab = 'transaction' }: FloatingQuickAd
             </TabsContent>
             
             <TabsContent value="asset" className="max-w-md mx-auto">
-              <QuickAssetInput onSuccess={() => setIsOpen(false)} />
+              <QuickAssetInput onSuccess={handleSuccess} />
+            </TabsContent>
+
+            <TabsContent value="income" className="max-w-md mx-auto">
+              <QuickIncomeInput onSuccess={handleSuccess} />
             </TabsContent>
           </Tabs>
         </SheetContent>
