@@ -8,7 +8,7 @@ import {
   TrendingDown, 
   TrendingUp,
   LineChart, 
-  Shield,
+  Settings,
   Download,
   Sparkles,
   Target,
@@ -58,7 +58,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Handshake,
   Sparkles,
   Crown,
-  Shield,
+  Settings,
   Download,
   Box,
   Eye,
@@ -84,7 +84,7 @@ const STATIC_NAV_ITEMS = [
 const SETTINGS_NAV_ITEMS = [
   { path: '/my-access', label: 'My Access', icon: Eye, module: 'my_access', adminOnly: false },
   { path: '/users', label: 'User Management', icon: Users, module: 'users', adminOnly: true },
-  { path: '/admin', label: 'Admin Portal', icon: Shield, module: 'admin', adminOnly: true },
+  { path: '/admin', label: 'Settings', icon: Settings, module: 'admin', adminOnly: false },
   { path: '/install', label: 'Install App', icon: Download, module: 'install', adminOnly: false },
 ];
 
