@@ -28,6 +28,7 @@ import { GuidedWorkflow } from '@/components/GuidedWorkflow';
 import { useAssets, Asset as DBAsset } from '@/hooks/useAssets';
 import { useTransactions, Transaction as DBTransaction } from '@/hooks/useTransactions';
 import { useIncomes } from '@/hooks/useIncomes';
+import { useLinkedAccounts, LinkedAccount } from '@/hooks/useLinkedAccounts';
 import { Transaction, Asset } from '@/lib/portfolioData';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -70,14 +71,14 @@ const Index = () => {
   const { assets: dbAssets, isLoading: assetsLoading } = useAssets();
   const { transactions: dbTransactions, isLoading: transactionsLoading, addTransaction } = useTransactions({ limit: 20 });
   const { totalMonthlyIncome, isLoading: incomesLoading } = useIncomes();
+  const { accounts: linkedAccounts, isLoading: linkedAccountsLoading } = useLinkedAccounts();
   const { formatAmount } = useFormattedCurrency();
   const { isAuthenticated, profile, loading: profileLoading } = useUserProfile();
   const { newlyUnlocked, clearNewlyUnlocked, updateStreak, checkTransactionAchievements } = useAchievements();
   const [showSetupWizard, setShowSetupWizard] = useState(false);
-  const [connectedAccounts, setConnectedAccounts] = useState<BankAccount[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('1W');
 
-  const isLoading = profileLoading || assetsLoading || transactionsLoading || incomesLoading;
+  const isLoading = profileLoading || assetsLoading || transactionsLoading || incomesLoading || linkedAccountsLoading;
 
   // Convert DB data to component format
   const assets: Asset[] = dbAssets.map(adaptAsset);
@@ -97,8 +98,21 @@ const Index = () => {
     }
   }, [dbTransactions.length, checkTransactionAchievements]);
 
+  // Convert linked accounts to BankAccount format for compatibility
+  const connectedAccounts: BankAccount[] = linkedAccounts.map(acc => ({
+    id: acc.id,
+    bankLogo: acc.platform_logo || '🏦',
+    bankName: acc.platform_name,
+    accountNumber: acc.account_number || '****',
+    accountType: acc.account_type as BankAccount['accountType'],
+    balance: acc.opening_balance,
+    currency: acc.currency as BankAccount['currency'],
+    lastSynced: acc.last_synced || new Date().toISOString(),
+    isConnected: acc.is_active ?? true,
+  }));
+
   const handleAccountsConnected = (accounts: BankAccount[]) => {
-    setConnectedAccounts(prev => [...prev, ...accounts]);
+    // This is now handled by the useLinkedAccounts hook
   };
 
   const handleTransactionsImported = async (bankTransactions: BankTransaction[]) => {
