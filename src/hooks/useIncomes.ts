@@ -15,12 +15,17 @@ export function useIncomes() {
   const { data: incomes = [], isLoading, error, refetch } = useQuery({
     queryKey: ['incomes', user?.id],
     queryFn: async () => {
+      console.log('[useIncomes] Fetching incomes for user:', user?.id);
       const { data, error } = await supabase
         .from('income_sources')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('[useIncomes] Fetch error:', error);
+        throw error;
+      }
+      console.log('[useIncomes] Fetched:', data?.length, 'income sources');
       return data as IncomeSource[];
     },
     enabled: !!user?.id,

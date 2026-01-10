@@ -42,6 +42,7 @@ export function useLinkedAccounts() {
     queryKey: ['linked-accounts'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('[useLinkedAccounts] Fetching for user:', user?.id);
       if (!user) return [];
 
       const { data, error } = await supabase
@@ -50,7 +51,11 @@ export function useLinkedAccounts() {
         .eq('is_active', true)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[useLinkedAccounts] Fetch error:', error);
+        throw error;
+      }
+      console.log('[useLinkedAccounts] Fetched:', data?.length, 'linked accounts');
       return data as LinkedAccount[];
     },
   });
