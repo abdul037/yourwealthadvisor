@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { DollarSign, Receipt, Wallet, TrendingDown, ArrowRight } from 'lucide-react';
 import { Period } from '@/lib/periodUtils';
@@ -34,6 +34,7 @@ import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAchievements } from '@/hooks/useAchievements';
 import { BankAccount, BankTransaction } from '@/lib/mockBankingData';
+import { convertToAED, isCashEquivalent } from '@/lib/currencyUtils';
 
 const quickNavItems = [
   { path: '/income', label: 'Income', icon: DollarSign, color: 'bg-wealth-positive/20 text-wealth-positive' },
@@ -42,19 +43,23 @@ const quickNavItems = [
   { path: '/debt', label: 'Debt', icon: TrendingDown, color: 'bg-accent/20 text-accent' },
 ];
 
-// Adapter to convert DB asset to component format
-const adaptAsset = (dbAsset: DBAsset): Asset => ({
-  id: dbAsset.id,
-  name: dbAsset.name,
-  category: dbAsset.category as Asset['category'],
-  amount: dbAsset.amount,
-  unit: (dbAsset.currency || 'AED') as Asset['unit'],
-  aedValue: dbAsset.amount, // Assuming AED for now
-  usdValue: dbAsset.amount * 0.27, // Approximate conversion
-  inrValue: dbAsset.amount * 22.7, // Approximate conversion
-  liquidityLevel: (dbAsset.liquidity_level || 'L2') as Asset['liquidityLevel'],
-  isCash: dbAsset.category === 'Cash',
-});
+// Adapter to convert DB asset to component format with proper currency conversion
+const adaptAsset = (dbAsset: DBAsset): Asset => {
+  const aedValue = convertToAED(dbAsset.amount, dbAsset.currency);
+  
+  return {
+    id: dbAsset.id,
+    name: dbAsset.name,
+    category: dbAsset.category as Asset['category'],
+    amount: dbAsset.amount,
+    unit: (dbAsset.currency || 'AED') as Asset['unit'],
+    aedValue: aedValue,
+    usdValue: aedValue * 0.27,
+    inrValue: aedValue * 22.7,
+    liquidityLevel: (dbAsset.liquidity_level || 'L2') as Asset['liquidityLevel'],
+    isCash: isCashEquivalent(dbAsset.category),
+  };
+};
 
 // Adapter to convert DB transaction to component format
 const adaptTransaction = (dbTransaction: DBTransaction): Transaction => ({
@@ -77,12 +82,22 @@ const Index = () => {
   const { newlyUnlocked, clearNewlyUnlocked, updateStreak, checkTransactionAchievements } = useAchievements();
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('1W');
+  const [achievementsChecked, setAchievementsChecked] = useState(false);
 
   const isLoading = profileLoading || assetsLoading || transactionsLoading || incomesLoading || linkedAccountsLoading;
 
   // Convert DB data to component format
   const assets: Asset[] = dbAssets.map(adaptAsset);
   const transactions: Transaction[] = dbTransactions.map(adaptTransaction);
+
+  // Calculate linked accounts balance with proper currency conversion
+  const linkedAccountsBalance = useMemo(() => {
+    return linkedAccounts.reduce((sum, acc) => {
+      const valueInAED = convertToAED(acc.opening_balance, acc.currency);
+      // Only include positive balances (bank accounts, not utility dues)
+      return sum + (valueInAED > 0 ? valueInAED : 0);
+    }, 0);
+  }, [linkedAccounts]);
 
   // Update streak on page load
   useEffect(() => {
@@ -91,12 +106,13 @@ const Index = () => {
     }
   }, [isAuthenticated, updateStreak]);
 
-  // Check transaction achievements
+  // Check transaction achievements - only once when transactions load
   useEffect(() => {
-    if (dbTransactions.length > 0) {
+    if (dbTransactions.length > 0 && !achievementsChecked && !isLoading) {
       checkTransactionAchievements(dbTransactions.length);
+      setAchievementsChecked(true);
     }
-  }, [dbTransactions.length, checkTransactionAchievements]);
+  }, [dbTransactions.length, achievementsChecked, isLoading, checkTransactionAchievements]);
 
   // Convert linked accounts to BankAccount format for compatibility
   const connectedAccounts: BankAccount[] = linkedAccounts.map(acc => ({
@@ -200,7 +216,7 @@ const Index = () => {
         {/* Hero Section - Net Worth & Quick Actions */}
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="flex-1 min-w-0" data-tour="net-worth">
-            <NetWorthCard assets={assets} period={selectedPeriod} onPeriodChange={setSelectedPeriod} />
+            <NetWorthCard assets={assets} linkedAccountsBalance={linkedAccountsBalance} period={selectedPeriod} onPeriodChange={setSelectedPeriod} />
           </div>
           <div className="lg:w-80 flex flex-col gap-4">
             <div className="wealth-card flex-1">
@@ -278,15 +294,15 @@ const Index = () => {
         </div>
         
         {/* Quick Stats */}
-        <QuickStats assets={assets} period={selectedPeriod} />
+        <QuickStats assets={assets} linkedAccountsBalance={linkedAccountsBalance} period={selectedPeriod} />
         
         {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
           {/* Allocation Chart */}
-          <AllocationChart assets={assets} />
+          <AllocationChart assets={assets} linkedAccountsBalance={linkedAccountsBalance} />
           
           {/* Liquidity Breakdown */}
-          <LiquidityBreakdown assets={assets} />
+          <LiquidityBreakdown assets={assets} linkedAccountsBalance={linkedAccountsBalance} />
           
           {/* Recent Transactions */}
           <RecentTransactions transactions={transactions} period={selectedPeriod} />

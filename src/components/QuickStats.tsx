@@ -8,10 +8,11 @@ import { useMemo } from 'react';
 
 interface QuickStatsProps {
   assets: Asset[];
+  linkedAccountsBalance?: number;
   period?: Period;
 }
 
-export function QuickStats({ assets, period = '1W' }: QuickStatsProps) {
+export function QuickStats({ assets, linkedAccountsBalance = 0, period = '1W' }: QuickStatsProps) {
   const { formatAmount } = useFormattedCurrency();
   
   // Generate period-based changes for each category
@@ -21,7 +22,10 @@ export function QuickStats({ assets, period = '1W' }: QuickStatsProps) {
     gold: getSimulatedChange(period, 0.8),
   }), [period]);
   
-  const totalWealth = assets.reduce((sum, a) => sum + a.aedValue, 0);
+  // Include linked accounts in total wealth
+  const assetsTotal = assets.reduce((sum, a) => sum + a.aedValue, 0);
+  const totalWealth = assetsTotal + linkedAccountsBalance;
+  
   const stocksValue = assets.filter(a => a.category === 'Stocks').reduce((sum, a) => sum + a.aedValue, 0);
   const landValue = assets.filter(a => a.category === 'Land Asset').reduce((sum, a) => sum + a.aedValue, 0);
   const goldValue = assets.filter(a => ['Gold', 'DigiGold'].includes(a.category)).reduce((sum, a) => sum + a.aedValue, 0);

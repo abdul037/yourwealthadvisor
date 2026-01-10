@@ -3,6 +3,7 @@ import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface LiquidityBreakdownProps {
   assets: Asset[];
+  linkedAccountsBalance?: number;
 }
 
 const LIQUIDITY_COLORS: Record<LiquidityLevel, string> = {
@@ -12,12 +13,17 @@ const LIQUIDITY_COLORS: Record<LiquidityLevel, string> = {
   'NL': 'bg-muted-foreground',
 };
 
-export function LiquidityBreakdown({ assets }: LiquidityBreakdownProps) {
+export function LiquidityBreakdown({ assets, linkedAccountsBalance = 0 }: LiquidityBreakdownProps) {
   const { formatAmount } = useFormattedCurrency();
   const liquidityTotals = assets.reduce((acc, asset) => {
     acc[asset.liquidityLevel] = (acc[asset.liquidityLevel] || 0) + asset.aedValue;
     return acc;
   }, {} as Record<LiquidityLevel, number>);
+  
+  // Add linked accounts balance to L1 (immediately liquid)
+  if (linkedAccountsBalance > 0) {
+    liquidityTotals['L1'] = (liquidityTotals['L1'] || 0) + linkedAccountsBalance;
+  }
   
   const total = Object.values(liquidityTotals).reduce((sum, val) => sum + val, 0);
   
