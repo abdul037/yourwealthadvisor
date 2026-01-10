@@ -110,6 +110,19 @@ const Index = () => {
     }, 0);
   }, [linkedAccounts]);
 
+  // Calculate cash position from income and expense transactions
+  const cashPosition = useMemo(() => {
+    const totalIncome = dbTransactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + convertToAED(t.amount, t.currency || 'AED'), 0);
+    
+    const totalExpenses = dbTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + convertToAED(t.amount, t.currency || 'AED'), 0);
+    
+    return totalIncome - totalExpenses;
+  }, [dbTransactions]);
+
   // Update streak on page load
   useEffect(() => {
     if (isAuthenticated) {
@@ -227,7 +240,13 @@ const Index = () => {
         {/* Hero Section - Net Worth & Quick Actions */}
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="flex-1 min-w-0" data-tour="net-worth">
-            <NetWorthCard assets={assets} linkedAccountsBalance={linkedAccountsBalance} period={selectedPeriod} onPeriodChange={setSelectedPeriod} />
+            <NetWorthCard 
+              assets={assets} 
+              linkedAccountsBalance={linkedAccountsBalance} 
+              cashPosition={cashPosition}
+              period={selectedPeriod} 
+              onPeriodChange={setSelectedPeriod} 
+            />
           </div>
           <div className="lg:w-80 flex flex-col gap-4">
             <div className="wealth-card flex-1">

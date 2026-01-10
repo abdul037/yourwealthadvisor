@@ -10,27 +10,34 @@ import { useMemo } from 'react';
 interface NetWorthCardProps {
   assets: Asset[];
   linkedAccountsBalance?: number;
+  cashPosition?: number;
   period: Period;
   onPeriodChange: (period: Period) => void;
 }
 
-export function NetWorthCard({ assets, linkedAccountsBalance = 0, period, onPeriodChange }: NetWorthCardProps) {
+export function NetWorthCard({ 
+  assets, 
+  linkedAccountsBalance = 0, 
+  cashPosition = 0,
+  period, 
+  onPeriodChange 
+}: NetWorthCardProps) {
   const { formatAmount } = useFormattedCurrency();
   
   // Total from assets (already converted to AED)
   const assetsTotal = assets.reduce((sum, asset) => sum + asset.aedValue, 0);
   
-  // Total net worth includes linked bank accounts
-  const totalWealth = assetsTotal + linkedAccountsBalance;
+  // Total net worth includes linked bank accounts AND cash position from transactions
+  const totalWealth = assetsTotal + linkedAccountsBalance + cashPosition;
   
-  // Cash includes both cash-type assets and linked bank account balances
+  // Cash includes cash-type assets, linked bank accounts, AND cash position from income/expenses
   const assetsCash = assets
     .filter(a => a.isCash)
     .reduce((sum, asset) => sum + asset.aedValue, 0);
-  const cashAmount = assetsCash + linkedAccountsBalance;
+  const cashAmount = assetsCash + linkedAccountsBalance + cashPosition;
   
-  // Invested = total - cash
-  const investedAmount = totalWealth - cashAmount;
+  // Invested = assets that are not cash
+  const investedAmount = assetsTotal - assetsCash;
   
   // Simulated change based on period
   const changePercent = useMemo(() => getSimulatedChange(period), [period]);
@@ -77,14 +84,14 @@ export function NetWorthCard({ assets, linkedAccountsBalance = 0, period, onPeri
             <p className="wealth-label mb-1">Invested Assets</p>
             <p className="text-lg sm:text-xl font-bold font-mono">{formatAmount(investedAmount)}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {((investedAmount / totalWealth) * 100).toFixed(1)}% of portfolio
+              {totalWealth > 0 ? ((investedAmount / totalWealth) * 100).toFixed(1) : '0.0'}% of portfolio
             </p>
           </div>
           <div className="p-4 rounded-lg bg-muted/30">
             <p className="wealth-label mb-1">Cash & Equivalents</p>
             <p className="text-lg sm:text-xl font-bold font-mono text-wealth-positive">{formatAmount(cashAmount)}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {((cashAmount / totalWealth) * 100).toFixed(1)}% of portfolio
+              {totalWealth > 0 ? ((cashAmount / totalWealth) * 100).toFixed(1) : '0.0'}% of portfolio
             </p>
           </div>
         </div>
