@@ -4,12 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useIncomes } from '@/hooks/useIncomes';
 import { useTransactions, Transaction } from '@/hooks/useTransactions';
+import { useAssets, Asset } from '@/hooks/useAssets';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { EditTransactionDialog } from '@/components/EditTransactionDialog';
+import { EditAssetDialog } from '@/components/EditAssetDialog';
 import { AddAssetDialog } from '@/components/AddAssetDialog';
-import { TrendingUp, TrendingDown, Wallet, PiggyBank, BarChart3, Pencil, Trash2, Plus } from 'lucide-react';
+import { 
+  TrendingUp, TrendingDown, Wallet, PiggyBank, BarChart3, Pencil, Trash2, Plus,
+  Banknote, Bitcoin, Gem, Building2, Car, Shield, Landmark, Coins
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { convertToAED } from '@/lib/currencyUtils';
@@ -24,15 +29,40 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+// Category icons mapping
+const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  'Cash': Banknote,
+  'Stocks': TrendingUp,
+  'Bonds': Landmark,
+  'Crypto': Bitcoin,
+  'Gold': Coins,
+  'DigiGold': Coins,
+  'Land Asset': Building2,
+  'Car': Car,
+  'Insurance': Shield,
+  'PF': PiggyBank,
+  'TokenRE': Building2,
+};
+
+const LIQUIDITY_LABELS: Record<string, string> = {
+  'L1': 'Highly Liquid',
+  'L2': 'Moderate',
+  'L3': 'Illiquid',
+  'NL': 'Locked',
+};
+
 const Investments = () => {
   const { incomes, isLoading: incomesLoading } = useIncomes();
   const { transactions, isLoading: transactionsLoading, updateTransaction, deleteTransaction } = useTransactions();
+  const { assets, isLoading: assetsLoading, totalNetWorth, deleteAsset } = useAssets();
   const { formatAmount } = useFormattedCurrency();
   
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
+  const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+  const [deletingAsset, setDeletingAsset] = useState<Asset | null>(null);
   
-  const isLoading = incomesLoading || transactionsLoading;
+  const isLoading = incomesLoading || transactionsLoading || assetsLoading;
   
   // Filter investment-related income sources
   const investmentIncomes = incomes.filter(
@@ -62,7 +92,15 @@ const Investments = () => {
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + convertToAED(t.amount, t.currency || 'AED'), 0);
   
-  const hasInvestments = investmentIncomes.length > 0 || investmentTransactions.length > 0;
+  const hasInvestments = assets.length > 0 || investmentIncomes.length > 0 || investmentTransactions.length > 0;
+
+  // Group assets by category
+  const assetsByCategory = assets.reduce((acc, asset) => {
+    const category = asset.category || 'Other';
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(asset);
+    return acc;
+  }, {} as Record<string, Asset[]>);
 
   const handleSaveTransaction = async (id: string, updates: Partial<Transaction>) => {
     await updateTransaction.mutateAsync({ id, ...updates });
@@ -72,6 +110,13 @@ const Investments = () => {
     if (deletingTransaction) {
       await deleteTransaction.mutateAsync(deletingTransaction.id);
       setDeletingTransaction(null);
+    }
+  };
+
+  const handleDeleteAsset = async () => {
+    if (deletingAsset) {
+      await deleteAsset.mutateAsync(deletingAsset.id);
+      setDeletingAsset(null);
     }
   };
 
@@ -113,14 +158,30 @@ const Investments = () => {
           <EmptyState
             icon={BarChart3}
             title="No investments yet"
-            description="Add investments using Quick Add or connect your investment accounts to see your portfolio here."
-            actionLabel="Go to Dashboard"
-            onAction={() => window.location.href = '/'}
+            description="Add your first asset using the 'Add Asset' button to start tracking your investment portfolio."
+            actionLabel="Add Your First Asset"
+            onAction={() => {}}
           />
         ) : (
           <>
             {/* Investment Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Portfolio</p>
+                      <p className="text-2xl font-bold font-mono text-primary">
+                        {formatAmount(totalNetWorth)}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-full bg-primary/10">
+                      <BarChart3 className="h-6 w-6 text-primary" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
@@ -146,8 +207,8 @@ const Investments = () => {
                         {formatAmount(totalInvestmentExpenses)}
                       </p>
                     </div>
-                    <div className="p-3 rounded-full bg-primary/10">
-                      <Wallet className="h-6 w-6 text-primary" />
+                    <div className="p-3 rounded-full bg-muted">
+                      <Wallet className="h-6 w-6 text-muted-foreground" />
                     </div>
                   </div>
                 </CardContent>
@@ -173,6 +234,106 @@ const Investments = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Your Assets Section */}
+            {assets.length > 0 && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Gem className="h-5 w-5" />
+                    Your Assets
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {Object.entries(assetsByCategory).map(([category, categoryAssets]) => {
+                      const CategoryIcon = CATEGORY_ICONS[category] || Wallet;
+                      const categoryTotal = categoryAssets.reduce(
+                        (sum, a) => sum + convertToAED(a.amount, a.currency),
+                        0
+                      );
+                      
+                      return (
+                        <div key={category}>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="p-2 rounded-full bg-muted">
+                                <CategoryIcon className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                              <h4 className="font-semibold">{category}</h4>
+                              <Badge variant="secondary" className="text-xs">
+                                {categoryAssets.length} {categoryAssets.length === 1 ? 'asset' : 'assets'}
+                              </Badge>
+                            </div>
+                            <p className="font-bold font-mono">
+                              {formatAmount(categoryTotal)}
+                            </p>
+                          </div>
+                          
+                          <div className="space-y-2 ml-10">
+                            {categoryAssets.map(asset => (
+                              <div 
+                                key={asset.id}
+                                className="flex items-center justify-between p-3 rounded-lg bg-muted/50 group hover:bg-muted transition-colors"
+                              >
+                                <div className="flex-1">
+                                  <p className="font-medium">{asset.name}</p>
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Badge variant="outline" className="text-xs">
+                                      {LIQUIDITY_LABELS[asset.liquidity_level || 'L2']}
+                                    </Badge>
+                                    {asset.appreciation_rate && (
+                                      <span className={asset.appreciation_rate >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}>
+                                        {asset.appreciation_rate > 0 ? '+' : ''}{asset.appreciation_rate}% p.a.
+                                      </span>
+                                    )}
+                                    {asset.purchase_date && (
+                                      <span>
+                                        Purchased {format(new Date(asset.purchase_date), 'MMM yyyy')}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-right">
+                                    <p className="font-bold font-mono">
+                                      {formatAmount(asset.amount, asset.currency)}
+                                    </p>
+                                    {asset.currency !== 'AED' && (
+                                      <p className="text-xs text-muted-foreground">
+                                        ≈ {formatAmount(convertToAED(asset.amount, asset.currency))}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => setEditingAsset(asset)}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-destructive hover:text-destructive"
+                                      onClick={() => setDeletingAsset(asset)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             
             {/* Investment Income Sources */}
             {investmentIncomes.length > 0 && (
@@ -301,7 +462,14 @@ const Investments = () => {
         onSave={handleSaveTransaction}
       />
 
-      {/* Delete Confirmation Dialog */}
+      {/* Edit Asset Dialog */}
+      <EditAssetDialog
+        open={!!editingAsset}
+        onOpenChange={(open) => !open && setEditingAsset(null)}
+        asset={editingAsset}
+      />
+
+      {/* Delete Transaction Confirmation Dialog */}
       <AlertDialog open={!!deletingTransaction} onOpenChange={(open) => !open && setDeletingTransaction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -313,6 +481,24 @@ const Investments = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteTransaction} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Asset Confirmation Dialog */}
+      <AlertDialog open={!!deletingAsset} onOpenChange={(open) => !open && setDeletingAsset(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Asset</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingAsset?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAsset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
