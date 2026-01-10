@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Receipt, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -7,19 +7,21 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuickTransactionInput } from '@/components/QuickTransactionInput';
+import { QuickAssetInput } from '@/components/QuickAssetInput';
 import { cn } from '@/lib/utils';
 
 // Trigger haptic feedback on supported devices
 const triggerHaptic = () => {
-  // Try Vibration API (works on most mobile browsers)
   if ('vibrate' in navigator) {
-    navigator.vibrate(10); // Short 10ms vibration
+    navigator.vibrate(10);
   }
 };
 
 export function FloatingQuickAdd() {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('transaction');
 
   const handleClick = useCallback(() => {
     triggerHaptic();
@@ -44,7 +46,6 @@ export function FloatingQuickAdd() {
             "transition-all duration-300",
             "hover:scale-110 hover:shadow-primary/40 hover:shadow-2xl",
             "active:scale-95",
-            // Glow effect
             "before:absolute before:inset-0 before:rounded-full",
             "before:bg-primary/20 before:blur-xl before:-z-10"
           )}
@@ -53,15 +54,33 @@ export function FloatingQuickAdd() {
         </Button>
       </div>
 
-      {/* Bottom Sheet for mobile-friendly input */}
+      {/* Bottom Sheet with tabs */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent side="bottom" className="rounded-t-2xl px-4 pb-8">
-          <SheetHeader className="pb-4">
-            <SheetTitle className="text-center">Quick Add Transaction</SheetTitle>
+        <SheetContent side="bottom" className="rounded-t-2xl px-4 pb-8 h-auto max-h-[85vh] overflow-y-auto">
+          <SheetHeader className="pb-2">
+            <SheetTitle className="text-center">Quick Add</SheetTitle>
           </SheetHeader>
-          <div className="max-w-md mx-auto">
-            <QuickTransactionInput />
-          </div>
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="transaction" className="gap-2">
+                <Receipt className="h-4 w-4" />
+                Transaction
+              </TabsTrigger>
+              <TabsTrigger value="asset" className="gap-2">
+                <Briefcase className="h-4 w-4" />
+                Asset
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="transaction" className="max-w-md mx-auto">
+              <QuickTransactionInput />
+            </TabsContent>
+            
+            <TabsContent value="asset" className="max-w-md mx-auto">
+              <QuickAssetInput onSuccess={() => setIsOpen(false)} />
+            </TabsContent>
+          </Tabs>
         </SheetContent>
       </Sheet>
     </>
