@@ -29,6 +29,7 @@ const adaptDebt = (dbDebt: DBDebt): Debt => ({
 const DebtTracker = () => {
   const { debts: dbDebts, isLoading, addDebt, deleteDebt } = useDebts();
   const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   
   // Convert DB data to component format
   const debts: Debt[] = dbDebts.map(adaptDebt);
@@ -85,13 +86,26 @@ const DebtTracker = () => {
         />
         
         {debts.length === 0 ? (
-          <EmptyState
-            icon={TrendingDown}
-            title="No debts tracked"
-            description="Add your debts to track payoff progress and optimize your repayment strategy."
-            actionLabel="Add Debt"
-            onAction={() => {/* Trigger add debt dialog */}}
-          />
+          <>
+            <EmptyState
+              icon={TrendingDown}
+              title="No debts tracked"
+              description="Add your debts to track payoff progress and optimize your repayment strategy."
+              actionLabel="Add Debt"
+              onAction={() => setShowAddDialog(true)}
+            />
+            {/* Hidden DebtList just for the dialog */}
+            <div className="hidden">
+              <DebtList 
+                debts={debts}
+                onAddDebt={handleAddDebt}
+                onDeleteDebt={handleDeleteDebt}
+                onSelectDebt={handleSelectDebt}
+                externalDialogOpen={showAddDialog}
+                onExternalDialogOpenChange={setShowAddDialog}
+              />
+            </div>
+          </>
         ) : (
           <>
             {/* Debt Overview */}

@@ -15,6 +15,8 @@ interface DebtListProps {
   onAddDebt: (debt: Omit<Debt, 'id'>) => void;
   onDeleteDebt: (id: string) => void;
   onSelectDebt: (debt: Debt) => void;
+  externalDialogOpen?: boolean;
+  onExternalDialogOpenChange?: (open: boolean) => void;
 }
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -26,8 +28,18 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   other: MoreHorizontal,
 };
 
-export function DebtList({ debts, onAddDebt, onDeleteDebt, onSelectDebt }: DebtListProps) {
-  const [open, setOpen] = useState(false);
+export function DebtList({ debts, onAddDebt, onDeleteDebt, onSelectDebt, externalDialogOpen, onExternalDialogOpenChange }: DebtListProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use external control if provided, otherwise use internal state
+  const open = externalDialogOpen !== undefined ? externalDialogOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    if (onExternalDialogOpenChange) {
+      onExternalDialogOpenChange(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { formatAmount } = useFormattedCurrency();
   const [formData, setFormData] = useState({
