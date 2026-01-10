@@ -25,13 +25,15 @@ export function useAchievements() {
   }, [profile]);
 
   const unlockAchievement = useCallback(async (achievementId: string) => {
-    if (!user) return;
+    if (!user) return { alreadyUnlocked: true };
     
     const achievement = achievements.find(a => a.id === achievementId);
-    if (!achievement) return;
+    if (!achievement) return { alreadyUnlocked: true };
     
-    // Check if already unlocked
-    if (unlockedAchievements.some(a => a.id === achievementId)) return;
+    // Check if already unlocked - return early, no celebration
+    if (unlockedAchievements.some(a => a.id === achievementId)) {
+      return { alreadyUnlocked: true };
+    }
 
     const newUnlocked: UnlockedAchievement = {
       id: achievementId,
@@ -52,11 +54,12 @@ export function useAchievements() {
     if (!error) {
       setUnlockedAchievements(updatedAchievements);
       setTotalPoints(newTotalPoints);
+      // Only show celebration for newly unlocked achievements
       setNewlyUnlocked(achievement);
       refetchProfile();
     }
 
-    return { error, achievement };
+    return { error, achievement, alreadyUnlocked: false };
   }, [user, unlockedAchievements, totalPoints, refetchProfile]);
 
   const updateStreak = useCallback(async () => {

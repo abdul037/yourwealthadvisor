@@ -9,19 +9,27 @@ import { useMemo } from 'react';
 
 interface NetWorthCardProps {
   assets: Asset[];
+  linkedAccountsBalance?: number;
   period: Period;
   onPeriodChange: (period: Period) => void;
 }
 
-export function NetWorthCard({ assets, period, onPeriodChange }: NetWorthCardProps) {
+export function NetWorthCard({ assets, linkedAccountsBalance = 0, period, onPeriodChange }: NetWorthCardProps) {
   const { formatAmount } = useFormattedCurrency();
   
-  const totalWealth = assets.reduce((sum, asset) => sum + asset.aedValue, 0);
+  // Total from assets (already converted to AED)
+  const assetsTotal = assets.reduce((sum, asset) => sum + asset.aedValue, 0);
   
-  const cashAmount = assets
+  // Total net worth includes linked bank accounts
+  const totalWealth = assetsTotal + linkedAccountsBalance;
+  
+  // Cash includes both cash-type assets and linked bank account balances
+  const assetsCash = assets
     .filter(a => a.isCash)
     .reduce((sum, asset) => sum + asset.aedValue, 0);
+  const cashAmount = assetsCash + linkedAccountsBalance;
   
+  // Invested = total - cash
   const investedAmount = totalWealth - cashAmount;
   
   // Simulated change based on period

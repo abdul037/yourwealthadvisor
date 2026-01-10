@@ -3,6 +3,7 @@ import { Asset, AssetCategory, CATEGORY_COLORS } from '@/lib/portfolioData';
 
 interface AllocationChartProps {
   assets: Asset[];
+  linkedAccountsBalance?: number;
 }
 
 const CHART_COLORS = [
@@ -19,7 +20,7 @@ const CHART_COLORS = [
   'hsl(50, 90%, 45%)',     // DigiGold
 ];
 
-export function AllocationChart({ assets }: AllocationChartProps) {
+export function AllocationChart({ assets, linkedAccountsBalance = 0 }: AllocationChartProps) {
   const categoryTotals = assets.reduce((acc, asset) => {
     const existing = acc.find(item => item.category === asset.category);
     if (existing) {
@@ -29,6 +30,16 @@ export function AllocationChart({ assets }: AllocationChartProps) {
     }
     return acc;
   }, [] as { category: AssetCategory; value: number }[]);
+  
+  // Add linked accounts as "Bank Accounts" category if there's a balance
+  if (linkedAccountsBalance > 0) {
+    const existingCash = categoryTotals.find(item => item.category === 'Cash');
+    if (existingCash) {
+      existingCash.value += linkedAccountsBalance;
+    } else {
+      categoryTotals.push({ category: 'Cash' as AssetCategory, value: linkedAccountsBalance });
+    }
+  }
   
   const totalValue = categoryTotals.reduce((sum, item) => sum + item.value, 0);
   
