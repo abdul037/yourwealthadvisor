@@ -2,25 +2,12 @@ import { useState, useEffect } from 'react';
 import { Droplets, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
+import { useIncomes } from '@/hooks/useIncomes';
+import { usePartners } from '@/hooks/usePartners';
 import { LIQUIDITY_LABELS } from '@/lib/portfolioData';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-
-interface IncomeSource {
-  id: string;
-  partner_id: string;
-  source_name: string;
-  source_type: string;
-  amount: number;
-  currency: string;
-  liquidity_level: 'L1' | 'L2' | 'L3' | 'NL';
-}
-
-interface Partner {
-  id: string;
-  name: string;
-}
 
 interface LiquiditySetting {
   category_name: string;
@@ -38,28 +25,37 @@ const LIQUIDITY_COLORS: Record<string, string> = {
 const USD_TO_AED = 3.67;
 
 export function IncomeLiquidityChart() {
-  const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
-  const [partners, setPartners] = useState<Partner[]>([]);
+  const { incomes, isLoading: incomesLoading } = useIncomes();
+  const { partners, isLoading: partnersLoading } = usePartners();
   const [liquiditySettings, setLiquiditySettings] = useState<LiquiditySetting[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [settingsLoading, setSettingsLoading] = useState(true);
   const { formatAmount } = useFormattedCurrency();
 
+  const loading = incomesLoading || partnersLoading || settingsLoading;
+
   useEffect(() => {
-    fetchData();
+    const fetchSettings = async () => {
+      const { data } = await supabase
+        .from('category_liquidity_settings')
+        .select('category_name, liquidity_level, liquidity_percentage')
+        .eq('category_type', 'income');
+      
+      if (data) setLiquiditySettings(data as LiquiditySetting[]);
+      setSettingsLoading(false);
+    };
+    fetchSettings();
   }, []);
 
-  const fetchData = async () => {
-    const [incomeRes, partnersRes, settingsRes] = await Promise.all([
-      supabase.from('income_sources').select('*').eq('is_active', true),
-      supabase.from('partners').select('id, name').eq('is_active', true),
-      supabase.from('category_liquidity_settings').select('category_name, liquidity_level, liquidity_percentage').eq('category_type', 'income'),
-    ]);
-
-    if (incomeRes.data) setIncomeSources(incomeRes.data as IncomeSource[]);
-    if (partnersRes.data) setPartners(partnersRes.data);
-    if (settingsRes.data) setLiquiditySettings(settingsRes.data as LiquiditySetting[]);
-    setLoading(false);
-  };
+  // Map incomes to the format needed for calculations
+  const incomeSources = incomes.map(income => ({
+    id: income.id,
+    partner_id: income.partner_id,
+    source_name: income.source_name,
+    source_type: income.source_type,
+    amount: income.amount,
+    currency: income.currency || 'AED',
+    liquidity_level: income.liquidity_level || 'L1',
+  }));
 
   // Calculate totals by liquidity level
   const calculateLiquidityTotals = () => {
@@ -67,7 +63,7 @@ export function IncomeLiquidityChart() {
     
     incomeSources.forEach(source => {
       const amountAED = source.currency === 'USD' ? source.amount * USD_TO_AED : source.amount;
-      totals[source.liquidity_level] += amountAED;
+      totals[source.liquidity_level as string] = (totals[source.liquidity_level as string] || 0) + amountAED;
     });
     
     return totals;
@@ -112,7 +108,7 @@ export function IncomeLiquidityChart() {
     
     partnerIncome.forEach(source => {
       const amountAED = source.currency === 'USD' ? source.amount * USD_TO_AED : source.amount;
-      breakdown[source.liquidity_level] += amountAED;
+      breakdown[source.liquidity_level as string] = (breakdown[source.liquidity_level as string] || 0) + amountAED;
     });
     
     return {
@@ -144,7 +140,7 @@ export function IncomeLiquidityChart() {
     );
   }
 
-  if (incomeSources.length === 0) {
+  if (incomes.length === 0) {
     return (
       <div className="wealth-card">
         <div className="flex items-center justify-between mb-4">

@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { useIncomes } from '@/hooks/useIncomes';
 import { useBudgets } from '@/hooks/useBudgets';
 import { useDebts } from '@/hooks/useDebts';
+import { useExpenses } from '@/hooks/useTransactions';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -25,8 +26,9 @@ export const CashFlowForecast = () => {
   const { totalMonthlyIncome, isLoading: incomesLoading } = useIncomes();
   const { budgets, isLoading: budgetsLoading } = useBudgets();
   const { debts, isLoading: debtsLoading } = useDebts();
+  const { transactions: expenses, isLoading: expensesLoading } = useExpenses();
 
-  const isLoading = incomesLoading || budgetsLoading || debtsLoading;
+  const isLoading = incomesLoading || budgetsLoading || debtsLoading || expensesLoading;
 
   const forecastData = useMemo(() => {
     const months: ForecastMonth[] = [];
@@ -37,9 +39,19 @@ export const CashFlowForecast = () => {
     // Use real data from hooks
     const monthlyIncome = totalMonthlyIncome || 0;
 
-    const monthlyExpenses = budgets.reduce((total, budget) => {
-      return total + budget.allocated_amount;
-    }, 0);
+    // Calculate average monthly expenses from actual transactions (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const recentExpenses = expenses.filter(e => new Date(e.transaction_date) >= sixMonthsAgo);
+    const actualExpensesTotal = recentExpenses.reduce((total, e) => total + e.amount, 0);
+    const monthsWithData = Math.min(6, Math.ceil((Date.now() - sixMonthsAgo.getTime()) / (30 * 24 * 60 * 60 * 1000)));
+    const avgMonthlyExpenses = monthsWithData > 0 ? actualExpensesTotal / monthsWithData : 0;
+    
+    // Fallback to budget if no expense data
+    const monthlyExpenses = avgMonthlyExpenses > 0 
+      ? avgMonthlyExpenses 
+      : budgets.reduce((total, budget) => total + budget.allocated_amount, 0);
 
     const monthlyDebtPayments = debts.reduce((total, debt) => {
       return total + (debt.minimum_payment || 0);
@@ -75,7 +87,7 @@ export const CashFlowForecast = () => {
     }
 
     return months;
-  }, [totalMonthlyIncome, budgets, debts]);
+  }, [totalMonthlyIncome, budgets, debts, expenses]);
 
   const chartConfig = {
     income: { label: 'Income', color: 'hsl(var(--wealth-positive))' },

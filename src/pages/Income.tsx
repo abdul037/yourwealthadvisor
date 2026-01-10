@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { IncomeSource } from '@/lib/incomeData';
 import { Expense } from '@/lib/expenseData';
 import { DollarSign } from 'lucide-react';
+import { useMemo } from 'react';
 
 // Helper to determine partner label based on partner order
 const getPartnerLabel = (partnerId: string, partners: Partner[]): IncomeSource['partner'] => {
@@ -55,7 +56,7 @@ const adaptExpense = (transaction: Transaction): Expense => ({
 });
 
 const Income = () => {
-  const { incomes, isLoading: incomesLoading, addIncome, deleteIncome } = useIncomes();
+  const { incomes, isLoading: incomesLoading, totalMonthlyIncome, addIncome, deleteIncome } = useIncomes();
   const { transactions: expenseTransactions, isLoading: expensesLoading } = useExpenses();
   const { partners, isLoading: partnersLoading } = usePartners();
   
@@ -73,6 +74,58 @@ const Income = () => {
     partner1Name: sortedPartners[0]?.name || 'Partner 1',
     partner2Name: sortedPartners[1]?.name || 'Partner 2',
   };
+  
+  // Calculate income breakdown by partner and type
+  const incomeBreakdown = useMemo(() => {
+    let partner1Income = 0;
+    let partner2Income = 0;
+    let bonusIncome = 0;
+    let otherIncome = 0;
+    
+    incomes.forEach(income => {
+      const partnerLabel = getPartnerLabel(income.partner_id, partners);
+      const normalizedType = (income.source_type || '').toLowerCase();
+      const amount = income.amount;
+      
+      // Normalize by frequency to get monthly amount
+      let monthlyAmount = amount;
+      switch (income.frequency) {
+        case 'weekly': monthlyAmount = amount * 4; break;
+        case 'bi-weekly': monthlyAmount = amount * 2; break;
+        case 'quarterly': monthlyAmount = amount / 3; break;
+        case 'annually': monthlyAmount = amount / 12; break;
+      }
+      
+      if (normalizedType === 'salary') {
+        if (partnerLabel === 'Partner 1') {
+          partner1Income += monthlyAmount;
+        } else if (partnerLabel === 'Partner 2') {
+          partner2Income += monthlyAmount;
+        } else {
+          otherIncome += monthlyAmount;
+        }
+      } else if (normalizedType === 'bonus') {
+        bonusIncome += monthlyAmount;
+      } else {
+        otherIncome += monthlyAmount;
+      }
+    });
+    
+    return { partner1Income, partner2Income, bonusIncome, otherIncome };
+  }, [incomes, partners]);
+  
+  // Calculate total monthly expenses
+  const totalMonthlyExpenses = useMemo(() => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    return expenseTransactions
+      .filter(t => {
+        const date = new Date(t.transaction_date);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+  }, [expenseTransactions]);
   
   const handleAddIncome = async (income: Omit<IncomeSource, 'id'>) => {
     // Find the correct partner_id based on the partner label
@@ -142,12 +195,20 @@ const Income = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               <div className="lg:col-span-2">
                 <IncomeOverview 
-                  incomeSources={incomeSources} 
+                  totalMonthlyIncome={totalMonthlyIncome}
+                  partner1Income={incomeBreakdown.partner1Income}
+                  partner2Income={incomeBreakdown.partner2Income}
+                  bonusIncome={incomeBreakdown.bonusIncome}
+                  otherIncome={incomeBreakdown.otherIncome}
+                  avgMonthlyIncome={totalMonthlyIncome}
                   partnerNames={partnerNames}
                 />
               </div>
               <div>
-                <SavingsRate incomeSources={incomeSources} expenses={expenses} />
+                <SavingsRate 
+                  totalMonthlyIncome={totalMonthlyIncome}
+                  totalMonthlyExpenses={totalMonthlyExpenses}
+                />
               </div>
             </div>
             

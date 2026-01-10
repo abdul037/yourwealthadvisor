@@ -1,32 +1,28 @@
 import { PiggyBank, TrendingUp } from 'lucide-react';
-import { IncomeSource, getMonthlyIncomeData } from '@/lib/incomeData';
-import { Expense, getMonthlySpending } from '@/lib/expenseData';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface SavingsRateProps {
-  incomeSources: IncomeSource[];
-  expenses: Expense[];
+  totalMonthlyIncome: number;
+  totalMonthlyExpenses: number;
+  avgMonthlyIncome?: number;
+  avgMonthlyExpenses?: number;
 }
 
-export function SavingsRate({ incomeSources, expenses }: SavingsRateProps) {
+export function SavingsRate({ 
+  totalMonthlyIncome, 
+  totalMonthlyExpenses,
+  avgMonthlyIncome = 0,
+  avgMonthlyExpenses = 0,
+}: SavingsRateProps) {
   const { formatAmount } = useFormattedCurrency();
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
   
-  const monthlyData = getMonthlyIncomeData(incomeSources);
-  const currentMonthIncome = monthlyData[monthlyData.length - 1]?.total || 0;
-  const currentMonthExpenses = getMonthlySpending(expenses, currentMonth, currentYear);
+  const savings = totalMonthlyIncome - totalMonthlyExpenses;
+  const savingsRate = totalMonthlyIncome > 0 ? (savings / totalMonthlyIncome) * 100 : 0;
   
-  const savings = currentMonthIncome - currentMonthExpenses;
-  const savingsRate = currentMonthIncome > 0 ? (savings / currentMonthIncome) * 100 : 0;
-  
-  // Calculate 6-month average savings
-  const avgSavings = monthlyData.reduce((sum, month, index) => {
-    const prevMonth = new Date();
-    prevMonth.setMonth(prevMonth.getMonth() - (5 - index));
-    const monthExpenses = getMonthlySpending(expenses, prevMonth.getMonth(), prevMonth.getFullYear());
-    return sum + (month.total - monthExpenses);
-  }, 0) / 6;
+  // Calculate average savings from averages or current values
+  const avgSavings = avgMonthlyIncome > 0 
+    ? avgMonthlyIncome - avgMonthlyExpenses 
+    : savings;
 
   const getSavingsColor = (rate: number) => {
     if (rate >= 30) return 'text-wealth-positive';
@@ -52,13 +48,13 @@ export function SavingsRate({ incomeSources, expenses }: SavingsRateProps) {
         <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
           <span className="text-sm text-muted-foreground">Income</span>
           <span className="font-mono font-medium text-wealth-positive">
-            {formatAmount(currentMonthIncome)}
+            {formatAmount(totalMonthlyIncome)}
           </span>
         </div>
         <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
           <span className="text-sm text-muted-foreground">Expenses</span>
           <span className="font-mono font-medium text-wealth-negative">
-            {formatAmount(currentMonthExpenses)}
+            {formatAmount(totalMonthlyExpenses)}
           </span>
         </div>
         <div className="flex justify-between items-center p-3 rounded-lg bg-wealth-positive/10 border border-wealth-positive/20">
@@ -72,7 +68,7 @@ export function SavingsRate({ incomeSources, expenses }: SavingsRateProps) {
       <div className="mt-4 pt-4 border-t border-border">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <TrendingUp className="w-4 h-4" />
-          <span>6-month avg savings: </span>
+          <span>Avg savings: </span>
           <span className={`font-mono font-medium ${avgSavings >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
             {formatAmount(avgSavings)}/mo
           </span>
