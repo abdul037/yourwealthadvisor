@@ -10,6 +10,7 @@ import { AdminRoute } from "@/components/AdminRoute";
 import { ModuleGate } from "@/components/ModuleGate";
 import Index from "./pages/Index";
 import Income from "./pages/Income";
+import Investments from "./pages/Investments";
 import Expenses from "./pages/Expenses";
 import BudgetPlanner from "./pages/BudgetPlanner";
 import DebtTracker from "./pages/DebtTracker";
@@ -70,6 +71,7 @@ const App = () => (
               {/* Protected app pages with layout */}
               <Route path="/" element={<ProtectedRoute><AppLayout><Index /></AppLayout></ProtectedRoute>} />
               <Route path="/income" element={<ProtectedRoute><AppLayout><Income /></AppLayout></ProtectedRoute>} />
+              <Route path="/investments" element={<ProtectedRoute><AppLayout><Investments /></AppLayout></ProtectedRoute>} />
               <Route path="/expenses" element={<ProtectedRoute><AppLayout><Expenses /></AppLayout></ProtectedRoute>} />
               <Route path="/budget" element={<ProtectedRoute><AppLayout><BudgetPlanner /></AppLayout></ProtectedRoute>} />
               <Route path="/debt" element={<ProtectedRoute><AppLayout><DebtTracker /></AppLayout></ProtectedRoute>} />

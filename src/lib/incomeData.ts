@@ -76,7 +76,8 @@ export const sampleIncomeSources: IncomeSource[] = [
 ];
 
 export function getIncomeTypeColor(type: string): string {
-  const incomeType = INCOME_TYPES.find(t => t.name === type);
+  const normalizedType = type.toLowerCase();
+  const incomeType = INCOME_TYPES.find(t => t.name === normalizedType);
   return incomeType?.color || 'hsl(215, 20%, 55%)';
 }
 
@@ -110,15 +111,22 @@ export function getMonthlyIncomeData(incomeSources: IncomeSource[]): MonthlyInco
       // Convert INR to AED for consistency
       const amount = income.currency === 'INR' ? income.amount * 0.041 : income.amount;
       
-      if (income.type === 'salary') {
+      // Normalize type for case-insensitive comparison
+      const normalizedType = income.type.toLowerCase();
+      
+      if (normalizedType === 'salary') {
         if (income.partner === 'Partner 1') {
           monthlyData[key].partner1 += amount;
         } else if (income.partner === 'Partner 2') {
           monthlyData[key].partner2 += amount;
+        } else {
+          // Joint salary goes into other
+          monthlyData[key].other += amount;
         }
-      } else if (income.type === 'bonus') {
+      } else if (normalizedType === 'bonus') {
         monthlyData[key].bonus += amount;
       } else {
+        // freelance, investment, rental, other all go to 'other'
         monthlyData[key].other += amount;
       }
       monthlyData[key].total += amount;
@@ -153,7 +161,8 @@ export function getIncomeByType(incomeSources: IncomeSource[], month?: number, y
   
   return filtered.reduce((acc, income) => {
     const amount = income.currency === 'INR' ? income.amount * 0.041 : income.amount;
-    const type = INCOME_TYPES.find(t => t.name === income.type)?.label || 'Other';
+    const normalizedType = income.type.toLowerCase();
+    const type = INCOME_TYPES.find(t => t.name === normalizedType)?.label || 'Other';
     acc[type] = (acc[type] || 0) + amount;
     return acc;
   }, {} as Record<string, number>);
