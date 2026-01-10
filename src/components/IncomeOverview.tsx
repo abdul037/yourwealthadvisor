@@ -1,12 +1,16 @@
-import { TrendingUp, TrendingDown, Users } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import { IncomeSource, getMonthlyIncomeData } from '@/lib/incomeData';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface IncomeOverviewProps {
   incomeSources: IncomeSource[];
+  partnerNames?: {
+    partner1Name: string;
+    partner2Name: string;
+  };
 }
 
-export function IncomeOverview({ incomeSources }: IncomeOverviewProps) {
+export function IncomeOverview({ incomeSources, partnerNames }: IncomeOverviewProps) {
   const { formatAmount } = useFormattedCurrency();
   const monthlyData = getMonthlyIncomeData(incomeSources);
   const currentMonth = monthlyData[monthlyData.length - 1];
@@ -22,6 +26,10 @@ export function IncomeOverview({ incomeSources }: IncomeOverviewProps) {
   const partner2Total = currentMonth?.partner2 || 0;
   const bonusTotal = currentMonth?.bonus || 0;
   const otherTotal = currentMonth?.other || 0;
+
+  // Use provided partner names or fallback to defaults
+  const partner1Name = partnerNames?.partner1Name || 'Partner 1';
+  const partner2Name = partnerNames?.partner2Name || 'Partner 2';
 
   return (
     <div className="wealth-card">
@@ -50,19 +58,19 @@ export function IncomeOverview({ incomeSources }: IncomeOverviewProps) {
         <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-3 h-3 rounded-full bg-primary" />
-            <span className="text-sm text-muted-foreground">Partner 1</span>
+            <span className="text-sm text-muted-foreground">{partner1Name}</span>
           </div>
           <p className="text-xl font-bold font-mono">{formatAmount(partner1Total)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Tech Lead</p>
+          <p className="text-xs text-muted-foreground mt-1">Salary & Income</p>
         </div>
         
         <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-3 h-3 rounded-full bg-purple-500" />
-            <span className="text-sm text-muted-foreground">Partner 2</span>
+            <span className="text-sm text-muted-foreground">{partner2Name}</span>
           </div>
           <p className="text-xl font-bold font-mono">{formatAmount(partner2Total)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Marketing Manager</p>
+          <p className="text-xs text-muted-foreground mt-1">Salary & Income</p>
         </div>
       </div>
       

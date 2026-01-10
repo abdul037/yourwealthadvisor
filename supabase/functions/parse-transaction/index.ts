@@ -33,7 +33,22 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a financial transaction parser for a Dubai-based family finance app. Parse natural language into structured transaction data. Default currency is AED unless specified otherwise.`
+            content: `You are a financial transaction parser for a Dubai-based family finance app. Parse natural language into structured transaction data. Default currency is AED unless specified otherwise.
+
+CRITICAL RULES for type classification:
+- INCOME: Money RECEIVED. Keywords: "salary", "got paid", "received", "earned", "bonus", "dividend", "refund", "cashback", "sold stocks/crypto", "investment return", "rental income"
+- EXPENSE: Money SPENT/PAID. Keywords: "spent", "paid", "bought", "purchased", "taxi", "uber", "food", "rent", "bill", "subscription"
+
+INVESTMENT HANDLING:
+- "Invested in X" or "bought stocks/ETF/crypto" = EXPENSE (money leaving your account to buy assets)
+- "Sold stocks" or "investment return" or "dividend received" = INCOME (money coming back)
+- Do NOT confuse investment PURCHASES (expense) with investment RETURNS (income)
+
+CATEGORY MAPPING:
+- For investment purchases: category = "Investment"
+- For investment returns/dividends: category = "Investment" but type = "income"
+- For salary/wages: category = "Salary"
+- For bonuses: category = "Bonus"`
           },
           {
             role: "user",
@@ -52,7 +67,7 @@ serve(async (req) => {
                   type: {
                     type: "string",
                     enum: ["income", "expense"],
-                    description: "Transaction type. Use 'expense' for spending, purchases, payments. Use 'income' for salary, earnings, received money."
+                    description: "Transaction type. 'expense' = money leaving (purchases, payments, investments bought). 'income' = money received (salary, earnings, dividends, sold assets)."
                   },
                   amount: {
                     type: "number",
@@ -65,11 +80,11 @@ serve(async (req) => {
                   },
                   category: {
                     type: "string",
-                    description: "For expenses: Food & Dining, Transport, Utilities, Entertainment, Shopping, Healthcare, Education, Subscriptions, Housing, Childcare, Other. For income: Salary, Bonus, Freelance, Investment, Rental, Dividend, Side Business, Other."
+                    description: "For expenses: Food & Dining, Transport, Utilities, Entertainment, Shopping, Healthcare, Education, Subscriptions, Housing, Childcare, Investment, Other. For income: Salary, Bonus, Freelance, Investment, Rental, Dividend, Side Business, Other."
                   },
                   description: {
                     type: "string",
-                    description: "Brief description extracted from the input (e.g., merchant name, purpose)"
+                    description: "Brief description extracted from the input (e.g., merchant name, purpose, asset name)"
                   }
                 },
                 required: ["type", "amount", "currency", "category", "description"],

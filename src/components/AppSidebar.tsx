@@ -6,6 +6,7 @@ import {
   Eye,
   Wallet, 
   TrendingDown, 
+  TrendingUp,
   LineChart, 
   Shield,
   Download,
@@ -49,6 +50,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Receipt,
   Wallet,
   TrendingDown,
+  TrendingUp,
   Target,
   LineChart,
   Users,
@@ -66,6 +68,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 const STATIC_NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' },
   { path: '/income', label: 'Income', icon: DollarSign, module: 'income' },
+  { path: '/investments', label: 'Investments', icon: TrendingUp, module: 'investments' },
   { path: '/expenses', label: 'Expenses', icon: Receipt, module: 'expenses' },
   { path: '/budget', label: 'Budget', icon: Wallet, module: 'budget' },
   { path: '/debt', label: 'Debt', icon: TrendingDown, module: 'debt' },

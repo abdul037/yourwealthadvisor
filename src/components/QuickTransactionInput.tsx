@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Send, Loader2, Check, X, Edit2, Mic, MicOff, Sparkles } from 'lucide-react';
+import { Send, Loader2, Check, X, Edit2, Mic, MicOff, Sparkles, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,8 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { useTransactionParser, ParsedTransaction } from '@/hooks/useTransactionParser';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const EXAMPLE_INPUTS = [
   "Spent 120 on groceries",
@@ -18,13 +24,21 @@ const EXAMPLE_INPUTS = [
   "Coffee 18",
 ];
 
+const KEYWORD_HELP = {
+  income: ["salary", "got paid", "received", "earned", "bonus", "dividend", "refund"],
+  expense: ["spent", "paid", "bought", "purchased", "taxi", "uber", "food"],
+  investment: ["invested in", "bought stocks", "ETF purchase", "mutual fund", "SIP", "crypto bought"],
+};
+
 export function QuickTransactionInput() {
   const [input, setInput] = useState('');
   const [preview, setPreview] = useState<ParsedTransaction | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   
   const { parse, isLoading, error } = useTransactionParser();
   const { addTransaction } = useTransactions();
+  const { markIncomeAdded, markExpenseAdded } = useOnboardingProgress();
   const { 
     isListening, 
     isSupported: isVoiceSupported, 
@@ -77,6 +91,13 @@ export function QuickTransactionInput() {
         description: preview.description,
         transaction_date: new Date().toISOString().split('T')[0],
       });
+
+      // Update onboarding progress
+      if (preview.type === 'income') {
+        markIncomeAdded();
+      } else {
+        markExpenseAdded();
+      }
 
       setShowSuccess(true);
       setTimeout(() => {
@@ -182,7 +203,48 @@ export function QuickTransactionInput() {
           <span className="text-xs font-medium text-primary">AI-Powered</span>
         </div>
         <span className="text-xs text-muted-foreground">Type or speak naturally</span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-5 w-5 ml-auto"
+              onClick={() => setShowHelp(!showHelp)}
+            >
+              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            <p className="font-medium mb-2">Keyword Examples:</p>
+            <p className="text-xs"><strong>Income:</strong> {KEYWORD_HELP.income.join(', ')}</p>
+            <p className="text-xs"><strong>Expense:</strong> {KEYWORD_HELP.expense.join(', ')}</p>
+            <p className="text-xs"><strong>Investment:</strong> {KEYWORD_HELP.investment.join(', ')}</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
+
+      {/* Keyword help panel */}
+      {showHelp && (
+        <Card className="mb-3 border-primary/20 bg-primary/5">
+          <CardContent className="p-3 space-y-2">
+            <p className="text-xs font-medium text-primary">How to phrase your transactions:</p>
+            <div className="grid grid-cols-1 gap-1.5 text-xs">
+              <div>
+                <span className="font-medium text-wealth-positive">💰 Income:</span>
+                <span className="text-muted-foreground ml-1">"Got salary 25000" • "Received bonus 5000"</span>
+              </div>
+              <div>
+                <span className="font-medium text-wealth-negative">💸 Expense:</span>
+                <span className="text-muted-foreground ml-1">"Spent 120 on groceries" • "Uber 45"</span>
+              </div>
+              <div>
+                <span className="font-medium text-amber-500">📈 Investment:</span>
+                <span className="text-muted-foreground ml-1">"Invested 5000 in ETF" • "Bought stocks 10000"</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-3">
         {/* Main input area with glow effect */}
