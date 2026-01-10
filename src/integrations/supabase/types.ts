@@ -125,6 +125,7 @@ export type Database = {
       assets: {
         Row: {
           amount: number
+          appreciation_rate: number | null
           category: string
           created_at: string | null
           currency: string
@@ -143,6 +144,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          appreciation_rate?: number | null
           category: string
           created_at?: string | null
           currency?: string
@@ -161,6 +163,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          appreciation_rate?: number | null
           category?: string
           created_at?: string | null
           currency?: string

@@ -10,7 +10,7 @@ import {
   Shield,
   Download,
   Target,
-  Split
+  Briefcase
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -29,6 +29,7 @@ const mainNavItems = [
 ];
 
 const moreItems = [
+  { path: '/investments', label: 'Assets', icon: Briefcase },
   { path: '/budget', label: 'Budget', icon: Wallet },
   { path: '/debt', label: 'Debt Tracker', icon: TrendingDown },
   { path: '/savings', label: 'Savings Goals', icon: Target },

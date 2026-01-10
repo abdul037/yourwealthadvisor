@@ -28,7 +28,22 @@ const LIQUIDITY_LEVELS = [
   { value: 'L1', label: 'L1 - Highly Liquid (within days)' },
   { value: 'L2', label: 'L2 - Moderately Liquid (weeks)' },
   { value: 'L3', label: 'L3 - Illiquid (months+)' },
+  { value: 'NL', label: 'NL - Not Liquid (Locked Assets)' },
 ];
+
+const APPRECIATION_HINTS: Record<string, string> = {
+  'Stocks': '8-12%',
+  'Cash': '2-3%',
+  'Gold': '3-5%',
+  'Crypto': '10-20%',
+  'Land Asset': '3-5%',
+  'Bonds': '4-6%',
+  'Car': '-10 to -15%',
+  'Insurance': '4-6%',
+  'PF': '8-9%',
+  'DigiGold': '3-5%',
+  'TokenRE': '5-8%',
+};
 
 interface AddAssetDialogProps {
   trigger?: React.ReactNode;
@@ -41,6 +56,7 @@ export function AddAssetDialog({ trigger }: AddAssetDialogProps) {
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('AED');
   const [liquidityLevel, setLiquidityLevel] = useState('L2');
+  const [appreciationRate, setAppreciationRate] = useState('');
   const [purchasePrice, setPurchasePrice] = useState('');
   const [purchaseDate, setPurchaseDate] = useState('');
   const [notes, setNotes] = useState('');
@@ -58,6 +74,7 @@ export function AddAssetDialog({ trigger }: AddAssetDialogProps) {
       amount: parseFloat(amount),
       currency,
       liquidity_level: liquidityLevel,
+      appreciation_rate: appreciationRate ? parseFloat(appreciationRate) : null,
       purchase_price: purchasePrice ? parseFloat(purchasePrice) : null,
       purchase_date: purchaseDate || null,
       notes: notes || null,
@@ -75,6 +92,7 @@ export function AddAssetDialog({ trigger }: AddAssetDialogProps) {
     setAmount('');
     setCurrency('AED');
     setLiquidityLevel('L2');
+    setAppreciationRate('');
     setPurchasePrice('');
     setPurchaseDate('');
     setNotes('');
@@ -190,6 +208,25 @@ export function AddAssetDialog({ trigger }: AddAssetDialogProps) {
                 onChange={(e) => setPurchaseDate(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="appreciationRate">
+              Expected Annual Return (%)
+              {category && APPRECIATION_HINTS[category] && (
+                <span className="text-xs text-muted-foreground ml-2">
+                  Typical: {APPRECIATION_HINTS[category]}
+                </span>
+              )}
+            </Label>
+            <Input
+              id="appreciationRate"
+              type="number"
+              step="0.1"
+              placeholder="e.g., 8 for 8%"
+              value={appreciationRate}
+              onChange={(e) => setAppreciationRate(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
