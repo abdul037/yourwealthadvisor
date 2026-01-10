@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Plus, Receipt, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,9 +19,18 @@ const triggerHaptic = () => {
   }
 };
 
-export function FloatingQuickAdd() {
+interface FloatingQuickAddProps {
+  defaultTab?: 'transaction' | 'asset';
+}
+
+export function FloatingQuickAdd({ defaultTab = 'transaction' }: FloatingQuickAddProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('transaction');
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  // Update active tab when defaultTab changes (route change)
+  useEffect(() => {
+    setActiveTab(defaultTab);
+  }, [defaultTab]);
 
   const handleClick = useCallback(() => {
     triggerHaptic();
@@ -61,7 +70,7 @@ export function FloatingQuickAdd() {
             <SheetTitle className="text-center">Quick Add</SheetTitle>
           </SheetHeader>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'transaction' | 'asset')} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="transaction" className="gap-2">
                 <Receipt className="h-4 w-4" />

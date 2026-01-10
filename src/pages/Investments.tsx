@@ -8,7 +8,8 @@ import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { EditTransactionDialog } from '@/components/EditTransactionDialog';
-import { TrendingUp, TrendingDown, Wallet, PiggyBank, BarChart3, Pencil, Trash2 } from 'lucide-react';
+import { AddAssetDialog } from '@/components/AddAssetDialog';
+import { TrendingUp, TrendingDown, Wallet, PiggyBank, BarChart3, Pencil, Trash2, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { convertToAED } from '@/lib/currencyUtils';
@@ -92,11 +93,21 @@ const Investments = () => {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
-        <PageHeader 
-          title="Investments"
-          description="Track your investment portfolio and returns"
-          breadcrumb={[{ label: 'Investments', path: '/investments' }]}
-        />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <PageHeader 
+            title="Investments"
+            description="Track your investment portfolio and returns"
+            breadcrumb={[{ label: 'Investments', path: '/investments' }]}
+          />
+          <AddAssetDialog 
+            trigger={
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Asset
+              </Button>
+            }
+          />
+        </div>
         
         {!hasInvestments ? (
           <EmptyState
