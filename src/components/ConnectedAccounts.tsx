@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { RefreshCw, Trash2, CreditCard, Wallet, PiggyBank, AlertCircle, CheckCircle, TrendingUp, Coins, Zap, Building } from 'lucide-react';
+import { RefreshCw, Trash2, CreditCard, Wallet, PiggyBank, AlertCircle, CheckCircle, TrendingUp, Coins, Zap, Building, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { BankAccount, simulateApiCall, DEMO_TRANSACTIONS, BankTransaction } from '@/lib/mockBankingData';
 import { toast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -14,25 +13,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { EditBalanceDialog } from '@/components/EditBalanceDialog';
+import { useLinkedAccounts, LinkedAccount } from '@/hooks/useLinkedAccounts';
 
-interface ConnectedAccountsProps {
-  accounts: BankAccount[];
-  onRefresh: (accountId: string) => void;
-  onRemove: (accountId: string) => void;
-  onTransactionsImported: (transactions: BankTransaction[]) => void;
-}
-
-export function ConnectedAccounts({ 
-  accounts, 
-  onRefresh, 
-  onRemove,
-  onTransactionsImported 
-}: ConnectedAccountsProps) {
-  const [refreshingId, setRefreshingId] = useState<string | null>(null);
+export function ConnectedAccounts() {
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [accountToRemove, setAccountToRemove] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [accountToEdit, setAccountToEdit] = useState<LinkedAccount | null>(null);
 
-  const getAccountIcon = (type: BankAccount['accountType']) => {
+  const { 
+    accounts, 
+    isLoading, 
+    refreshAccount, 
+    deleteAccount, 
+    updateAccount 
+  } = useLinkedAccounts();
+
+  const getAccountIcon = (type: string) => {
     switch (type) {
       case 'current':
         return <Wallet className="w-5 h-5" />;
@@ -51,7 +49,7 @@ export function ConnectedAccounts({
     }
   };
 
-  const getAccountTypeLabel = (type: BankAccount['accountType']) => {
+  const getAccountTypeLabel = (type: string) => {
     switch (type) {
       case 'current':
         return 'Current Account';
@@ -71,22 +69,7 @@ export function ConnectedAccounts({
   };
 
   const handleRefresh = async (accountId: string) => {
-    setRefreshingId(accountId);
-    
-    // Simulate fetching new transactions
-    await simulateApiCall(null, 2000);
-    
-    // Get transactions for this account
-    const accountTransactions = DEMO_TRANSACTIONS.filter(t => t.accountId === accountId);
-    onTransactionsImported(accountTransactions);
-    
-    onRefresh(accountId);
-    setRefreshingId(null);
-    
-    toast({
-      title: 'Transactions Synced',
-      description: `${accountTransactions.length} transactions imported successfully.`,
-    });
+    await refreshAccount.mutateAsync(accountId);
   };
 
   const handleRemoveClick = (accountId: string) => {
@@ -94,17 +77,21 @@ export function ConnectedAccounts({
     setRemoveDialogOpen(true);
   };
 
-  const confirmRemove = () => {
+  const confirmRemove = async () => {
     if (accountToRemove) {
-      onRemove(accountToRemove);
-      toast({
-        title: 'Account Disconnected',
-        description: 'Bank account has been unlinked.',
-        variant: 'destructive',
-      });
+      await deleteAccount.mutateAsync(accountToRemove);
     }
     setRemoveDialogOpen(false);
     setAccountToRemove(null);
+  };
+
+  const handleEditClick = (account: LinkedAccount) => {
+    setAccountToEdit(account);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveBalance = async (id: string, newBalance: number) => {
+    await updateAccount.mutateAsync({ id, opening_balance: newBalance });
   };
 
   const formatBalance = (balance: number, currency: string) => {
@@ -117,6 +104,15 @@ export function ConnectedAccounts({
     
     return balance < 0 ? `-${formatted}` : formatted;
   };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <RefreshCw className="w-8 h-8 mx-auto mb-4 animate-spin opacity-50" />
+        <p className="text-sm">Loading accounts...</p>
+      </div>
+    );
+  }
 
   if (accounts.length === 0) {
     return (
@@ -138,20 +134,23 @@ export function ConnectedAccounts({
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg bg-background flex items-center justify-center text-2xl">
-                {account.bankLogo}
+                {account.platform_logo || '🏦'}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium truncate">{account.bankName}</p>
-                  <span className="text-xs text-muted-foreground flex-shrink-0">{account.accountNumber}</span>
+                  <p className="font-medium truncate">{account.platform_name}</p>
+                  <span className="text-xs text-muted-foreground flex-shrink-0">{account.account_number}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  {getAccountIcon(account.accountType)}
-                  <span>{getAccountTypeLabel(account.accountType)}</span>
+                  {getAccountIcon(account.account_type)}
+                  <span>{getAccountTypeLabel(account.account_type)}</span>
                   <span>•</span>
                   <CheckCircle className="w-3 h-3 text-green-500" />
                   <span className="truncate">
-                    Synced {formatDistanceToNow(new Date(account.lastSynced), { addSuffix: true })}
+                    {account.last_synced 
+                      ? `Synced ${formatDistanceToNow(new Date(account.last_synced), { addSuffix: true })}`
+                      : 'Just connected'
+                    }
                   </span>
                 </div>
               </div>
@@ -159,26 +158,36 @@ export function ConnectedAccounts({
 
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className={`font-semibold ${account.balance < 0 ? 'text-red-500' : ''}`}>
-                  {formatBalance(account.balance, account.currency)}
+                <p className={`font-semibold ${account.opening_balance < 0 ? 'text-destructive' : ''}`}>
+                  {formatBalance(account.opening_balance, account.currency)}
                 </p>
-                <p className="text-xs text-muted-foreground">{account.currency}</p>
+                <p className="text-xs text-muted-foreground">Opening Balance</p>
               </div>
               
               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleRefresh(account.id)}
-                  disabled={refreshingId === account.id}
+                  onClick={() => handleEditClick(account)}
+                  title="Edit opening balance"
                 >
-                  <RefreshCw className={`w-4 h-4 ${refreshingId === account.id ? 'animate-spin' : ''}`} />
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleRefresh(account.id)}
+                  disabled={refreshAccount.isPending}
+                  title="Sync account"
+                >
+                  <RefreshCw className={`w-4 h-4 ${refreshAccount.isPending ? 'animate-spin' : ''}`} />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="text-destructive hover:text-destructive"
                   onClick={() => handleRemoveClick(account.id)}
+                  title="Disconnect account"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -204,6 +213,13 @@ export function ConnectedAccounts({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <EditBalanceDialog
+        account={accountToEdit}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSave={handleSaveBalance}
+      />
     </>
   );
 }

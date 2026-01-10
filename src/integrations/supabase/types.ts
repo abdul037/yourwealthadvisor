@@ -1045,6 +1045,54 @@ export type Database = {
         }
         Relationships: []
       }
+      linked_accounts: {
+        Row: {
+          account_number: string | null
+          account_type: string
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean | null
+          last_synced: string | null
+          opening_balance: number
+          platform_id: string
+          platform_logo: string | null
+          platform_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_number?: string | null
+          account_type?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean | null
+          last_synced?: string | null
+          opening_balance?: number
+          platform_id: string
+          platform_logo?: string | null
+          platform_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_number?: string | null
+          account_type?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean | null
+          last_synced?: string | null
+          opening_balance?: number
+          platform_id?: string
+          platform_logo?: string | null
+          platform_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       milestones: {
         Row: {
           achieved_date: string | null

@@ -256,12 +256,7 @@ const AdminPortal = () => {
                     connectedAccounts={connectedAccounts}
                   />
                 </div>
-                <ConnectedAccounts 
-                  accounts={connectedAccounts}
-                  onRefresh={handleAccountRefresh}
-                  onRemove={handleAccountRemove}
-                  onTransactionsImported={handleTransactionsImported}
-                />
+                <ConnectedAccounts />
               </div>
               
               {/* Imported Transactions */}
