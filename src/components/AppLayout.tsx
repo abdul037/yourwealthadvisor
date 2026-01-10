@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { AppHeader } from '@/components/AppHeader';
@@ -12,6 +13,9 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const location = useLocation();
+  const isInvestmentsPage = location.pathname === '/investments';
+
   return (
     <TourProvider>
       <SidebarProvider defaultOpen={true}>
@@ -24,7 +28,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </main>
           </SidebarInset>
           <MobileBottomNav />
-          <FloatingQuickAdd />
+          <FloatingQuickAdd defaultTab={isInvestmentsPage ? 'asset' : 'transaction'} />
         </div>
         <OnboardingTour />
       </SidebarProvider>
