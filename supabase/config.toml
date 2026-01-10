@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.recommend-challenges]
 verify_jwt = false
+
+[functions.parse-asset]
+verify_jwt = false

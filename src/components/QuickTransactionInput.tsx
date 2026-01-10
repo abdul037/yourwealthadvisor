@@ -1,15 +1,20 @@
-import { useState, useEffect } from 'react';
-import { Send, Loader2, Check, X, Edit2, Mic, MicOff, Sparkles, HelpCircle } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Send, Loader2, Check, X, Edit2, Mic, MicOff, Sparkles, HelpCircle, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useTransactionParser, ParsedTransaction } from '@/hooks/useTransactionParser';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import {
   Tooltip,
   TooltipContent,
@@ -30,11 +35,32 @@ const KEYWORD_HELP = {
   investment: ["invested in", "bought stocks", "ETF purchase", "mutual fund", "SIP", "crypto bought"],
 };
 
+const TRANSACTION_TYPE_STYLES = {
+  income: {
+    badge: 'bg-primary/10 text-primary border-primary/30',
+    icon: '↑',
+    label: 'Income',
+  },
+  expense: {
+    badge: 'bg-destructive/10 text-destructive border-destructive/30',
+    icon: '↓',
+    label: 'Expense',
+  },
+  investment: {
+    badge: 'bg-accent/10 text-accent border-accent/30',
+    icon: '→',
+    label: 'Investment',
+  },
+};
+
 export function QuickTransactionInput() {
   const [input, setInput] = useState('');
   const [preview, setPreview] = useState<ParsedTransaction | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [transactionDate, setTransactionDate] = useState<Date>(new Date());
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [notes, setNotes] = useState('');
   
   const { parse, isLoading, error } = useTransactionParser();
   const { addTransaction } = useTransactions();
@@ -69,6 +95,12 @@ export function QuickTransactionInput() {
     }
   }, [voiceError]);
 
+  // Get transaction type styles
+  const typeStyles = useMemo(() => {
+    if (!preview) return null;
+    return TRANSACTION_TYPE_STYLES[preview.type as keyof typeof TRANSACTION_TYPE_STYLES] || TRANSACTION_TYPE_STYLES.expense;
+  }, [preview]);
+
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -76,6 +108,10 @@ export function QuickTransactionInput() {
     const parsed = await parse(input);
     if (parsed) {
       setPreview(parsed);
+      // Reset date to today for new preview
+      setTransactionDate(new Date());
+      setIsRecurring(false);
+      setNotes('');
     }
   };
 
@@ -89,7 +125,9 @@ export function QuickTransactionInput() {
         currency: preview.currency,
         category: preview.category,
         description: preview.description,
-        transaction_date: new Date().toISOString().split('T')[0],
+        transaction_date: format(transactionDate, 'yyyy-MM-dd'),
+        is_recurring: isRecurring,
+        notes: notes.trim() || null,
       });
 
       // Update onboarding progress
@@ -104,6 +142,8 @@ export function QuickTransactionInput() {
         setShowSuccess(false);
         setPreview(null);
         setInput('');
+        setNotes('');
+        setIsRecurring(false);
       }, 1500);
     } catch {
       toast({
@@ -125,70 +165,130 @@ export function QuickTransactionInput() {
 
   if (showSuccess) {
     return (
-      <Card className="border-green-500/50 bg-green-500/10">
-        <CardContent className="flex items-center justify-center gap-2 py-4">
-          <Check className="h-5 w-5 text-green-500" />
-          <span className="text-green-600 dark:text-green-400 font-medium">Transaction saved!</span>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center py-8 animate-fade-in">
+        <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+          <Check className="h-8 w-8 text-primary" />
+        </div>
+        <p className="text-lg font-medium text-foreground">Transaction Saved!</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          {preview?.currency} {preview?.amount.toLocaleString()} - {preview?.category}
+        </p>
+      </div>
     );
   }
 
   if (preview) {
     return (
-      <Card>
-        <CardContent className="p-4 space-y-3">
+      <div className="space-y-4 animate-fade-in">
+        <div className="text-center mb-2">
+          <p className="text-sm text-muted-foreground">Confirm transaction details</p>
+        </div>
+
+        {/* Transaction Preview Card */}
+        <div className={cn(
+          "p-4 rounded-xl border-2 space-y-3",
+          typeStyles?.badge
+        )}>
+          {/* Type Badge */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Badge variant={preview.type === 'income' ? 'default' : 'secondary'}>
-                {preview.type}
-              </Badge>
-              <span className="font-semibold text-lg">
-                {preview.currency} {preview.amount.toLocaleString()}
-              </span>
-            </div>
+            <span className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border",
+              typeStyles?.badge
+            )}>
+              <span>{typeStyles?.icon}</span>
+              {typeStyles?.label}
+            </span>
             <Badge variant="outline">{preview.category}</Badge>
           </div>
-          
-          {preview.description && (
-            <p className="text-sm text-muted-foreground">{preview.description}</p>
-          )}
 
-          <div className="flex gap-2 pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEdit}
-              className="flex-1"
-            >
-              <Edit2 className="h-4 w-4 mr-1" />
-              Edit
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCancel}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleConfirm}
-              disabled={addTransaction.isPending}
-              className="flex-1"
-            >
-              {addTransaction.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Check className="h-4 w-4 mr-1" />
-                  Confirm
-                </>
-              )}
-            </Button>
+          {/* Amount */}
+          <div className="text-center py-2">
+            <span className="text-3xl font-bold font-mono">
+              {preview.currency} {preview.amount.toLocaleString()}
+            </span>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Description */}
+          {preview.description && (
+            <p className="text-sm text-center text-muted-foreground">
+              {preview.description}
+            </p>
+          )}
+        </div>
+
+        {/* Date Picker */}
+        <div className="space-y-2">
+          <Label className="text-xs">Transaction Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !transactionDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {transactionDate ? format(transactionDate, "PPP") : "Pick a date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={transactionDate}
+                onSelect={(date) => date && setTransactionDate(date)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Recurring Toggle */}
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+          <div>
+            <Label htmlFor="recurring" className="text-sm font-medium">Recurring Transaction</Label>
+            <p className="text-xs text-muted-foreground">Mark as a regular transaction</p>
+          </div>
+          <Switch
+            id="recurring"
+            checked={isRecurring}
+            onCheckedChange={setIsRecurring}
+          />
+        </div>
+
+        {/* Optional Notes */}
+        <div className="space-y-2">
+          <Label htmlFor="notes" className="text-xs">Notes (optional)</Label>
+          <Input
+            id="notes"
+            placeholder="Add a note..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="text-sm"
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleEdit} className="flex-1">
+            <Edit2 className="h-4 w-4 mr-1" />
+            Edit
+          </Button>
+          <Button variant="outline" onClick={handleCancel} size="icon">
+            <X className="h-4 w-4" />
+          </Button>
+          <Button onClick={handleConfirm} className="flex-1" disabled={addTransaction.isPending}>
+            {addTransaction.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Check className="h-4 w-4 mr-1" />
+                Confirm
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
     );
   }
 
@@ -230,15 +330,15 @@ export function QuickTransactionInput() {
             <p className="text-xs font-medium text-primary">How to phrase your transactions:</p>
             <div className="grid grid-cols-1 gap-1.5 text-xs">
               <div>
-                <span className="font-medium text-wealth-positive">💰 Income:</span>
+                <span className="font-medium text-primary">💰 Income:</span>
                 <span className="text-muted-foreground ml-1">"Got salary 25000" • "Received bonus 5000"</span>
               </div>
               <div>
-                <span className="font-medium text-wealth-negative">💸 Expense:</span>
+                <span className="font-medium text-destructive">💸 Expense:</span>
                 <span className="text-muted-foreground ml-1">"Spent 120 on groceries" • "Uber 45"</span>
               </div>
               <div>
-                <span className="font-medium text-amber-500">📈 Investment:</span>
+                <span className="font-medium text-accent">📈 Investment:</span>
                 <span className="text-muted-foreground ml-1">"Invested 5000 in ETF" • "Bought stocks 10000"</span>
               </div>
             </div>
