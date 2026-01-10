@@ -42,6 +42,10 @@ export function FloatingQuickAdd({ defaultTab }: FloatingQuickAddProps) {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   
+  // State for cross-tab input passing (smart intent detection)
+  const [assetInputFromTransaction, setAssetInputFromTransaction] = useState<string>('');
+  const [shouldAutoParseAsset, setShouldAutoParseAsset] = useState(false);
+  
   // Determine the active tab based on route or prop
   const getDefaultTab = useCallback((): TabType => {
     if (defaultTab) return defaultTab;
@@ -55,6 +59,14 @@ export function FloatingQuickAdd({ defaultTab }: FloatingQuickAddProps) {
     setActiveTab(getDefaultTab());
   }, [getDefaultTab]);
 
+  // Clear cross-tab state when sheet closes
+  useEffect(() => {
+    if (!isOpen) {
+      setAssetInputFromTransaction('');
+      setShouldAutoParseAsset(false);
+    }
+  }, [isOpen]);
+
   const handleClick = useCallback(() => {
     triggerHaptic();
     setIsOpen(true);
@@ -65,6 +77,19 @@ export function FloatingQuickAdd({ defaultTab }: FloatingQuickAddProps) {
     setTimeout(() => {
       setIsOpen(false);
     }, 1500);
+  }, []);
+
+  // Handler for when transaction input detects asset-like input
+  const handleSwitchToAsset = useCallback((inputText: string) => {
+    setAssetInputFromTransaction(inputText);
+    setShouldAutoParseAsset(true);
+    setActiveTab('asset');
+  }, []);
+
+  // Clear the passed input after asset tab processes it
+  const handleAssetInputConsumed = useCallback(() => {
+    setAssetInputFromTransaction('');
+    setShouldAutoParseAsset(false);
   }, []);
 
   return (
@@ -118,11 +143,16 @@ export function FloatingQuickAdd({ defaultTab }: FloatingQuickAddProps) {
             </TabsList>
             
             <TabsContent value="transaction" className="max-w-md mx-auto">
-              <QuickTransactionInput />
+              <QuickTransactionInput onSwitchToAsset={handleSwitchToAsset} />
             </TabsContent>
             
             <TabsContent value="asset" className="max-w-md mx-auto">
-              <QuickAssetInput onSuccess={handleSuccess} />
+              <QuickAssetInput 
+                onSuccess={handleSuccess} 
+                initialInput={assetInputFromTransaction}
+                autoParseOnMount={shouldAutoParseAsset}
+                onInitialInputConsumed={handleAssetInputConsumed}
+              />
             </TabsContent>
 
             <TabsContent value="income" className="max-w-md mx-auto">

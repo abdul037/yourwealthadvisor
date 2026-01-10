@@ -61,9 +61,17 @@ const EXAMPLE_PHRASES = [
 
 interface QuickAssetInputProps {
   onSuccess?: () => void;
+  initialInput?: string;
+  autoParseOnMount?: boolean;
+  onInitialInputConsumed?: () => void;
 }
 
-export function QuickAssetInput({ onSuccess }: QuickAssetInputProps) {
+export function QuickAssetInput({ 
+  onSuccess, 
+  initialInput, 
+  autoParseOnMount, 
+  onInitialInputConsumed 
+}: QuickAssetInputProps) {
   const [mode, setMode] = useState<'ai' | 'manual'>('ai');
   const [input, setInput] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
@@ -95,6 +103,19 @@ export function QuickAssetInput({ onSuccess }: QuickAssetInputProps) {
       setInput(transcript);
     }
   }, [transcript]);
+
+  // Handle initial input from transaction tab (smart intent detection)
+  useEffect(() => {
+    if (initialInput && autoParseOnMount) {
+      setInput(initialInput);
+      // Trigger parse after a short delay to let UI update
+      const timer = setTimeout(() => {
+        parseAsset(initialInput);
+        onInitialInputConsumed?.();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [initialInput, autoParseOnMount, onInitialInputConsumed, parseAsset]);
 
   // Sync parsed asset to editable fields
   useEffect(() => {

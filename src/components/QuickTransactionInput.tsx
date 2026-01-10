@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Send, Loader2, Check, X, Edit2, Mic, MicOff, Sparkles, HelpCircle, Calendar as CalendarIcon } from 'lucide-react';
+import { Send, Loader2, Check, X, Edit2, Mic, MicOff, Sparkles, HelpCircle, Calendar as CalendarIcon, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -53,11 +53,24 @@ const TRANSACTION_TYPE_STYLES = {
   },
 };
 
-export function QuickTransactionInput() {
+// Keywords that suggest the user is describing an asset holding, not a transaction
+const ASSET_KEYWORDS = [
+  'gold', 'stocks', 'stock', 'shares', 'share', 'crypto', 'bitcoin', 'btc', 'eth', 'ethereum',
+  'etf', 'bond', 'bonds', 'property', 'real estate', 'land', 'car', 'portfolio', 
+  'sarwa', 'stash', 'investment account', 'pf', 'provident fund', 'insurance policy',
+  'digigold', 'mutual fund', 'nps', 'ppf', 'fd', 'fixed deposit'
+];
+
+interface QuickTransactionInputProps {
+  onSwitchToAsset?: (inputText: string) => void;
+}
+
+export function QuickTransactionInput({ onSwitchToAsset }: QuickTransactionInputProps) {
   const [input, setInput] = useState('');
   const [preview, setPreview] = useState<ParsedTransaction | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [mightBeAsset, setMightBeAsset] = useState(false);
   const [transactionDate, setTransactionDate] = useState<Date>(new Date());
   const [isRecurring, setIsRecurring] = useState(false);
   const [notes, setNotes] = useState('');
@@ -108,10 +121,25 @@ export function QuickTransactionInput() {
     const parsed = await parse(input);
     if (parsed) {
       setPreview(parsed);
+      // Check if input might be describing an asset instead of a transaction
+      const lowerInput = input.toLowerCase();
+      const detectedAssetKeyword = ASSET_KEYWORDS.some(kw => lowerInput.includes(kw));
+      // Only suggest asset tab for expenses that look like holdings (gold, stocks, etc.)
+      setMightBeAsset(detectedAssetKeyword && parsed.type === 'expense');
       // Reset date to today for new preview
       setTransactionDate(new Date());
       setIsRecurring(false);
       setNotes('');
+    }
+  };
+
+  const handleSwitchToAssetTab = () => {
+    if (onSwitchToAsset) {
+      onSwitchToAsset(input);
+      // Reset state
+      setPreview(null);
+      setInput('');
+      setMightBeAsset(false);
     }
   };
 
@@ -156,6 +184,7 @@ export function QuickTransactionInput() {
 
   const handleCancel = () => {
     setPreview(null);
+    setMightBeAsset(false);
   };
 
   const handleEdit = () => {
@@ -215,6 +244,28 @@ export function QuickTransactionInput() {
             </p>
           )}
         </div>
+
+        {/* Asset Detection Prompt */}
+        {mightBeAsset && onSwitchToAsset && (
+          <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 space-y-2">
+            <p className="text-sm font-medium text-amber-600 dark:text-amber-400 flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              Did you mean to add this as an asset?
+            </p>
+            <p className="text-xs text-muted-foreground">
+              It looks like you're describing a holding (like gold, stocks, or crypto) rather than a transaction.
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSwitchToAssetTab}
+              className="w-full border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+            >
+              <Briefcase className="h-4 w-4 mr-2" />
+              Add as Asset Instead
+            </Button>
+          </div>
+        )}
 
         {/* Date Picker */}
         <div className="space-y-2">
