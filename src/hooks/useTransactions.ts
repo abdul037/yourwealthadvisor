@@ -62,6 +62,8 @@ export function useTransactions(options: UseTransactionsOptions = {}) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['incomes'] });
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
       toast({ title: 'Transaction added', description: 'Your transaction has been recorded.' });
     },
     onError: (error) => {
@@ -83,6 +85,8 @@ export function useTransactions(options: UseTransactionsOptions = {}) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['incomes'] });
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
       toast({ title: 'Transaction updated', description: 'Your transaction has been updated.' });
     },
     onError: (error) => {
@@ -101,6 +105,8 @@ export function useTransactions(options: UseTransactionsOptions = {}) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['incomes'] });
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
       toast({ title: 'Transaction deleted', description: 'Your transaction has been removed.' });
     },
     onError: (error) => {

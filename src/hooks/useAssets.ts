@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from './useUserProfile';
 import { toast } from '@/hooks/use-toast';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { convertToAED } from '@/lib/currencyUtils';
 
 export type Asset = Tables<'assets'>;
 export type AssetInsert = TablesInsert<'assets'>;
@@ -93,20 +94,22 @@ export function useAssets() {
     },
   });
 
-  // Calculate totals by category
-  const totalNetWorth = assets.reduce((sum, asset) => sum + (asset.amount || 0), 0);
+  // Calculate totals by category with currency conversion
+  const totalNetWorth = assets.reduce((sum, asset) => {
+    return sum + convertToAED(asset.amount || 0, asset.currency || 'AED');
+  }, 0);
   
   const assetsByCategory = assets.reduce((acc, asset) => {
     const category = asset.category || 'Other';
     if (!acc[category]) acc[category] = 0;
-    acc[category] += asset.amount || 0;
+    acc[category] += convertToAED(asset.amount || 0, asset.currency || 'AED');
     return acc;
   }, {} as Record<string, number>);
 
   const assetsByLiquidity = assets.reduce((acc, asset) => {
     const level = asset.liquidity_level || 'L2';
     if (!acc[level]) acc[level] = 0;
-    acc[level] += asset.amount || 0;
+    acc[level] += convertToAED(asset.amount || 0, asset.currency || 'AED');
     return acc;
   }, {} as Record<string, number>);
 
