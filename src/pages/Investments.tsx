@@ -1,18 +1,34 @@
+import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useIncomes } from '@/hooks/useIncomes';
-import { useTransactions } from '@/hooks/useTransactions';
+import { useTransactions, Transaction } from '@/hooks/useTransactions';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
-import { TrendingUp, TrendingDown, Wallet, PiggyBank, BarChart3 } from 'lucide-react';
+import { EditTransactionDialog } from '@/components/EditTransactionDialog';
+import { TrendingUp, TrendingDown, Wallet, PiggyBank, BarChart3, Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const Investments = () => {
   const { incomes, isLoading: incomesLoading } = useIncomes();
-  const { transactions, isLoading: transactionsLoading } = useTransactions();
+  const { transactions, isLoading: transactionsLoading, updateTransaction, deleteTransaction } = useTransactions();
   const { formatAmount } = useFormattedCurrency();
+  
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
   
   const isLoading = incomesLoading || transactionsLoading;
   
@@ -43,6 +59,17 @@ const Investments = () => {
     .reduce((sum, t) => sum + t.amount, 0);
   
   const hasInvestments = investmentIncomes.length > 0 || investmentTransactions.length > 0;
+
+  const handleSaveTransaction = async (id: string, updates: Partial<Transaction>) => {
+    await updateTransaction.mutateAsync({ id, ...updates });
+  };
+
+  const handleDeleteTransaction = async () => {
+    if (deletingTransaction) {
+      await deleteTransaction.mutateAsync(deletingTransaction.id);
+      setDeletingTransaction(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -153,7 +180,7 @@ const Investments = () => {
                           </p>
                         </div>
                         <p className="font-bold font-mono text-wealth-positive">
-                          +{formatAmount(income.amount)}
+                          +{formatAmount(income.amount, income.currency || 'AED')}
                         </p>
                       </div>
                     ))}
@@ -179,7 +206,7 @@ const Investments = () => {
                       .map(transaction => (
                         <div 
                           key={transaction.id}
-                          className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                          className="flex items-center justify-between p-3 rounded-lg bg-muted/50 group"
                         >
                           <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-full ${
@@ -197,20 +224,43 @@ const Investments = () => {
                               <p className="font-medium">{transaction.description || transaction.category}</p>
                               <p className="text-sm text-muted-foreground">
                                 {format(new Date(transaction.transaction_date), 'MMM d, yyyy')}
+                                {transaction.currency && transaction.currency !== 'AED' && (
+                                  <span className="ml-2 text-xs">({transaction.currency})</span>
+                                )}
                               </p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className={`font-bold font-mono ${
-                              transaction.type === 'income' 
-                                ? 'text-wealth-positive' 
-                                : 'text-wealth-negative'
-                            }`}>
-                              {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)}
-                            </p>
-                            <Badge variant="outline" className="text-xs">
-                              {transaction.type}
-                            </Badge>
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <p className={`font-bold font-mono ${
+                                transaction.type === 'income' 
+                                  ? 'text-wealth-positive' 
+                                  : 'text-wealth-negative'
+                              }`}>
+                                {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount, transaction.currency || 'AED')}
+                              </p>
+                              <Badge variant="outline" className="text-xs">
+                                {transaction.type}
+                              </Badge>
+                            </div>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => setEditingTransaction(transaction)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => setDeletingTransaction(transaction)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -228,6 +278,32 @@ const Investments = () => {
           </p>
         </footer>
       </main>
+
+      {/* Edit Transaction Dialog */}
+      <EditTransactionDialog
+        open={!!editingTransaction}
+        onOpenChange={(open) => !open && setEditingTransaction(null)}
+        transaction={editingTransaction}
+        onSave={handleSaveTransaction}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingTransaction} onOpenChange={(open) => !open && setDeletingTransaction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this transaction? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTransaction} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
