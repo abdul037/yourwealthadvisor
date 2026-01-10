@@ -11,6 +11,7 @@ import { EditTransactionDialog } from '@/components/EditTransactionDialog';
 import { TrendingUp, TrendingDown, Wallet, PiggyBank, BarChart3, Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { convertToAED } from '@/lib/currencyUtils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,14 +50,16 @@ const Investments = () => {
          t.description?.toLowerCase().includes('mutual fund')
   );
   
-  // Calculate totals
-  const totalInvestmentIncome = investmentIncomes.reduce((sum, i) => sum + i.amount, 0);
+  // Calculate totals with currency conversion
+  const totalInvestmentIncome = investmentIncomes.reduce((sum, i) => {
+    return sum + convertToAED(i.amount, i.currency || 'AED');
+  }, 0);
   const totalInvestmentExpenses = investmentTransactions
     .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + convertToAED(t.amount, t.currency || 'AED'), 0);
   const totalDividends = investmentTransactions
     .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + convertToAED(t.amount, t.currency || 'AED'), 0);
   
   const hasInvestments = investmentIncomes.length > 0 || investmentTransactions.length > 0;
 

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from './useUserProfile';
 import { toast } from '@/hooks/use-toast';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { convertToAED } from '@/lib/currencyUtils';
 
 export type IncomeSource = Tables<'income_sources'>;
 export type IncomeSourceInsert = TablesInsert<'income_sources'>;
@@ -92,16 +93,16 @@ export function useIncomes() {
     },
   });
 
-  // Calculate totals
+  // Calculate totals with currency conversion
   const totalMonthlyIncome = incomes.reduce((sum, income) => {
-    const amount = income.amount || 0;
+    const amountInAED = convertToAED(income.amount || 0, income.currency || 'AED');
     switch (income.frequency) {
-      case 'weekly': return sum + amount * 4;
-      case 'bi-weekly': return sum + amount * 2;
-      case 'monthly': return sum + amount;
-      case 'quarterly': return sum + amount / 3;
-      case 'annually': return sum + amount / 12;
-      default: return sum + amount;
+      case 'weekly': return sum + amountInAED * 4;
+      case 'bi-weekly': return sum + amountInAED * 2;
+      case 'monthly': return sum + amountInAED;
+      case 'quarterly': return sum + amountInAED / 3;
+      case 'annually': return sum + amountInAED / 12;
+      default: return sum + amountInAED;
     }
   }, 0);
 
