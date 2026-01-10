@@ -17,13 +17,20 @@ import {
   BankAccount 
 } from '@/lib/mockBankingData';
 import { toast } from '@/hooks/use-toast';
+import { useLinkedAccounts, CreateLinkedAccountInput } from '@/hooks/useLinkedAccounts';
 
 interface BankConnectionProps {
   onConnectionSuccess: (accounts: BankAccount[]) => void;
   connectedAccounts: BankAccount[];
 }
 
-type ConnectionStep = 'select-platform' | 'consent' | 'otp' | 'success';
+type ConnectionStep = 'select-platform' | 'consent' | 'otp' | 'opening-balance' | 'success';
+
+interface AccountBalance {
+  accountNumber: string;
+  accountType: string;
+  balance: string;
+}
 
 export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankConnectionProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,6 +39,10 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
   const [otpValue, setOtpValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [pendingAccounts, setPendingAccounts] = useState<BankAccount[]>([]);
+  const [accountBalances, setAccountBalances] = useState<AccountBalance[]>([]);
+
+  const { createAccount, accounts: linkedAccounts } = useLinkedAccounts();
 
   const handlePlatformSelect = (platform: Bank) => {
     setSelectedPlatform(platform);
@@ -61,22 +72,74 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
     }
 
     setIsLoading(true);
-    await simulateApiCall(null, 2000);
+    await simulateApiCall(null, 1500);
     
     // Get demo accounts for the selected platform
     const accountsToAdd = getDemoAccountsForPlatform(selectedPlatform?.id || '');
+    setPendingAccounts(accountsToAdd);
+    
+    // Initialize balances for each account
+    setAccountBalances(accountsToAdd.map(acc => ({
+      accountNumber: acc.accountNumber,
+      accountType: acc.accountType,
+      balance: acc.balance.toString(),
+    })));
 
     setIsLoading(false);
-    setStep('success');
-    
-    setTimeout(() => {
-      onConnectionSuccess(accountsToAdd);
-      handleClose();
+    setStep('opening-balance');
+  };
+
+  const handleBalanceChange = (accountNumber: string, value: string) => {
+    setAccountBalances(prev => 
+      prev.map(acc => 
+        acc.accountNumber === accountNumber 
+          ? { ...acc, balance: value }
+          : acc
+      )
+    );
+  };
+
+  const handleSaveBalances = async () => {
+    setIsLoading(true);
+
+    try {
+      // Save each account to the database
+      for (const acc of pendingAccounts) {
+        const balanceEntry = accountBalances.find(b => b.accountNumber === acc.accountNumber);
+        const openingBalance = parseFloat(balanceEntry?.balance || '0');
+
+        const input: CreateLinkedAccountInput = {
+          platform_id: selectedPlatform?.id || '',
+          platform_name: acc.bankName,
+          platform_logo: acc.bankLogo,
+          account_number: acc.accountNumber,
+          account_type: acc.accountType,
+          opening_balance: openingBalance,
+          currency: acc.currency,
+        };
+
+        await createAccount.mutateAsync(input);
+      }
+
+      setStep('success');
+      
+      setTimeout(() => {
+        onConnectionSuccess(pendingAccounts);
+        handleClose();
+        toast({
+          title: 'Connected Successfully!',
+          description: `${selectedPlatform?.name} has been linked with opening balances saved.`,
+        });
+      }, 2000);
+    } catch (error) {
       toast({
-        title: 'Connected Successfully!',
-        description: `${selectedPlatform?.name} has been linked to your account.`,
+        title: 'Error',
+        description: 'Failed to save account balances. Please try again.',
+        variant: 'destructive',
       });
-    }, 2000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -85,6 +148,8 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
     setSelectedPlatform(null);
     setOtpValue('');
     setOtpSent(false);
+    setPendingAccounts([]);
+    setAccountBalances([]);
   };
 
   const getConsentItems = () => {
@@ -113,12 +178,21 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
     }
   };
 
+  const isAccountConnected = (platform: Bank) => {
+    // Check both local state and database
+    const inLocalState = connectedAccounts.some(acc => 
+      acc.bankName.toLowerCase() === platform.name.toLowerCase()
+    );
+    const inDatabase = linkedAccounts.some(acc => 
+      acc.platform_id === platform.id && acc.is_active
+    );
+    return inLocalState || inDatabase;
+  };
+
   const renderPlatformGrid = (platforms: Bank[]) => (
     <div className="grid grid-cols-2 gap-3">
       {platforms.map((platform) => {
-        const isConnected = connectedAccounts.some(acc => 
-          acc.bankName.toLowerCase() === platform.name.toLowerCase()
-        );
+        const isConnected = isAccountConnected(platform);
         return (
           <button
             key={platform.id}
@@ -143,6 +217,18 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
       })}
     </div>
   );
+
+  const getAccountTypeLabel = (type: string) => {
+    switch (type) {
+      case 'current': return 'Current Account';
+      case 'savings': return 'Savings Account';
+      case 'credit_card': return 'Credit Card';
+      case 'investment': return 'Investment Portfolio';
+      case 'crypto': return 'Crypto Wallet';
+      case 'utility': return 'Utility Account';
+      default: return type;
+    }
+  };
 
   const renderStep = () => {
     switch (step) {
@@ -308,6 +394,65 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
           </div>
         );
 
+      case 'opening-balance':
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">{selectedPlatform?.logo}</span>
+              </div>
+              <h3 className="font-semibold mb-2">Set Opening Balances</h3>
+              <p className="text-sm text-muted-foreground">
+                Enter the current balance for each account. This helps us track your finances accurately.
+              </p>
+            </div>
+
+            <div className="space-y-4 max-h-[250px] overflow-y-auto">
+              {pendingAccounts.map((account, index) => {
+                const balanceEntry = accountBalances.find(b => b.accountNumber === account.accountNumber);
+                return (
+                  <div key={account.id} className="p-4 bg-muted/50 rounded-lg space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm">{getAccountTypeLabel(account.accountType)}</p>
+                        <p className="text-xs text-muted-foreground">{account.accountNumber}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{account.currency}</span>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Opening Balance</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={balanceEntry?.balance || ''}
+                        onChange={(e) => handleBalanceChange(account.accountNumber, e.target.value)}
+                        className="text-right"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setStep('otp')} className="flex-1">
+                Back
+              </Button>
+              <Button onClick={handleSaveBalances} disabled={isLoading} className="flex-1">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save & Complete'
+                )}
+              </Button>
+            </div>
+          </div>
+        );
+
       case 'success':
         return (
           <div className="text-center space-y-4 py-6">
@@ -317,11 +462,11 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
             <div>
               <h3 className="font-semibold text-lg mb-2">Connected Successfully!</h3>
               <p className="text-sm text-muted-foreground">
-                Your {selectedPlatform?.name} account is now linked. Data will be synced automatically.
+                Your {selectedPlatform?.name} account is now linked with opening balances saved.
               </p>
             </div>
             <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
-            <p className="text-sm text-muted-foreground">Importing data...</p>
+            <p className="text-sm text-muted-foreground">Finishing setup...</p>
           </div>
         );
     }
@@ -342,6 +487,7 @@ export function BankConnection({ onConnectionSuccess, connectedAccounts }: BankC
               {step === 'select-platform' && 'Connect Account'}
               {step === 'consent' && 'Authorize Access'}
               {step === 'otp' && 'Verify Identity'}
+              {step === 'opening-balance' && 'Set Opening Balance'}
               {step === 'success' && 'Connection Complete'}
             </DialogTitle>
             {step === 'select-platform' && (
