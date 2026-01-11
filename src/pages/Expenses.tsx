@@ -10,6 +10,7 @@ import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { Expense, Budget } from '@/lib/expenseData';
 import { Receipt } from 'lucide-react';
+import { useState } from 'react';
 
 // Adapter to convert DB transaction to expense format
 const adaptExpense = (transaction: Transaction): Expense => ({
@@ -33,6 +34,7 @@ const adaptBudget = (dbBudget: DBBudget): Budget => ({
 const Expenses = () => {
   const { transactions, isLoading: expensesLoading, addTransaction, deleteTransaction } = useExpenses();
   const { budgets: dbBudgets, isLoading: budgetsLoading, addBudget, deleteBudget } = useBudgets();
+  const [showAddDialog, setShowAddDialog] = useState(false);
   
   const isLoading = expensesLoading || budgetsLoading;
   
@@ -97,13 +99,25 @@ const Expenses = () => {
         />
         
         {expenses.length === 0 && budgets.length === 0 ? (
-          <EmptyState
-            icon={Receipt}
-            title="No expenses recorded"
-            description="Start tracking your spending by adding your first expense."
-            actionLabel="Add Expense"
-            onAction={() => {/* Trigger add expense dialog */}}
-          />
+          <>
+            <EmptyState
+              icon={Receipt}
+              title="No expenses recorded"
+              description="Start tracking your spending by adding your first expense."
+              actionLabel="Add Expense"
+              onAction={() => setShowAddDialog(true)}
+            />
+            {/* Hidden ExpenseList just for the dialog */}
+            <div className="hidden">
+              <ExpenseList 
+                expenses={expenses}
+                onAddExpense={handleAddExpense}
+                onDeleteExpense={handleDeleteExpense}
+                externalDialogOpen={showAddDialog}
+                onExternalDialogOpenChange={setShowAddDialog}
+              />
+            </div>
+          </>
         ) : (
           <>
             {/* Monthly Overview */}

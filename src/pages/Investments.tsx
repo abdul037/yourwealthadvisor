@@ -146,7 +146,7 @@ const Investments = () => {
           />
           <AddAssetDialog 
             trigger={
-              <Button className="gap-2">
+              <Button className="gap-2" data-add-asset-trigger>
                 <Plus className="h-4 w-4" />
                 Add Asset
               </Button>
@@ -158,9 +158,13 @@ const Investments = () => {
           <EmptyState
             icon={BarChart3}
             title="No investments yet"
-            description="Add your first asset using the 'Add Asset' button to start tracking your investment portfolio."
+            description="Add your first asset to start tracking your investment portfolio."
             actionLabel="Add Your First Asset"
-            onAction={() => {}}
+            onAction={() => {
+              // Trigger the AddAssetDialog by clicking the hidden button
+              const addButton = document.querySelector('[data-add-asset-trigger]') as HTMLButtonElement;
+              addButton?.click();
+            }}
           />
         ) : (
           <>

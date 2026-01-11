@@ -12,7 +12,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { IncomeSource } from '@/lib/incomeData';
 import { Expense } from '@/lib/expenseData';
 import { DollarSign } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 // Helper to determine partner label based on partner order
 const getPartnerLabel = (partnerId: string, partners: Partner[]): IncomeSource['partner'] => {
@@ -59,6 +59,7 @@ const Income = () => {
   const { incomes, isLoading: incomesLoading, totalMonthlyIncome, addIncome, deleteIncome } = useIncomes();
   const { transactions: expenseTransactions, isLoading: expensesLoading } = useExpenses();
   const { partners, isLoading: partnersLoading } = usePartners();
+  const [showAddDialog, setShowAddDialog] = useState(false);
   
   const isLoading = incomesLoading || expensesLoading || partnersLoading;
   
@@ -182,13 +183,25 @@ const Income = () => {
         />
         
         {incomeSources.length === 0 ? (
-          <EmptyState
-            icon={DollarSign}
-            title="No income sources yet"
-            description="Add your first income source to start tracking your earnings."
-            actionLabel="Add Income"
-            onAction={() => {/* Trigger add income dialog */}}
-          />
+          <>
+            <EmptyState
+              icon={DollarSign}
+              title="No income sources yet"
+              description="Add your first income source to start tracking your earnings."
+              actionLabel="Add Income"
+              onAction={() => setShowAddDialog(true)}
+            />
+            {/* Hidden IncomeList just for the dialog */}
+            <div className="hidden">
+              <IncomeList 
+                incomeSources={incomeSources}
+                onAddIncome={handleAddIncome}
+                onDeleteIncome={handleDeleteIncome}
+                externalDialogOpen={showAddDialog}
+                onExternalDialogOpenChange={setShowAddDialog}
+              />
+            </div>
+          </>
         ) : (
           <>
             {/* Income Overview */}
