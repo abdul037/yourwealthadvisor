@@ -102,7 +102,7 @@ export function IncomeList({ incomeSources, onAddIncome, onDeleteIncome, externa
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Partner</Label>
+                  <Label>Earner</Label>
                   <Select 
                     value={formData.partner} 
                     onValueChange={(v) => setFormData({...formData, partner: v as any})}
@@ -111,9 +111,9 @@ export function IncomeList({ incomeSources, onAddIncome, onDeleteIncome, externa
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Partner 1">Partner 1</SelectItem>
-                      <SelectItem value="Partner 2">Partner 2</SelectItem>
-                      <SelectItem value="Joint">Joint</SelectItem>
+                      <SelectItem value="Partner 1">Primary Earner</SelectItem>
+                      <SelectItem value="Partner 2">Secondary Earner</SelectItem>
+                      <SelectItem value="Joint">Joint/Shared</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -229,7 +229,7 @@ export function IncomeList({ incomeSources, onAddIncome, onDeleteIncome, externa
                         income.partner === 'Partner 2' ? 'bg-purple-500/20 text-purple-400' :
                         'bg-green-500/20 text-green-400'
                       }`}>
-                        {income.partner}
+                        {income.partner === 'Partner 1' ? 'Primary' : income.partner === 'Partner 2' ? 'Secondary' : 'Joint'}
                       </span>
                       <span>•</span>
                       <span>{new Date(income.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>

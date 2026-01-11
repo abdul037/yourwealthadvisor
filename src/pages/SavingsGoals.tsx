@@ -9,7 +9,7 @@ const SavingsGoals = () => {
         <PageHeader 
           title="Savings Goals"
           description="Track your savings goals and monitor your progress toward financial milestones"
-          breadcrumb={[{ label: 'Savings Goals', path: '/savings-goals' }]}
+          breadcrumb={[{ label: 'Savings Goals', path: '/savings' }]}
         />
 
         {/* Dashboard */}

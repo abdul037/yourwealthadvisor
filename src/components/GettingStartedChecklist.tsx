@@ -35,7 +35,7 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     label: 'Set up your profile',
     description: 'Add your name for personalized experience',
     icon: User,
-    path: '/admin',
+    path: '/membership',
     checkKey: 'income_added', // We'll use profile.full_name for this one
   },
   {
@@ -75,7 +75,7 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     label: 'Connect a bank account',
     description: 'Link your accounts for automatic tracking',
     icon: Building2,
-    path: '/admin',
+    path: '/investments',
     checkKey: 'bank_connected',
   },
 ];

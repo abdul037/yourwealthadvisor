@@ -64,6 +64,15 @@ const NotFound = () => {
             <Link to="/budget">
               <Button variant="ghost" size="sm">Budget</Button>
             </Link>
+            <Link to="/savings">
+              <Button variant="ghost" size="sm">Savings</Button>
+            </Link>
+            <Link to="/investments">
+              <Button variant="ghost" size="sm">Investments</Button>
+            </Link>
+            <Link to="/debt">
+              <Button variant="ghost" size="sm">Debt</Button>
+            </Link>
             <Link to="/trends">
               <Button variant="ghost" size="sm">Trends</Button>
             </Link>
