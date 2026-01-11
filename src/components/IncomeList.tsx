@@ -15,6 +15,8 @@ interface IncomeListProps {
   incomeSources: IncomeSource[];
   onAddIncome: (income: Omit<IncomeSource, 'id'>) => void;
   onDeleteIncome: (id: string) => void;
+  externalDialogOpen?: boolean;
+  onExternalDialogOpenChange?: (open: boolean) => void;
 }
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -26,9 +28,19 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   other: MoreHorizontal,
 };
 
-export function IncomeList({ incomeSources, onAddIncome, onDeleteIncome }: IncomeListProps) {
-  const [open, setOpen] = useState(false);
+export function IncomeList({ incomeSources, onAddIncome, onDeleteIncome, externalDialogOpen, onExternalDialogOpenChange }: IncomeListProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const { markIncomeAdded } = useOnboardingProgress();
+  
+  // Use external control if provided, otherwise use internal state
+  const open = externalDialogOpen !== undefined ? externalDialogOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    if (onExternalDialogOpenChange) {
+      onExternalDialogOpenChange(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
   const { formatAmount } = useFormattedCurrency();
   const [formData, setFormData] = useState({
     partner: 'Partner 1' as 'Partner 1' | 'Partner 2' | 'Joint',

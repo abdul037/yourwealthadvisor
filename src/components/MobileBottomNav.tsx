@@ -20,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const mainNavItems = [
   { path: '/', label: 'Home', icon: LayoutDashboard },
@@ -28,19 +29,26 @@ const mainNavItems = [
   { path: '/social', label: 'Social', icon: Sparkles },
 ];
 
-const moreItems = [
+const baseMoreItems = [
   { path: '/investments', label: 'Assets', icon: Briefcase },
   { path: '/budget', label: 'Budget', icon: Wallet },
   { path: '/debt', label: 'Debt Tracker', icon: TrendingDown },
   { path: '/savings', label: 'Savings Goals', icon: Target },
   { path: '/trends', label: 'Trends', icon: LineChart },
   { path: '/ai-tools', label: 'AI Tools', icon: Sparkles },
-  { path: '/admin', label: 'Admin Portal', icon: Shield },
   { path: '/install', label: 'Install App', icon: Download },
 ];
 
+const adminItem = { path: '/admin', label: 'Admin Portal', icon: Shield };
+
 export function MobileBottomNav() {
   const location = useLocation();
+  const { isAdmin } = useUserRole();
+  
+  // Build the more items list, including admin only for admins
+  const moreItems = isAdmin 
+    ? [...baseMoreItems, adminItem]
+    : baseMoreItems;
   
   const isActive = (path: string) => location.pathname === path;
   const isMoreActive = moreItems.some(item => isActive(item.path));

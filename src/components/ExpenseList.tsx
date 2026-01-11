@@ -16,6 +16,8 @@ interface ExpenseListProps {
   expenses: Expense[];
   onAddExpense: (expense: Omit<Expense, 'id'>) => void;
   onDeleteExpense: (id: string) => void;
+  externalDialogOpen?: boolean;
+  onExternalDialogOpenChange?: (open: boolean) => void;
 }
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -30,8 +32,18 @@ const ICONS: Record<string, React.ReactNode> = {
   'Other': <MoreHorizontal className="w-4 h-4" />,
 };
 
-export function ExpenseList({ expenses, onAddExpense, onDeleteExpense }: ExpenseListProps) {
-  const [open, setOpen] = useState(false);
+export function ExpenseList({ expenses, onAddExpense, onDeleteExpense, externalDialogOpen, onExternalDialogOpenChange }: ExpenseListProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use external control if provided, otherwise use internal state
+  const open = externalDialogOpen !== undefined ? externalDialogOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    if (onExternalDialogOpenChange) {
+      onExternalDialogOpenChange(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
