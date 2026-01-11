@@ -15,9 +15,12 @@ export function usePartners() {
   const { data: partners = [], isLoading, error, refetch } = useQuery({
     queryKey: ['partners', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
+      
       const { data, error } = await supabase
         .from('partners')
         .select('*')
+        .eq('user_id', user.id)
         .eq('is_active', true)
         .order('name', { ascending: true });
       

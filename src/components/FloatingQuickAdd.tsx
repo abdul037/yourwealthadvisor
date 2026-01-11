@@ -35,7 +35,7 @@ const ROUTE_TAB_MAP: Record<string, TabType> = {
   '/debt': 'transaction',
   '/investments': 'asset',
   '/income': 'income',
-  '/savings-goals': 'transaction',
+  '/savings': 'transaction',
 };
 
 export function FloatingQuickAdd({ defaultTab }: FloatingQuickAddProps) {
