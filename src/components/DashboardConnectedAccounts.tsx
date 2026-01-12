@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { BankConnection } from '@/components/BankConnection';
+import { convertToAED } from '@/lib/currencyUtils';
 
 interface DashboardConnectedAccountsProps {
   accounts: BankAccount[];
@@ -73,21 +74,14 @@ export function DashboardConnectedAccounts({
     });
   };
 
-  // Calculate total balance
+  // Calculate total balance using centralized currency conversion
   const totalBalance = accounts.reduce((sum, acc) => {
     // Skip negative utility balances for total
     if (acc.accountType === 'utility' && acc.balance < 0) {
       return sum;
     }
-    // Convert USD to AED
-    if (acc.currency === 'USD') {
-      return sum + acc.balance * 3.67;
-    }
-    // Convert BTC to AED
-    if (acc.currency === 'BTC') {
-      return sum + acc.balance * 150000;
-    }
-    return sum + acc.balance;
+    // Use centralized currency conversion
+    return sum + convertToAED(acc.balance, acc.currency);
   }, 0);
 
   // Group accounts by type

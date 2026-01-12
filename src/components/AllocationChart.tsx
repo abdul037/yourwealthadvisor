@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Asset, AssetCategory, CATEGORY_COLORS } from '@/lib/portfolioData';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface AllocationChartProps {
   assets: Asset[];
@@ -21,6 +22,8 @@ const CHART_COLORS = [
 ];
 
 export function AllocationChart({ assets, linkedAccountsBalance = 0 }: AllocationChartProps) {
+  const { formatAmount } = useFormattedCurrency();
+
   const categoryTotals = assets.reduce((acc, asset) => {
     const existing = acc.find(item => item.category === asset.category);
     if (existing) {
@@ -59,7 +62,7 @@ export function AllocationChart({ assets, linkedAccountsBalance = 0 }: Allocatio
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <p className="font-medium text-sm">{data.name}</p>
           <p className="text-muted-foreground text-xs">
-            AED {data.value.toLocaleString()} ({data.percentage}%)
+            {formatAmount(data.value)} ({data.percentage}%)
           </p>
         </div>
       );

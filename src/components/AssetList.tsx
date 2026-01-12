@@ -1,6 +1,7 @@
-import { Asset, formatCurrency, CATEGORY_COLORS, LIQUIDITY_LABELS } from '@/lib/portfolioData';
+import { Asset, CATEGORY_COLORS, LIQUIDITY_LABELS } from '@/lib/portfolioData';
 import { Building, TrendingUp, Wallet, Car, Shield, Landmark, Coins, PiggyBank, Bitcoin, Gem } from 'lucide-react';
 import { AddAssetDialog } from './AddAssetDialog';
+import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface AssetListProps {
   assets: Asset[];
@@ -35,6 +36,7 @@ const CATEGORY_BG: Record<string, string> = {
 };
 
 export function AssetList({ assets }: AssetListProps) {
+  const { formatAmount } = useFormattedCurrency();
   const sortedAssets = [...assets].sort((a, b) => b.aedValue - a.aedValue);
   
   return (
@@ -69,10 +71,7 @@ export function AssetList({ assets }: AssetListProps) {
             </div>
             
             <div className="text-right">
-              <p className="text-sm font-mono font-medium">{formatCurrency(asset.aedValue)}</p>
-              <p className="text-xs text-muted-foreground font-mono">
-                ${asset.usdValue.toLocaleString()}
-              </p>
+              <p className="text-sm font-mono font-medium">{formatAmount(asset.aedValue)}</p>
             </div>
           </div>
         ))}
