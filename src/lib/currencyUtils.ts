@@ -7,6 +7,7 @@ export const EXCHANGE_RATES: Record<string, number> = {
   EUR_AED: 4.00,
   GBP_AED: 4.66,
   SAR_AED: 0.98,
+  BTC_AED: 367000, // ~$100,000 * 3.67
   AED_AED: 1,
   // Reverse rates
   AED_USD: 0.27,
@@ -15,6 +16,7 @@ export const EXCHANGE_RATES: Record<string, number> = {
   AED_EUR: 0.25,
   AED_GBP: 0.21,
   AED_SAR: 1.02,
+  AED_BTC: 0.0000027,
 };
 
 export function convertToAED(amount: number, currency: string = 'AED'): number {
