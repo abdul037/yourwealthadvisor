@@ -685,12 +685,30 @@ export function useExpenseGroup(groupId: string | undefined) {
         .single();
       
       if (error) throw error;
-      return data;
+      
+      // Return settlement data with member names for toast
+      return {
+        ...data,
+        fromMemberName: fromMember?.name || 'Unknown',
+        toMemberName: toMember?.name || 'Unknown',
+        amount,
+        currency: group.currency,
+      };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['expense-settlements', groupId] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      toast({ title: 'Settlement recorded' });
+      toast({ 
+        title: '✓ Settlement Recorded',
+        description: `${data.fromMemberName} paid ${data.currency} ${data.amount.toFixed(2)} to ${data.toMemberName}`,
+      });
+    },
+    onError: (error) => {
+      toast({ 
+        title: 'Settlement Failed', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
     },
   });
 
