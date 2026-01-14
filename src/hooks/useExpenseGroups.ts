@@ -301,7 +301,7 @@ export function useExpenseGroup(groupId: string | undefined) {
       owes,
       settledPaid,
       settledReceived,
-      balance: paid - owes - settledPaid + settledReceived,
+      balance: paid - owes + settledPaid - settledReceived,
     };
   });
 
