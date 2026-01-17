@@ -50,10 +50,10 @@ export default function JoinSplitGroup() {
         ? inviteCode.split('-').pop() 
         : inviteCode;
       
+      // Use secure RPC function to fetch group by invite code
+      // This bypasses RLS to allow join page access while keeping groups private
       const { data, error } = await supabase
-        .from('expense_groups')
-        .select('id, name, description')
-        .eq('invite_code', actualCode)
+        .rpc('get_group_by_invite_code', { p_invite_code: actualCode })
         .maybeSingle();
       
       if (error || !data) {

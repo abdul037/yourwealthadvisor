@@ -1850,6 +1850,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_group_by_invite_code: {
+        Args: { p_invite_code: string }
+        Returns: {
+          category: string
+          created_at: string
+          currency: string
+          description: string
+          id: string
+          invite_code: string
+          is_active: boolean
+          is_settled: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
