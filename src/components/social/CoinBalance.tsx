@@ -70,10 +70,33 @@ export function CoinBalance() {
             </ScrollArea>
           </div>
 
-          <div className="border-t pt-3 space-y-2">
-            <p className="text-xs text-muted-foreground">
-              <strong>Earn coins by:</strong> Daily logins, completing challenges, getting upvotes, and achievements
-            </p>
+          <div className="border-t pt-3 space-y-3">
+            <h5 className="text-sm font-medium">Redeem & Boosts</h5>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-lg border border-border/70 bg-muted/30 p-3">
+                <p className="text-sm font-medium">Rewards</p>
+                <p className="text-xs text-muted-foreground">Unlock perks with coins</p>
+                <Button size="sm" variant="ghost" className="mt-2 w-full">
+                  Browse rewards
+                </Button>
+              </div>
+              <div className="rounded-lg border border-border/70 bg-muted/30 p-3">
+                <p className="text-sm font-medium">Boosts</p>
+                <p className="text-xs text-muted-foreground">Accelerate challenge points</p>
+                <Button size="sm" variant="ghost" className="mt-2 w-full">
+                  View boosts
+                </Button>
+              </div>
+            </div>
+            <div className="rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground mb-2">Earn coins by:</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-1 rounded-full bg-background border border-border/70">Daily logins</span>
+                <span className="px-2 py-1 rounded-full bg-background border border-border/70">Challenge wins</span>
+                <span className="px-2 py-1 rounded-full bg-background border border-border/70">Helpful tips</span>
+                <span className="px-2 py-1 rounded-full bg-background border border-border/70">Upvotes</span>
+              </div>
+            </div>
           </div>
         </div>
       </PopoverContent>

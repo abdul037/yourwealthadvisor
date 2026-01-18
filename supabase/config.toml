@@ -32,3 +32,12 @@ verify_jwt = false
 
 [functions.parse-asset]
 verify_jwt = false
+
+[functions.social-invite-email]
+verify_jwt = false
+
+[functions.social-reply-notification]
+verify_jwt = false
+
+[functions.social-weekly-digest]
+verify_jwt = false

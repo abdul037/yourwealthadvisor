@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { trackSocialEvent } from '@/lib/socialAnalytics';
 
 export interface UserConnection {
   id: string;
@@ -106,6 +107,7 @@ export function useFriends() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-connections'] });
+      trackSocialEvent('friend_request_sent');
       toast({ title: 'Friend request sent!' });
     },
     onError: (error: Error) => {

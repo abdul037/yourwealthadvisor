@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { trackSocialEvent } from '@/lib/socialAnalytics';
 
 export interface Circle {
   id: string;
@@ -77,9 +78,10 @@ export function useCircles() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, circleId) => {
       queryClient.invalidateQueries({ queryKey: ['circle-memberships'] });
       queryClient.invalidateQueries({ queryKey: ['circles'] });
+      trackSocialEvent('circle_joined', { circleId });
       toast({ title: 'Joined circle!' });
     },
     onError: () => {
@@ -101,9 +103,10 @@ export function useCircles() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, circleId) => {
       queryClient.invalidateQueries({ queryKey: ['circle-memberships'] });
       queryClient.invalidateQueries({ queryKey: ['circles'] });
+      trackSocialEvent('circle_left', { circleId });
       toast({ title: 'Left circle' });
     },
     onError: () => {

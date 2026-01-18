@@ -77,6 +77,30 @@ export type Database = {
         }
         Relationships: []
       }
+      app_events: {
+        Row: {
+          created_at: string | null
+          id: string
+          meta: Json | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_modules: {
         Row: {
           category: string | null
@@ -1535,6 +1559,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      social_events: {
+        Row: {
+          created_at: string | null
+          id: string
+          meta: Json | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      social_preferences: {
+        Row: {
+          created_at: string | null
+          reply_alerts: boolean | null
+          streak_nudges: boolean | null
+          updated_at: string | null
+          user_id: string
+          weekly_digest: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          reply_alerts?: boolean | null
+          streak_nudges?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          weekly_digest?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          reply_alerts?: boolean | null
+          streak_nudges?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          weekly_digest?: boolean | null
+        }
+        Relationships: []
       }
       subscription_tiers: {
         Row: {

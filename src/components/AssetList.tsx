@@ -49,33 +49,43 @@ export function AssetList({ assets }: AssetListProps) {
         </div>
       </div>
       
-      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-        {sortedAssets.map((asset, index) => (
-          <div 
-            key={asset.id}
-            className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-            style={{ animationDelay: `${index * 50}ms` }}
-          >
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${CATEGORY_BG[asset.category]}`}>
-              {CATEGORY_ICONS[asset.category]}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{asset.name}</p>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">{asset.category}</span>
-                <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                  {asset.liquidityLevel}
-                </span>
+      {sortedAssets.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <p className="text-sm">No assets yet</p>
+          <p className="text-xs mt-1">Add your first asset to track portfolio growth.</p>
+          <div className="mt-3 flex justify-center">
+            <AddAssetDialog />
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+          {sortedAssets.map((asset, index) => (
+            <div 
+              key={asset.id}
+              className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${CATEGORY_BG[asset.category]}`}>
+                {CATEGORY_ICONS[asset.category]}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{asset.name}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{asset.category}</span>
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                    {asset.liquidityLevel}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="text-right">
+                <p className="text-sm font-mono font-medium">{formatAmount(asset.aedValue)}</p>
               </div>
             </div>
-            
-            <div className="text-right">
-              <p className="text-sm font-mono font-medium">{formatAmount(asset.aedValue)}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

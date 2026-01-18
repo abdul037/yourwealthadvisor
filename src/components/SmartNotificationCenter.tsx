@@ -198,8 +198,13 @@ export function SmartNotificationCenter() {
 }
 
 // Widget version for dashboard
-export function NotificationWidget() {
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+interface NotificationWidgetProps {
+  notifications: Notification[];
+  unreadCount: number;
+  onMarkRead: (id: string) => void;
+}
+
+export function NotificationWidget({ notifications, unreadCount, onMarkRead }: NotificationWidgetProps) {
   const recentUnread = notifications.filter(n => !n.is_read).slice(0, 3);
 
   if (recentUnread.length === 0) return null;
@@ -220,7 +225,7 @@ export function NotificationWidget() {
           <div 
             key={notification.id}
             className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors"
-            onClick={() => markAsRead(notification.id)}
+            onClick={() => onMarkRead(notification.id)}
           >
             <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${PRIORITY_COLORS[notification.priority]}`}>
               {NOTIFICATION_ICONS[notification.type] || <Bell className="w-3 h-3" />}

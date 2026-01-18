@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Circle } from '@/hooks/useCircles';
-import { usePosts, PostWithAuthor } from '@/hooks/usePosts';
+import { usePosts, PostWithAuthor, useComments } from '@/hooks/usePosts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,9 +17,12 @@ import {
   Lightbulb,
   HelpCircle,
   Trophy,
-  Flag
+  Flag,
+  Share2,
+  Pin,
+  ShieldAlert
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {
@@ -29,6 +32,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { trackSocialEvent } from '@/lib/socialAnalytics';
 
 const postTypeConfig = {
   discussion: { icon: MessageCircle, label: 'Discussion', color: 'text-blue-500' },
@@ -49,12 +63,16 @@ interface CircleDetailProps {
 export function CircleDetail({ circle, onBack, isMember, onJoin, onLeave }: CircleDetailProps) {
   const { posts, isLoading, createPost, toggleUpvote } = usePosts(circle.id);
   const [showPostForm, setShowPostForm] = useState(false);
+  const { toast } = useToast();
+  const [isMuted, setIsMuted] = useState(false);
   const [newPost, setNewPost] = useState({
     title: '',
     content: '',
     post_type: 'discussion' as const,
     is_anonymous: false,
   });
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const inviteLink = `${baseUrl}/social?circle=${circle.slug}`;
 
   const handleSubmitPost = () => {
     if (!newPost.content.trim()) return;
@@ -73,6 +91,29 @@ export function CircleDetail({ circle, onBack, isMember, onJoin, onLeave }: Circ
     });
   };
 
+  const handleCopyInvite = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      toast({ title: 'Invite link copied', description: 'Share it with your circle.' });
+      trackSocialEvent('circle_invite_copied', { circleId: circle.id });
+    } catch {
+      toast({ title: 'Copy failed', description: 'Please copy the link manually.', variant: 'destructive' });
+    }
+  };
+
+  useEffect(() => {
+    const key = `tharwa_circle_muted_${circle.id}`;
+    const stored = window.localStorage.getItem(key);
+    setIsMuted(stored === 'true');
+  }, [circle.id]);
+
+  const handleMuteChange = (value: boolean) => {
+    const key = `tharwa_circle_muted_${circle.id}`;
+    setIsMuted(value);
+    window.localStorage.setItem(key, value ? 'true' : 'false');
+    toast({ title: value ? 'Circle muted' : 'Circle unmuted' });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -88,7 +129,7 @@ export function CircleDetail({ circle, onBack, isMember, onJoin, onLeave }: Circ
               <p className="text-muted-foreground">{circle.description}</p>
             </div>
           </div>
-          <div className="flex items-center gap-4 mt-3">
+          <div className="flex flex-wrap items-center gap-4 mt-3">
             <span className="flex items-center gap-1 text-sm text-muted-foreground">
               <Users className="w-4 h-4" />
               {circle.member_count} members
@@ -104,12 +145,26 @@ export function CircleDetail({ circle, onBack, isMember, onJoin, onLeave }: Circ
             >
               {isMember ? 'Leave Circle' : 'Join Circle'}
             </Button>
+            <Button size="sm" variant="ghost" className="gap-2" onClick={handleCopyInvite}>
+              <Share2 className="w-4 h-4" />
+              Share invite
+            </Button>
+            <div className="flex items-center gap-2">
+              <Switch
+                id={`mute-${circle.id}`}
+                checked={isMuted}
+                onCheckedChange={handleMuteChange}
+              />
+              <Label htmlFor={`mute-${circle.id}`} className="text-sm text-muted-foreground">
+                Mute
+              </Label>
+            </div>
           </div>
         </div>
       </div>
 
       {/* New Post Form */}
-      {isMember && (
+      {isMember && !isMuted && (
         <Card>
           {!showPostForm ? (
             <CardContent className="p-4">
@@ -175,8 +230,30 @@ export function CircleDetail({ circle, onBack, isMember, onJoin, onLeave }: Circ
         </Card>
       )}
 
+      <Card className="border-border/70 bg-muted/10">
+        <CardContent className="p-4">
+          <p className="text-sm font-medium">Community Guidelines</p>
+          <ul className="mt-2 text-xs text-muted-foreground space-y-1">
+            <li>Be respectful and keep discussions constructive.</li>
+            <li>No spam, promotions, or off-topic posts.</li>
+            <li>Share tips and wins that help others progress.</li>
+          </ul>
+        </CardContent>
+      </Card>
+
       {/* Posts */}
-      {isLoading ? (
+      {isMuted ? (
+        <Card className="p-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            You muted this circle. Unmute to see new posts.
+          </p>
+          <div className="mt-3">
+            <Button size="sm" variant="outline" onClick={() => handleMuteChange(false)}>
+              Unmute circle
+            </Button>
+          </div>
+        </Card>
+      ) : isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
             <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
@@ -195,7 +272,8 @@ export function CircleDetail({ circle, onBack, isMember, onJoin, onLeave }: Circ
           {posts.map(post => (
             <PostCard 
               key={post.id} 
-              post={post} 
+              post={post}
+              circleSlug={circle.slug}
               onUpvote={() => toggleUpvote.mutate({ postId: post.id, hasUpvoted: post.hasUpvoted })}
             />
           ))}
@@ -205,9 +283,46 @@ export function CircleDetail({ circle, onBack, isMember, onJoin, onLeave }: Circ
   );
 }
 
-function PostCard({ post, onUpvote }: { post: PostWithAuthor; onUpvote: () => void }) {
+function PostCard({ post, circleSlug, onUpvote }: { post: PostWithAuthor; circleSlug: string; onUpvote: () => void }) {
   const config = postTypeConfig[post.post_type] || postTypeConfig.discussion;
   const Icon = config.icon;
+  const [showComments, setShowComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportNote, setReportNote] = useState('');
+  const { comments, isLoading, createComment } = useComments(showComments ? post.id : undefined);
+  const { toast } = useToast();
+
+  const handleAddComment = () => {
+    const commentValue = newComment.trim();
+    if (!commentValue) return;
+    createComment.mutate(
+      { post_id: post.id, content: commentValue },
+      {
+        onSuccess: async () => {
+          setNewComment('');
+          try {
+            const { error } = await supabase.functions.invoke('social-reply-notification', {
+              body: {
+                postId: post.id,
+                commentContent: commentValue,
+                circleSlug,
+              },
+            });
+            if (error) throw error;
+          } catch (error) {
+            console.warn('Failed to send comment notification', error);
+          }
+        },
+      }
+    );
+  };
+
+  const handleReport = () => {
+    setReportOpen(false);
+    setReportNote('');
+    toast({ title: 'Report submitted', description: 'Thanks for keeping the community safe.' });
+  };
 
   return (
     <Card>
@@ -233,6 +348,12 @@ function PostCard({ post, onUpvote }: { post: PostWithAuthor; onUpvote: () => vo
             {config.label}
           </Badge>
         </div>
+        {post.is_pinned && (
+          <Badge variant="secondary" className="flex items-center gap-1">
+            <Pin className="w-3 h-3" />
+            Pinned
+          </Badge>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
         {post.title && <h4 className="font-semibold text-lg">{post.title}</h4>}
@@ -247,11 +368,74 @@ function PostCard({ post, onUpvote }: { post: PostWithAuthor; onUpvote: () => vo
             <ThumbsUp className={`w-4 h-4 mr-1 ${post.hasUpvoted ? 'fill-current' : ''}`} />
             {post.upvote_count}
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => setShowComments((prev) => !prev)}>
             <MessageSquare className="w-4 h-4 mr-1" />
             {post.comment_count}
           </Button>
+          <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <ShieldAlert className="w-4 h-4 mr-1" />
+                Report
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Report this post</DialogTitle>
+                <DialogDescription>
+                  Let us know what’s wrong. We’ll review it promptly.
+                </DialogDescription>
+              </DialogHeader>
+              <Textarea
+                placeholder="Tell us more (optional)"
+                value={reportNote}
+                onChange={(e) => setReportNote(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setReportOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleReport}>Submit report</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
+
+        {showComments && (
+          <div className="space-y-3 border-t border-border/60 pt-3">
+            {isLoading ? (
+              <div className="space-y-2">
+                {[1, 2].map(i => (
+                  <div key={i} className="h-10 bg-muted/60 rounded-md animate-pulse" />
+                ))}
+              </div>
+            ) : comments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No comments yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {comments.map(comment => (
+                  <div key={comment.id} className="rounded-md bg-muted/20 p-2">
+                    <p className="text-xs text-muted-foreground">
+                      {comment.is_anonymous ? 'Anonymous' : (comment.author?.full_name || 'User')} •{' '}
+                      {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                    </p>
+                    <p className="text-sm">{comment.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Input
+                placeholder="Write a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+              />
+              <Button size="sm" onClick={handleAddComment} disabled={createComment.isPending}>
+                Post
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

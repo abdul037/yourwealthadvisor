@@ -29,6 +29,13 @@ const EXAMPLE_INPUTS = [
   "Coffee 18",
 ];
 
+const QUICK_TEMPLATES = [
+  { label: 'Salary', value: 'Got salary 25000' },
+  { label: 'Groceries', value: 'Spent 120 on groceries' },
+  { label: 'Ride', value: 'Careem ride 45' },
+  { label: 'Investment', value: 'Invested 5000 in ETF' },
+];
+
 const KEYWORD_HELP = {
   income: ["salary", "got paid", "received", "earned", "bonus", "dividend", "refund"],
   expense: ["spent", "paid", "bought", "purchased", "taxi", "uber", "food"],
@@ -114,15 +121,14 @@ export function QuickTransactionInput({ onSwitchToAsset }: QuickTransactionInput
     return TRANSACTION_TYPE_STYLES[preview.type as keyof typeof TRANSACTION_TYPE_STYLES] || TRANSACTION_TYPE_STYLES.expense;
   }, [preview]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const submitInput = async (rawInput: string) => {
+    if (!rawInput.trim() || isLoading || isListening) return;
 
-    const parsed = await parse(input);
+    const parsed = await parse(rawInput);
     if (parsed) {
       setPreview(parsed);
       // Check if input might be describing an asset instead of a transaction
-      const lowerInput = input.toLowerCase();
+      const lowerInput = rawInput.toLowerCase();
       const detectedAssetKeyword = ASSET_KEYWORDS.some(kw => lowerInput.includes(kw));
       // Only suggest asset tab for expenses that look like holdings (gold, stocks, etc.)
       setMightBeAsset(detectedAssetKeyword && parsed.type === 'expense');
@@ -131,6 +137,18 @@ export function QuickTransactionInput({ onSwitchToAsset }: QuickTransactionInput
       setIsRecurring(false);
       setNotes('');
     }
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const rawInput = input.trim();
+    if (!rawInput) return;
+    await submitInput(rawInput);
+  };
+
+  const handleTemplateClick = async (value: string) => {
+    setInput(value);
+    await submitInput(value);
   };
 
   const handleSwitchToAssetTab = () => {
@@ -456,6 +474,22 @@ export function QuickTransactionInput({ onSwitchToAsset }: QuickTransactionInput
         </div>
 
         {/* Helper text */}
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {QUICK_TEMPLATES.map((template) => (
+            <Button
+              key={template.label}
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleTemplateClick(template.value)}
+              className="h-7 rounded-full px-3 text-xs"
+              disabled={isLoading || isListening}
+            >
+              {template.label}
+            </Button>
+          ))}
+        </div>
+
         <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <Mic className="h-3 w-3" />

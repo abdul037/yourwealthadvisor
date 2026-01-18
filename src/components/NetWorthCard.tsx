@@ -73,7 +73,7 @@ export function NetWorthCard({
           
           <Link to="/trends">
             <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
-              <span className="hidden sm:inline">View Trends</span>
+              <span className="hidden sm:inline">What changed?</span>
               <ExternalLink className="w-4 h-4" />
             </Button>
           </Link>

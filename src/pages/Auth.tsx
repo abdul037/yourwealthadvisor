@@ -40,6 +40,7 @@ const GoogleIcon = () => (
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get('mode') === 'signup' ? 'signup' : 'signin';
+  const referralCode = searchParams.get('ref');
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,6 +65,10 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (referralCode) {
+      window.localStorage.setItem('tharwa_referral_code', referralCode);
+    }
+
     // Check URL hash for recovery token first (before auth state listener)
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');

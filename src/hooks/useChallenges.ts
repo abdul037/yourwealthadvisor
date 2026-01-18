@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { trackSocialEvent } from '@/lib/socialAnalytics';
 
 export interface Challenge {
   id: string;
@@ -108,8 +109,9 @@ export function useChallenges() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, challengeId) => {
       queryClient.invalidateQueries({ queryKey: ['challenges'] });
+      trackSocialEvent('challenge_joined', { challengeId });
       toast({ title: 'Joined challenge! Good luck! 🎯' });
     },
     onError: () => {
@@ -131,8 +133,9 @@ export function useChallenges() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, challengeId) => {
       queryClient.invalidateQueries({ queryKey: ['challenges'] });
+      trackSocialEvent('challenge_left', { challengeId });
       toast({ title: 'Left challenge' });
     },
     onError: () => {

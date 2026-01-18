@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { trackSocialEvent } from '@/lib/socialAnalytics';
 
 export interface Post {
   id: string;
@@ -113,8 +114,9 @@ export function usePosts(circleId?: string) {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['posts', circleId] });
+      trackSocialEvent('post_created', { circleId: variables.circle_id });
       toast({ title: 'Post created!' });
     },
     onError: () => {
@@ -209,8 +211,9 @@ export function useComments(postId?: string) {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+      trackSocialEvent('comment_created', { postId: variables.post_id });
       toast({ title: 'Comment added!' });
     },
     onError: () => {
