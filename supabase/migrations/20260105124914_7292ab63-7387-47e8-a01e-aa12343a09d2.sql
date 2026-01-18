@@ -6,7 +6,7 @@ CREATE TABLE public.expense_groups (
   description text,
   category text DEFAULT 'other',
   currency text NOT NULL DEFAULT 'AED',
-  invite_code text UNIQUE DEFAULT encode(gen_random_bytes(6), 'hex'),
+  invite_code text UNIQUE DEFAULT substring(replace(gen_random_uuid()::text, '-', ''), 1, 12),
   is_active boolean DEFAULT true,
   is_settled boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT now(),
