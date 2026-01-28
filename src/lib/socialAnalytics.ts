@@ -29,13 +29,13 @@ export function trackSocialEvent(name: SocialEventName, meta?: SocialEvent['meta
   void (async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { error } = await supabase
-      .from('social_events')
+    const { error } = await (supabase
+      .from('social_events' as any)
       .insert({
         user_id: user.id,
         name: event.name,
         meta: event.meta ?? null,
-      });
+      }) as unknown as Promise<{ error: any }>);
     if (error && process.env.NODE_ENV !== 'production') {
       console.warn('[SocialEvent] Failed to persist', error.message);
     }

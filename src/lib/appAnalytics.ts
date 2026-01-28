@@ -20,13 +20,13 @@ export function trackAppEvent(name: AppEventName, meta?: AppEvent['meta']) {
   void (async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { error } = await supabase
-      .from('app_events')
+    const { error } = await (supabase
+      .from('app_events' as any)
       .insert({
         user_id: user.id,
         name: event.name,
         meta: event.meta ?? null,
-      });
+      }) as unknown as Promise<{ error: any }>);
     if (error && process.env.NODE_ENV !== 'production') {
       console.warn('[AppEvent] Failed to persist', error.message);
     }
