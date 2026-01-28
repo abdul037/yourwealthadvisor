@@ -71,7 +71,7 @@ const sendEmail = async ({
   }
 };
 
-const listAllUsers = async (supabase: ReturnType<typeof createClient>) => {
+const listAllUsers = async (supabase: { auth: { admin: { listUsers: (opts: { page: number; perPage: number }) => Promise<{ data: { users: { id: string; email?: string; user_metadata?: Record<string, unknown> }[] } | null; error: Error | null }> } } }) => {
   const users = [];
   let page = 1;
   const perPage = 1000;

@@ -7,6 +7,12 @@ import { trackSocialEvent } from '@/lib/socialAnalytics';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from '@/hooks/useUserProfile';
 
+interface SocialPreferencesRow {
+  weekly_digest: boolean | null;
+  reply_alerts: boolean | null;
+  streak_nudges: boolean | null;
+}
+
 export function SocialSettings() {
   const [preferences, setPreferences] = useState(loadSocialPreferences);
   const { user } = useUserProfile();
@@ -16,11 +22,11 @@ export function SocialSettings() {
     if (!user) return;
     let isMounted = true;
     const syncPreferences = async () => {
-      const { data, error } = await supabase
-        .from('social_preferences')
+      const { data, error } = await (supabase
+        .from('social_preferences' as any)
         .select('weekly_digest, reply_alerts, streak_nudges')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle() as unknown as Promise<{ data: SocialPreferencesRow | null; error: any }>);
 
       if (error) {
         console.warn('[SocialSettings] Failed to load preferences', error.message);
@@ -42,12 +48,12 @@ export function SocialSettings() {
       }
 
       const seed = loadSocialPreferences();
-      const { error: seedError } = await supabase.from('social_preferences').upsert({
+      const { error: seedError } = await (supabase.from('social_preferences' as any).upsert({
         user_id: user.id,
         weekly_digest: seed.weeklyDigest,
         reply_alerts: seed.replyAlerts,
         streak_nudges: seed.streakNudges,
-      });
+      }) as unknown as Promise<{ error: any }>);
       if (seedError) {
         console.warn('[SocialSettings] Failed to seed preferences', seedError.message);
       }
@@ -67,14 +73,14 @@ export function SocialSettings() {
     saveSocialPreferences(preferences);
     trackSocialEvent('social_preferences_updated', preferences);
     if (!user) return;
-    void supabase
-      .from('social_preferences')
+    void (supabase
+      .from('social_preferences' as any)
       .upsert({
         user_id: user.id,
         weekly_digest: preferences.weeklyDigest,
         reply_alerts: preferences.replyAlerts,
         streak_nudges: preferences.streakNudges,
-      })
+      }) as unknown as Promise<{ error: any }>)
       .then(({ error }) => {
         if (error) {
           console.warn('[SocialSettings] Failed to update preferences', error.message);
