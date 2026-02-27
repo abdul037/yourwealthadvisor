@@ -19,7 +19,7 @@ export function useUserProfile() {
 
   useEffect(() => {
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -58,8 +58,21 @@ export function useUserProfile() {
 
     if (error) {
       console.error('Error fetching profile:', error);
-    } else {
+    } else if (data) {
       setProfile(data);
+    } else {
+      // Profile row missing (trigger race or first OAuth login) — create it now.
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const { data: created } = await supabase
+        .from('profiles')
+        .upsert({
+          id: userId,
+          full_name: authUser?.user_metadata?.full_name ?? null,
+          avatar_url: authUser?.user_metadata?.avatar_url ?? null,
+        })
+        .select()
+        .single();
+      if (created) setProfile(created);
     }
     setLoading(false);
   };

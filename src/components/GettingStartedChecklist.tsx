@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
+import {
   CheckCircle2, Circle, X, ChevronRight,
-  Wallet, CreditCard, PiggyBank, BarChart3, User, Building2
+  Wallet, PiggyBank, BarChart3
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,41 +18,15 @@ interface ChecklistItem {
   description: string;
   icon: React.ElementType;
   path: string;
-  checkKey: keyof OnboardingProgress;
-}
-
-interface OnboardingProgress {
-  income_added: boolean;
-  expense_added: boolean;
-  budget_created: boolean;
-  goal_created: boolean;
-  bank_connected: boolean;
 }
 
 const CHECKLIST_ITEMS: ChecklistItem[] = [
   {
-    id: 'profile',
-    label: 'Set up your profile',
-    description: 'Add your name for personalized experience',
-    icon: User,
-    path: '/membership',
-    checkKey: 'income_added', // We'll use profile.full_name for this one
-  },
-  {
-    id: 'income',
-    label: 'Add your first income',
-    description: 'Track salary or other income sources',
+    id: 'transaction',
+    label: 'Add your first transaction',
+    description: 'Log an income or expense to get started',
     icon: Wallet,
     path: '/income',
-    checkKey: 'income_added',
-  },
-  {
-    id: 'expense',
-    label: 'Log an expense',
-    description: 'Start tracking where your money goes',
-    icon: CreditCard,
-    path: '/expenses',
-    checkKey: 'expense_added',
   },
   {
     id: 'budget',
@@ -60,7 +34,6 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     description: 'Allocate spending limits by category',
     icon: BarChart3,
     path: '/budget',
-    checkKey: 'budget_created',
   },
   {
     id: 'goal',
@@ -68,22 +41,13 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     description: 'Define a target to work towards',
     icon: PiggyBank,
     path: '/savings',
-    checkKey: 'goal_created',
-  },
-  {
-    id: 'bank',
-    label: 'Connect a bank account',
-    description: 'Link your accounts for automatic tracking',
-    icon: Building2,
-    path: '/investments',
-    checkKey: 'bank_connected',
   },
 ];
 
 const STORAGE_KEY = 'tharwa-checklist-dismissed';
 
 export function GettingStartedChecklist() {
-  const { profile, isAuthenticated } = useUserProfile();
+  const { isAuthenticated } = useUserProfile();
   const { progress: onboardingProgress } = useOnboardingProgress();
   const [dismissed, setDismissed] = useState(true); // Default true to prevent flash
 
@@ -98,10 +62,12 @@ export function GettingStartedChecklist() {
   
   // Calculate completed items using the reactive onboardingProgress hook
   const getItemCompleted = (item: ChecklistItem): boolean => {
-    if (item.id === 'profile') {
-      return !!profile?.full_name;
+    if (item.id === 'transaction') {
+      return onboardingProgress.income_added || onboardingProgress.expense_added;
     }
-    return onboardingProgress[item.checkKey] ?? false;
+    if (item.id === 'budget') return onboardingProgress.budget_created;
+    if (item.id === 'goal') return onboardingProgress.goal_created;
+    return false;
   };
 
   const completedCount = CHECKLIST_ITEMS.filter(getItemCompleted).length;
@@ -145,8 +111,7 @@ export function GettingStartedChecklist() {
         <ul className="space-y-2">
           {CHECKLIST_ITEMS.map((item) => {
             const isCompleted = getItemCompleted(item);
-            const Icon = item.icon;
-            
+
             return (
               <li key={item.id}>
                 <Link

@@ -60,6 +60,7 @@ const TOUR_STEPS: TourStep[] = [
 ];
 
 const STORAGE_KEY = 'wealth-tracker-tour-completed';
+const PENDING_KEY  = 'wealth-tracker-tour-pending';
 
 interface TourContextType {
   isActive: boolean;
@@ -89,26 +90,26 @@ export function TourProvider({ children }: { children: ReactNode }) {
       setHasCompleted(true);
       return;
     }
-    
+
     setHasCompleted(false);
-    
-    // Auto-start tour for first-time users after page is fully loaded
+
+    // Only auto-start when onboarding explicitly set the pending flag.
+    // This prevents the tour from colliding with any other first-load UI.
+    if (localStorage.getItem(PENDING_KEY) !== 'true') return;
+    localStorage.removeItem(PENDING_KEY);
+
     const startTourWhenReady = () => {
-      // Wait for first tour target to exist before starting
       const checkAndStart = () => {
         const firstTarget = document.querySelector(TOUR_STEPS[0].target);
         if (firstTarget) {
           setIsActive(true);
         } else {
-          // Retry after a short delay if target not yet rendered
           setTimeout(checkAndStart, 500);
         }
       };
-      
-      // Start checking after initial render
       setTimeout(checkAndStart, 1000);
     };
-    
+
     if (document.readyState === 'complete') {
       startTourWhenReady();
     } else {

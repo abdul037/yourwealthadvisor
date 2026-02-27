@@ -22,7 +22,6 @@ import { IncomeLiquidityChart } from '@/components/IncomeLiquidityChart';
 import { EmergencyFundCalculator } from '@/components/EmergencyFundCalculator';
 import { CashFlowForecast } from '@/components/CashFlowForecast';
 import { WelcomeBanner } from '@/components/WelcomeBanner';
-import { SetupWizard } from '@/components/SetupWizard';
 import { GettingStartedChecklist } from '@/components/GettingStartedChecklist';
 import { DashboardConnectedAccounts } from '@/components/DashboardConnectedAccounts';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
@@ -101,8 +100,7 @@ const Index = () => {
   const { totalAllocated } = useBudgets();
   const { goals } = useSavingsGoals();
   const { notifications, unreadCount, markAsRead } = useNotifications();
-  const [showSetupWizard, setShowSetupWizard] = useState(false);
-  const [gettingStartedOpen, setGettingStartedOpen] = useState(!profile?.onboarding_completed);
+  const [gettingStartedOpen, setGettingStartedOpen] = useState(false);
   const [showFullTransactionForm, setShowFullTransactionForm] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('1W');
   const [achievementsChecked, setAchievementsChecked] = useState(false);
@@ -219,19 +217,6 @@ const Index = () => {
     }
   };
   
-  // Show setup wizard for new authenticated users who haven't completed onboarding
-  useEffect(() => {
-    if (!profileLoading && isAuthenticated && profile && !profile.onboarding_completed) {
-      const timer = setTimeout(() => setShowSetupWizard(true), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [profileLoading, isAuthenticated, profile]);
-
-  useEffect(() => {
-    if (profile && !profile.onboarding_completed) {
-      setGettingStartedOpen(true);
-    }
-  }, [profile?.onboarding_completed]);
 
   const autoFocusMode: FocusMode = currencySummary.totalCurrencies > 1 ? 'expat' : 'young_pro';
 
@@ -410,13 +395,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SetupWizard 
-        open={showSetupWizard} 
-        onOpenChange={setShowSetupWizard} 
-        onAccountsConnected={handleAccountsConnected}
-      />
-      
-      
       {/* Guided Workflow Overlay */}
       <GuidedWorkflow />
       

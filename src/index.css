@@ -1,3 +1,14 @@
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+#root {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -212,5 +223,426 @@
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.7; }
+  }
+
+  /* ── Tharwa Mascot animations ─────────────────────────────── */
+  @keyframes coin-bob {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-10px); }
+  }
+
+  @keyframes coin-talking {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25%       { transform: translateY(-4px) rotate(-4deg); }
+    75%       { transform: translateY(-4px) rotate(4deg); }
+  }
+
+  @keyframes coin-celebrating {
+    0%   { transform: scale(1)    translateY(0px)   rotate(0deg); }
+    20%  { transform: scale(1.15) translateY(-22px) rotate(-10deg); }
+    40%  { transform: scale(1.15) translateY(-22px) rotate(10deg); }
+    60%  { transform: scale(1.08) translateY(-14px) rotate(-5deg); }
+    80%  { transform: scale(1.05) translateY(-7px)  rotate(3deg); }
+    100% { transform: scale(1)    translateY(0px)   rotate(0deg); }
+  }
+
+  @keyframes eye-blink {
+    0%, 88%, 100% { transform: scaleY(1); }
+    93%           { transform: scaleY(0.06); }
+  }
+
+  @keyframes sparkle-pop {
+    0%   { opacity: 0; transform: scale(0) translate(0, 0); }
+    40%  { opacity: 1; transform: scale(1.3) translate(calc(var(--tx) * 0.6), calc(var(--ty) * 0.6)); }
+    100% { opacity: 0; transform: scale(0)   translate(var(--tx), var(--ty)); }
+  }
+
+  @keyframes arm-wave {
+    0%, 100% { transform: rotate(0deg); }
+    30%       { transform: rotate(18deg); }
+    70%       { transform: rotate(-12deg); }
+  }
+
+  @keyframes mascot-enter {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+  }
+
+  /* ── Nayla mascot styles + Pixar-inspired motion ──────────────────────── */
+  .nayla-scene {
+    perspective: 900px;
+    transform-style: preserve-3d;
+  }
+
+  .nayla-aura {
+    position: absolute;
+    inset: 8% 10% 14%;
+    border-radius: 9999px;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 38% 34%, rgba(255, 241, 210, 0.42), transparent 54%),
+      radial-gradient(circle at 70% 66%, rgba(96, 165, 250, 0.28), transparent 64%),
+      radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.15), transparent 70%);
+    filter: blur(4px);
+    animation: nayla-aura-pulse 4.2s ease-in-out infinite;
+  }
+
+  .nayla-sparkle {
+    position: absolute;
+    pointer-events: none;
+    left: 50%;
+    top: 36%;
+    width: var(--sparkle-size);
+    height: var(--sparkle-size);
+    margin-top: calc(var(--sparkle-size) * -0.5);
+    margin-left: calc(var(--sparkle-size) * -0.5);
+    border-radius: 9999px;
+    background: var(--sparkle-color);
+    box-shadow: 0 0 16px var(--sparkle-color);
+    animation: nayla-sparkle-pop 1s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+
+  .nayla-thought-orb {
+    position: absolute;
+    pointer-events: none;
+    left: 50%;
+    top: 25%;
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: rgba(163, 230, 255, 0.95);
+    box-shadow: 0 0 12px rgba(125, 211, 252, 0.85);
+    animation: nayla-thought-orbit 2.5s linear infinite;
+  }
+
+  .nayla-photo-shell {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transform-origin: 50% 88%;
+    filter:
+      drop-shadow(0 16px 20px rgba(2, 6, 23, 0.36))
+      drop-shadow(0 8px 8px rgba(15, 23, 42, 0.25));
+  }
+
+  .nayla-photo-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center top;
+    -webkit-user-drag: none;
+    user-select: none;
+    /* Blend edge into app background while preserving face detail */
+    mask-image: radial-gradient(ellipse 84% 84% at 50% 45%, #000 64%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 84% 84% at 50% 45%, #000 64%, transparent 100%);
+    filter: contrast(1.04) saturate(1.07);
+  }
+
+  .nayla-photo-depth {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: 9999px;
+    background:
+      radial-gradient(circle at 50% 20%, rgba(255, 247, 230, 0.22), transparent 45%),
+      radial-gradient(circle at 20% 72%, rgba(16, 185, 129, 0.11), transparent 42%),
+      radial-gradient(circle at 80% 74%, rgba(99, 102, 241, 0.1), transparent 44%);
+    mix-blend-mode: screen;
+    opacity: 0.9;
+  }
+
+  .nayla-photo-sheen {
+    position: absolute;
+    inset: 10% 18% 40%;
+    pointer-events: none;
+    border-radius: 9999px;
+    background: linear-gradient(106deg, transparent 8%, rgba(255, 255, 255, 0.5) 42%, transparent 74%);
+    filter: blur(2.3px);
+    transform: translateX(-140%) rotate(-9deg);
+    animation: nayla-photo-sheen 6.4s ease-in-out infinite;
+    opacity: 0.42;
+  }
+
+  @keyframes nayla-aura-pulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50%      { opacity: 1; transform: scale(1.04); }
+  }
+
+  @keyframes nayla-scene-idle {
+    0%, 100% { transform: translateY(0) rotateX(0deg); }
+    50%      { transform: translateY(-4px) rotateX(1.6deg); }
+  }
+
+  @keyframes nayla-scene-talk {
+    0%, 100% { transform: translateY(0); }
+    35%      { transform: translateY(-3px); }
+    65%      { transform: translateY(-1px); }
+  }
+
+  @keyframes nayla-scene-wave {
+    0%, 100% { transform: translateY(0) rotate(-0.2deg); }
+    25%      { transform: translateY(-4px) rotate(-0.8deg); }
+    75%      { transform: translateY(-2px) rotate(0.9deg); }
+  }
+
+  @keyframes nayla-scene-think {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    36%      { transform: translateY(-3px) rotate(-0.9deg); }
+    68%      { transform: translateY(-4px) rotate(0.6deg); }
+  }
+
+  @keyframes nayla-scene-celebrate {
+    0%   { transform: translateY(0) scale(1); }
+    22%  { transform: translateY(-9px) scale(1.05); }
+    46%  { transform: translateY(-4px) scale(1.04); }
+    72%  { transform: translateY(-10px) scale(1.03); }
+    100% { transform: translateY(0) scale(1); }
+  }
+
+  @keyframes nayla-photo-idle {
+    0%, 100% { transform: perspective(880px) rotateX(0.4deg) rotateY(0deg) scale(1); }
+    50%      { transform: perspective(880px) rotateX(1.1deg) rotateY(-0.6deg) scale(1.01); }
+  }
+
+  @keyframes nayla-photo-talk {
+    0%, 100% { transform: perspective(880px) rotateX(0.6deg) rotateY(0deg) scale(1); }
+    35%      { transform: perspective(880px) rotateX(1.3deg) rotateY(-0.8deg) scale(1.012); }
+    70%      { transform: perspective(880px) rotateX(0.9deg) rotateY(0.7deg) scale(1.008); }
+  }
+
+  @keyframes nayla-photo-wave {
+    0%, 100% { transform: perspective(880px) rotateX(0.4deg) rotateY(0deg) scale(1); }
+    25%      { transform: perspective(880px) rotateX(1.1deg) rotateY(-1.2deg) scale(1.012); }
+    75%      { transform: perspective(880px) rotateX(1deg) rotateY(0.95deg) scale(1.01); }
+  }
+
+  @keyframes nayla-photo-think {
+    0%, 100% { transform: perspective(880px) rotateX(0.4deg) rotateY(0deg) scale(1); }
+    35%      { transform: perspective(880px) rotateX(1.4deg) rotateY(-1.3deg) scale(1.014); }
+    70%      { transform: perspective(880px) rotateX(1.05deg) rotateY(-0.5deg) scale(1.01); }
+  }
+
+  @keyframes nayla-photo-celebrate {
+    0%, 100% { transform: perspective(880px) rotateX(0.6deg) rotateY(0deg) scale(1); }
+    25%      { transform: perspective(880px) rotateX(1.6deg) rotateY(-1.3deg) scale(1.02); }
+    50%      { transform: perspective(880px) rotateX(1.3deg) rotateY(1.2deg) scale(1.017); }
+    75%      { transform: perspective(880px) rotateX(1.5deg) rotateY(-0.7deg) scale(1.016); }
+  }
+
+  @keyframes nayla-photo-sheen {
+    0%, 100% { transform: translateX(-140%) rotate(-9deg); opacity: 0.28; }
+    45%      { transform: translateX(130%) rotate(-9deg); opacity: 0.52; }
+    60%      { transform: translateX(130%) rotate(-9deg); opacity: 0; }
+  }
+
+  @keyframes nayla-head-idle {
+    0%, 100% { transform: rotate(0deg); }
+    50%      { transform: rotate(-1deg); }
+  }
+
+  @keyframes nayla-head-talk {
+    0%, 100% { transform: rotate(0deg) translateY(0); }
+    30%      { transform: rotate(-1.2deg) translateY(-1px); }
+    65%      { transform: rotate(1deg) translateY(-2px); }
+  }
+
+  @keyframes nayla-head-wave {
+    0%, 100% { transform: rotate(0deg); }
+    25%      { transform: rotate(-2.1deg); }
+    75%      { transform: rotate(1.9deg); }
+  }
+
+  @keyframes nayla-head-think {
+    0%, 100% { transform: rotate(0deg); }
+    35%      { transform: rotate(-3deg); }
+    70%      { transform: rotate(-1.2deg); }
+  }
+
+  @keyframes nayla-head-celebrate {
+    0%, 100% { transform: rotate(0deg); }
+    25%      { transform: rotate(-3deg); }
+    50%      { transform: rotate(3deg); }
+    75%      { transform: rotate(-2deg); }
+  }
+
+  @keyframes nayla-arm-idle {
+    0%, 100% { transform: rotate(0deg); }
+    50%      { transform: rotate(-2deg); }
+  }
+
+  @keyframes nayla-arm-talk {
+    0%, 100% { transform: rotate(0deg); }
+    40%      { transform: rotate(-3.5deg); }
+    70%      { transform: rotate(2deg); }
+  }
+
+  @keyframes nayla-arm-wave {
+    0%, 100% { transform: rotate(0deg); }
+    20%      { transform: rotate(-11deg); }
+    50%      { transform: rotate(9deg); }
+    80%      { transform: rotate(-8deg); }
+  }
+
+  @keyframes nayla-arm-think {
+    0%, 100% { transform: rotate(0deg); }
+    45%      { transform: rotate(-4deg); }
+    65%      { transform: rotate(-2deg); }
+  }
+
+  @keyframes nayla-arm-celebrate {
+    0%, 100% { transform: rotate(0deg); }
+    28%      { transform: rotate(-12deg); }
+    56%      { transform: rotate(11deg); }
+    82%      { transform: rotate(-6deg); }
+  }
+
+  @keyframes nayla-holo-idle {
+    0%, 100% { opacity: 0.9; transform: translateY(0) scale(1); }
+    50%      { opacity: 1; transform: translateY(-1px) scale(1.03); }
+  }
+
+  @keyframes nayla-holo-talk {
+    0%, 100% { opacity: 0.92; transform: scale(1); }
+    50%      { opacity: 1; transform: scale(1.05); }
+  }
+
+  @keyframes nayla-holo-wave {
+    0%, 100% { opacity: 0.9; transform: scale(1) rotate(0deg); }
+    50%      { opacity: 1; transform: scale(1.06) rotate(1deg); }
+  }
+
+  @keyframes nayla-holo-think {
+    0%, 100% { opacity: 0.86; transform: scale(1); }
+    40%      { opacity: 1; transform: scale(1.08); }
+    60%      { opacity: 0.94; transform: scale(1.03); }
+  }
+
+  @keyframes nayla-holo-celebrate {
+    0%, 100% { opacity: 0.86; transform: scale(1); }
+    35%      { opacity: 1; transform: scale(1.12); }
+    70%      { opacity: 1; transform: scale(1.05); }
+  }
+
+  @keyframes nayla-chart-idle {
+    0%, 100% { opacity: 0.86; transform: translateY(0) scale(1); }
+    50%      { opacity: 1; transform: translateY(-1px) scale(1.03); }
+  }
+
+  @keyframes nayla-chart-talk {
+    0%, 100% { opacity: 0.9; transform: scale(1); }
+    50%      { opacity: 1; transform: scale(1.05); }
+  }
+
+  @keyframes nayla-chart-wave {
+    0%, 100% { opacity: 0.88; transform: scale(1) rotate(0deg); }
+    50%      { opacity: 1; transform: scale(1.07) rotate(1deg); }
+  }
+
+  @keyframes nayla-chart-think {
+    0%, 100% { opacity: 0.82; transform: scale(1); }
+    40%      { opacity: 1; transform: scale(1.08); }
+    65%      { opacity: 0.95; transform: scale(1.04); }
+  }
+
+  @keyframes nayla-chart-celebrate {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    35%      { opacity: 1; transform: scale(1.14); }
+    70%      { opacity: 0.98; transform: scale(1.08); }
+  }
+
+  @keyframes nayla-mouth-idle {
+    0%, 100% { transform: scaleY(1); }
+    50%      { transform: scaleY(1.03); }
+  }
+
+  @keyframes nayla-mouth-talk {
+    0%, 100% { transform: scaleY(0.9) translateY(0); }
+    35%      { transform: scaleY(1.35) translateY(1px); }
+    70%      { transform: scaleY(1.05) translateY(0); }
+  }
+
+  @keyframes nayla-mouth-think {
+    0%, 100% { transform: scaleX(1); }
+    50%      { transform: scaleX(0.9) translateX(-0.5px); }
+  }
+
+  @keyframes nayla-mouth-smile {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.1); }
+  }
+
+  @keyframes nayla-eye-blink {
+    0%, 89%, 100% { transform: scaleY(0); opacity: 0; }
+    92%, 94%      { transform: scaleY(1); opacity: 0.96; }
+  }
+
+  @keyframes nayla-pupil-talk {
+    0%, 100% { transform: translateX(0); }
+    35%      { transform: translateX(-0.9px); }
+    65%      { transform: translateX(0.9px); }
+  }
+
+  @keyframes nayla-pupil-think {
+    0%, 100% { transform: translate(0, 0); }
+    30%      { transform: translate(-1.2px, -0.8px); }
+    60%      { transform: translate(1.4px, -0.6px); }
+  }
+
+  @keyframes nayla-pupil-celebrate {
+    0%, 100% { transform: translate(0, 0); }
+    40%      { transform: translate(-0.6px, -0.8px); }
+    70%      { transform: translate(0.8px, -0.7px); }
+  }
+
+  @keyframes nayla-shadow-idle {
+    0%, 100% { opacity: 0.34; transform: translateX(-50%) scaleX(1); }
+    50%      { opacity: 0.24; transform: translateX(-50%) scaleX(0.92); }
+  }
+
+  @keyframes nayla-shadow-talk {
+    0%, 100% { opacity: 0.34; transform: translateX(-50%) scaleX(1); }
+    50%      { opacity: 0.26; transform: translateX(-50%) scaleX(0.95); }
+  }
+
+  @keyframes nayla-shadow-wave {
+    0%, 100% { opacity: 0.34; transform: translateX(-50%) scaleX(1); }
+    35%      { opacity: 0.24; transform: translateX(-50%) scaleX(0.92); }
+    75%      { opacity: 0.28; transform: translateX(-50%) scaleX(0.96); }
+  }
+
+  @keyframes nayla-shadow-think {
+    0%, 100% { opacity: 0.34; transform: translateX(-50%) scaleX(1); }
+    50%      { opacity: 0.24; transform: translateX(-50%) scaleX(0.93); }
+  }
+
+  @keyframes nayla-shadow-celebrate {
+    0%, 100% { opacity: 0.34; transform: translateX(-50%) scaleX(1); }
+    30%      { opacity: 0.2; transform: translateX(-50%) scaleX(0.88); }
+    65%      { opacity: 0.24; transform: translateX(-50%) scaleX(0.91); }
+  }
+
+  @keyframes nayla-sparkle-pop {
+    0%   { opacity: 0; transform: scale(0.2) translate(0, 0); }
+    35%  { opacity: 1; transform: scale(1.2) translate(calc(var(--tx) * 0.55), calc(var(--ty) * 0.55)); }
+    100% { opacity: 0; transform: scale(0) translate(var(--tx), var(--ty)); }
+  }
+
+  @keyframes nayla-thought-orbit {
+    0%   { opacity: 0; transform: rotate(0deg) translateX(var(--orb-radius)) translateY(0) scale(0.5); }
+    18%  { opacity: 0.95; }
+    72%  { opacity: 0.9; }
+    100% { opacity: 0; transform: rotate(120deg) translateX(var(--orb-radius)) translateY(-7px) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nayla-aura,
+    .nayla-sparkle,
+    .nayla-thought-orb,
+    .nayla-photo-shell,
+    .nayla-photo-sheen {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+    }
   }
 }

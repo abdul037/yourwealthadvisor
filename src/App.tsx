@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { CurrencyProvider } from "@/components/CurrencyConverter";
 import { AppLayout } from "@/components/AppLayout";
@@ -23,6 +23,7 @@ import Auth from "./pages/Auth";
 import Welcome from "./pages/Welcome";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
+import Onboarding from "./pages/Onboarding";
 import SplitExpenses from "./pages/SplitExpenses";
 import SplitGroupDetail from "./pages/SplitGroupDetail";
 import JoinSplitGroup from "./pages/JoinSplitGroup";
@@ -33,10 +34,12 @@ import Membership from "./pages/Membership";
 import UserManagement from "./pages/UserManagement";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
-// Protected route wrapper that redirects unauthenticated users to welcome page
+// Protected route wrapper — redirects unauthenticated users to welcome,
+// and funnels new users through /onboarding before reaching the app.
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useUserProfile();
-  
+  const { isAuthenticated, loading, profile } = useUserProfile();
+  const location = useLocation();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -44,11 +47,22 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/welcome" replace />;
   }
-  
+
+  // Gate access until onboarding is done.
+  // Also catches null profile (trigger race or first-time OAuth user).
+  if ((!profile || !profile.onboarding_completed) && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  // Prevent re-entering onboarding once it's complete.
+  if (profile?.onboarding_completed && location.pathname === '/onboarding') {
+    return <Navigate to="/" replace />;
+  }
+
   return <>{children}</>;
 }
 
@@ -67,6 +81,9 @@ const App = () => (
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/install" element={<Install />} />
+
+              {/* Onboarding — protected but no app layout */}
+              <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
               
               {/* Protected app pages with layout */}
               <Route path="/" element={<ProtectedRoute><AppLayout><Index /></AppLayout></ProtectedRoute>} />

@@ -7,6 +7,7 @@ import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { OnboardingTour } from '@/components/OnboardingTour';
 import { TourProvider } from '@/hooks/useOnboardingTour';
 import { FloatingQuickAdd } from '@/components/FloatingQuickAdd';
+import { FloatingMascot } from '@/components/FloatingMascot';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -31,6 +32,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <FloatingQuickAdd defaultTab={isInvestmentsPage ? 'asset' : 'transaction'} />
         </div>
         <OnboardingTour />
+        <FloatingMascot />
       </SidebarProvider>
     </TourProvider>
   );
