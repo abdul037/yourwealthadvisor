@@ -567,7 +567,7 @@ export function useExpenseGroup(groupId: string | undefined) {
       const finalSplitType = splitType ?? expense.split_type;
 
       // Update expense record
-      const updateData: Record<string, unknown> = {};
+      const updateData: Record<string, any> = {};
       if (description !== undefined) updateData.description = description;
       if (amount !== undefined) updateData.amount = amount;
       if (expenseDate !== undefined) updateData.expense_date = expenseDate;

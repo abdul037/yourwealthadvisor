@@ -36,12 +36,12 @@ export function trackSocialEvent(name: SocialEventName, meta?: SocialEvent['meta
         name: event.name,
         meta: event.meta ?? null,
       }) as unknown as Promise<{ error: any }>);
-    if (error && process.env.NODE_ENV !== 'production') {
+    if (error && import.meta.env.DEV) {
       console.warn('[SocialEvent] Failed to persist', error.message);
     }
   })();
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (import.meta.env.DEV) {
     console.info('[SocialEvent]', event);
   }
 }
