@@ -27,12 +27,12 @@ export function trackAppEvent(name: AppEventName, meta?: AppEvent['meta']) {
         name: event.name,
         meta: event.meta ?? null,
       }) as unknown as Promise<{ error: any }>);
-    if (error && process.env.NODE_ENV !== 'production') {
+    if (error && import.meta.env.DEV) {
       console.warn('[AppEvent] Failed to persist', error.message);
     }
   })();
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (import.meta.env.DEV) {
     console.info('[AppEvent]', event);
   }
 }

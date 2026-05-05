@@ -134,7 +134,7 @@ export function useSavingsGoals() {
 
   const updateGoal = async (id: string, updates: Partial<CreateSavingsGoal & { is_achieved?: boolean }>) => {
     try {
-      const updateData: Record<string, unknown> = {};
+      const updateData: Record<string, any> = {};
       
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.target_amount !== undefined) updateData.target_amount = updates.target_amount;
@@ -150,7 +150,7 @@ export function useSavingsGoals() {
 
       const { error } = await supabase
         .from('milestones')
-        .update(updateData)
+        .update(updateData as any)
         .eq('id', id);
 
       if (error) throw error;
