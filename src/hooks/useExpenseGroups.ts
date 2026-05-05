@@ -577,7 +577,7 @@ export function useExpenseGroup(groupId: string | undefined) {
       if (Object.keys(updateData).length > 0) {
         const { error } = await supabase
           .from('expense_group_expenses')
-          .update(updateData)
+          .update(updateData as any)
           .eq('id', expenseId);
         if (error) throw error;
       }

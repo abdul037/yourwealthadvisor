@@ -150,7 +150,7 @@ export function useSavingsGoals() {
 
       const { error } = await supabase
         .from('milestones')
-        .update(updateData)
+        .update(updateData as any)
         .eq('id', id);
 
       if (error) throw error;
