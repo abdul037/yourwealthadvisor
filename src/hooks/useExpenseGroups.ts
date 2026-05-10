@@ -360,12 +360,8 @@ export function useExpenseGroup(groupId: string | undefined) {
         throw new Error(`A member named "${name}" already exists`);
       }
       
-      if (email) {
-        const existingByEmail = members.find(m => m.email?.toLowerCase() === email.toLowerCase());
-        if (existingByEmail) {
-          throw new Error(`A member with email "${email}" already exists`);
-        }
-      }
+      // Note: email duplicate check removed — emails are no longer client-readable for privacy.
+      // Database-level uniqueness is not enforced; the group creator should manage member emails.
       
       const { data, error } = await supabase
         .from('expense_group_members')
