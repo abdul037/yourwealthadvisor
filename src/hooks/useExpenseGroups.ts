@@ -193,7 +193,7 @@ export function useExpenseGroup(groupId: string | undefined) {
       if (!groupId) return [];
       const { data, error } = await supabase
         .from('expense_group_members')
-        .select('*')
+        .select('id, group_id, user_id, name, is_creator, joined_at')
         .eq('group_id', groupId)
         .order('joined_at', { ascending: true });
       
