@@ -67,7 +67,7 @@ export default function JoinSplitGroup() {
       // Fetch existing members
       const { data: members } = await supabase
         .from('expense_group_members')
-        .select('id, name, email, user_id')
+        .select('id, name, user_id')
         .eq('group_id', data.id);
       
       setExistingMembers(members || []);
