@@ -60,11 +60,7 @@ Deno.serve(async (req) => {
     // Generate unique tracking code
     const trackingCode = generateTrackingCode();
 
-    // Get client info
-    const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
-    const userAgent = req.headers.get('user-agent') || 'unknown';
-
-    // Record the click
+    // Record the click (PII like IP/user-agent intentionally not stored)
     const { error: clickError } = await supabase
       .from('referral_clicks')
       .insert({
@@ -72,8 +68,6 @@ Deno.serve(async (req) => {
         partner_id: partnerId,
         tracking_code: trackingCode,
         source: source || 'direct',
-        ip_address: ipAddress,
-        user_agent: userAgent,
       });
 
     if (clickError) {

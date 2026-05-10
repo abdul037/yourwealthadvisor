@@ -21,7 +21,7 @@ export interface ExpenseGroupMember {
   group_id: string;
   user_id: string | null;
   name: string;
-  email: string | null;
+  email?: string | null;
   is_creator: boolean;
   joined_at: string;
 }
@@ -193,7 +193,7 @@ export function useExpenseGroup(groupId: string | undefined) {
       if (!groupId) return [];
       const { data, error } = await supabase
         .from('expense_group_members')
-        .select('*')
+        .select('id, group_id, user_id, name, is_creator, joined_at')
         .eq('group_id', groupId)
         .order('joined_at', { ascending: true });
       
@@ -360,12 +360,8 @@ export function useExpenseGroup(groupId: string | undefined) {
         throw new Error(`A member named "${name}" already exists`);
       }
       
-      if (email) {
-        const existingByEmail = members.find(m => m.email?.toLowerCase() === email.toLowerCase());
-        if (existingByEmail) {
-          throw new Error(`A member with email "${email}" already exists`);
-        }
-      }
+      // Note: email duplicate check removed — emails are no longer client-readable for privacy.
+      // Database-level uniqueness is not enforced; the group creator should manage member emails.
       
       const { data, error } = await supabase
         .from('expense_group_members')
@@ -882,14 +878,20 @@ export function useExpenseGroup(groupId: string | undefined) {
   const sendInviteEmail = useMutation({
     mutationFn: async ({ memberId }: { memberId: string }) => {
       if (!groupId) throw new Error('No group ID');
-      
+
       const member = members.find(m => m.id === memberId);
-      if (!member?.email) throw new Error('Member has no email');
+      if (!member) throw new Error('Member not found');
+
+      // Fetch the email via secure RPC (only group creator or the member themselves can read it)
+      const { data: emailData, error: emailErr } = await supabase
+        .rpc('get_member_email_for_creator', { p_member_id: memberId });
+      if (emailErr) throw emailErr;
+      if (!emailData) throw new Error('Member has no email');
 
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: {
           groupId,
-          recipientEmail: member.email,
+          recipientEmail: emailData as string,
           recipientName: member.name,
         },
       });
