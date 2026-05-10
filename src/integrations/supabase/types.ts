@@ -1448,31 +1448,25 @@ export type Database = {
         Row: {
           clicked_at: string | null
           id: string
-          ip_address: string | null
           partner_id: string
           source: string | null
           tracking_code: string
-          user_agent: string | null
           user_id: string | null
         }
         Insert: {
           clicked_at?: string | null
           id?: string
-          ip_address?: string | null
           partner_id: string
           source?: string | null
           tracking_code: string
-          user_agent?: string | null
           user_id?: string | null
         }
         Update: {
           clicked_at?: string | null
           id?: string
-          ip_address?: string | null
           partner_id?: string
           source?: string | null
           tracking_code?: string
-          user_agent?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -1850,6 +1844,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_coins: {
+        Args: { p_amount: number; p_description: string; p_source: string }
+        Returns: undefined
+      }
+      ensure_coin_balance: { Args: never; Returns: undefined }
       get_group_by_invite_code: {
         Args: { p_invite_code: string }
         Returns: {
@@ -1866,6 +1865,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_member_email_for_creator: {
+        Args: { p_member_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1880,6 +1883,10 @@ export type Database = {
       is_expense_group_member: {
         Args: { p_group_id: string; p_user_id: string }
         Returns: boolean
+      }
+      spend_coins: {
+        Args: { p_amount: number; p_description: string; p_source: string }
+        Returns: undefined
       }
     }
     Enums: {
