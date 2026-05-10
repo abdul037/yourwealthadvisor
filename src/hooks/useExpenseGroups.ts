@@ -21,7 +21,7 @@ export interface ExpenseGroupMember {
   group_id: string;
   user_id: string | null;
   name: string;
-  email: string | null;
+  email?: string | null;
   is_creator: boolean;
   joined_at: string;
 }
