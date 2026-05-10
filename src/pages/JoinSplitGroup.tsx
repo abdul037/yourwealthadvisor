@@ -13,7 +13,7 @@ import { toast } from '@/hooks/use-toast';
 interface GroupMember {
   id: string;
   name: string;
-  email: string | null;
+  email?: string | null;
   user_id: string | null;
 }
 
