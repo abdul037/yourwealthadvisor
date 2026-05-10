@@ -878,14 +878,20 @@ export function useExpenseGroup(groupId: string | undefined) {
   const sendInviteEmail = useMutation({
     mutationFn: async ({ memberId }: { memberId: string }) => {
       if (!groupId) throw new Error('No group ID');
-      
+
       const member = members.find(m => m.id === memberId);
-      if (!member?.email) throw new Error('Member has no email');
+      if (!member) throw new Error('Member not found');
+
+      // Fetch the email via secure RPC (only group creator or the member themselves can read it)
+      const { data: emailData, error: emailErr } = await supabase
+        .rpc('get_member_email_for_creator', { p_member_id: memberId });
+      if (emailErr) throw emailErr;
+      if (!emailData) throw new Error('Member has no email');
 
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: {
           groupId,
-          recipientEmail: member.email,
+          recipientEmail: emailData as string,
           recipientName: member.name,
         },
       });
