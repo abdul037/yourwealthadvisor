@@ -65,6 +65,16 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   resolve: {
     alias: {
+      // LOCAL PREVIEW ONLY: when VITE_MOCK=1, swap the Supabase client for a
+      // no-network mock so authenticated screens render without a backend.
+      ...(process.env.VITE_MOCK === "1"
+        ? {
+            "@/integrations/supabase/client": path.resolve(
+              __dirname,
+              "./src/integrations/supabase/mockClient.ts"
+            ),
+          }
+        : {}),
       "@": path.resolve(__dirname, "./src"),
     },
   },
