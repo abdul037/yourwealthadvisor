@@ -63,7 +63,7 @@ const aiMapViewedKey = 'tharwa_ai_map_viewed';
 // Adapter to convert DB asset to component format with proper currency conversion
 const adaptAsset = (dbAsset: DBAsset): Asset => {
   const aedValue = convertToAED(dbAsset.amount, dbAsset.currency);
-  
+
   return {
     id: dbAsset.id,
     name: dbAsset.name,
@@ -101,6 +101,7 @@ const Index = () => {
   const { goals } = useSavingsGoals();
   const { notifications, unreadCount, markAsRead } = useNotifications();
   const [gettingStartedOpen, setGettingStartedOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [showFullTransactionForm, setShowFullTransactionForm] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('1W');
   const [achievementsChecked, setAchievementsChecked] = useState(false);
@@ -115,17 +116,6 @@ const Index = () => {
   });
 
   const isLoading = profileLoading || assetsLoading || transactionsLoading || incomesLoading || linkedAccountsLoading;
-
-  // Debug logging
-  console.log('[Dashboard] Data loaded:', {
-    assetsCount: dbAssets.length,
-    transactionsCount: dbTransactions.length,
-    totalMonthlyIncome,
-    linkedAccountsCount: linkedAccounts.length,
-    userId: profile?.id,
-    isAuthenticated,
-    isLoading,
-  });
 
   // Convert DB data to component format
   const assets: Asset[] = dbAssets.map(adaptAsset);
@@ -163,11 +153,11 @@ const Index = () => {
     const totalIncome = dbTransactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + convertToAED(t.amount, t.currency || 'AED'), 0);
-    
+
     const totalExpenses = dbTransactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + convertToAED(t.amount, t.currency || 'AED'), 0);
-    
+
     return totalIncome - totalExpenses;
   }, [dbTransactions]);
 
@@ -216,7 +206,7 @@ const Index = () => {
       });
     }
   };
-  
+
 
   const autoFocusMode: FocusMode = currencySummary.totalCurrencies > 1 ? 'expat' : 'young_pro';
 
@@ -238,7 +228,7 @@ const Index = () => {
       transactionCount: dbTransactions.length,
     });
   }, [focusMode, currencySummary.totalCurrencies, dbTransactions.length]);
-  
+
   const handleAddTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     await addTransaction.mutateAsync({
       amount: transaction.amount,
@@ -383,6 +373,13 @@ const Index = () => {
     }).length;
   }, [notifications]);
 
+  // The single most relevant next action, shown in the "Today's focus" card.
+  const primaryAction = !hasCashflowData
+    ? { to: '/income', label: 'Add income' }
+    : suggestedSave > 0
+      ? { to: '/savings', label: 'Lock a savings goal' }
+      : { to: '/expenses', label: 'Review spending' };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -397,14 +394,14 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Guided Workflow Overlay */}
       <GuidedWorkflow />
-      
+
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-full overflow-x-hidden">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6">
           <div className="space-y-1">
-            <p className="wealth-label">Dashboard</p>
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Your Wealth Snapshot</h1>
+            <p className="wealth-label">Home</p>
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Your money at a glance</h1>
             <p className="text-sm text-muted-foreground">
-              Track net worth, cash flow, and goals in one place.
+              Where you stand today — and the one thing to do next.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -437,12 +434,6 @@ const Index = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Link to="/investments">
-              <Button size="sm" variant="outline" className="gap-2">
-                <Link2 className="w-4 h-4" />
-                Connect accounts
-              </Button>
-            </Link>
           </div>
         </header>
 
@@ -450,6 +441,79 @@ const Index = () => {
           <WelcomeBanner />
         </div>
 
+        {/* Where you stand: net worth + quick add */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
+            <div className="flex-1 min-w-0" data-tour="net-worth">
+              <NetWorthCard
+                assets={assets}
+                linkedAccountsBalance={linkedAccountsBalance}
+                cashPosition={cashPosition}
+                period={selectedPeriod}
+                onPeriodChange={setSelectedPeriod}
+              />
+            </div>
+            <div className="lg:w-80 flex flex-col gap-4">
+              <div className="wealth-card flex-1 relative overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-accent/60 to-primary/60" />
+                <p className="wealth-label mb-3">Quick Add</p>
+                <div className="space-y-3" data-tour="add-transaction">
+                  <QuickTransactionInput />
+                  <Collapsible open={showFullTransactionForm} onOpenChange={setShowFullTransactionForm}>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Need more details?</span>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="gap-1">
+                          {showFullTransactionForm ? 'Hide details' : 'Expand details'}
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFullTransactionForm ? 'rotate-180' : ''}`} />
+                        </Button>
+                      </CollapsibleTrigger>
+                    </div>
+                    <CollapsibleContent className="pt-3">
+                      <TransactionForm onAddTransaction={handleAddTransaction} />
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+
+                {/* Quick Nav Grid */}
+                <div className="grid grid-cols-2 gap-2 mt-4" data-tour="quick-nav">
+                  {quickNavItems.map(item => (
+                    <Link key={item.path} to={item.path}>
+                      <Button
+                        variant="ghost"
+                        className={`w-full h-auto flex flex-col items-center gap-1 py-3 ${item.color} hover:opacity-80`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span className="text-xs font-medium">{item.label}</span>
+                      </Button>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <Link to="/income" className="block">
+                <div className="wealth-card hover:border-primary/50 transition-colors cursor-pointer group">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="wealth-label mb-1">Combined Income</p>
+                      <p className="text-lg sm:text-xl font-bold font-mono text-wealth-positive">
+                        {combinedIncome > 0 ? `${formatAmount(combinedIncome)}/mo` : 'Add income'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {combinedIncome > 0 ? 'Monthly total' : 'Track your earnings'}
+                      </p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+          <div className="mt-6">
+            <QuickStats assets={assets} linkedAccountsBalance={linkedAccountsBalance} period={selectedPeriod} />
+          </div>
+        </div>
+
+        {/* This month at a glance */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <div className={summaryCardClass}>
             <div className="flex items-center justify-between">
@@ -511,290 +575,45 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between mb-4">
-            <div>
-              <p className="wealth-label">AI focus</p>
-              <h2 className="text-base sm:text-lg font-semibold">Momentum plan</h2>
-              <p className="text-sm text-muted-foreground">
-                Personalized for {focusMode === 'expat' ? 'expats' : 'young professionals'}.
-              </p>
+        {/* Today's focus: one insight + one next action */}
+        <div className="mb-6">
+          <div className="wealth-card">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="wealth-label">Today's focus</p>
+                <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  Your next move
+                </h2>
+              </div>
+              <Badge variant="secondary">AI guided</Badge>
             </div>
-            <ToggleGroup
-              type="single"
-              value={focusMode}
-              onValueChange={handleFocusChange}
-              variant="outline"
-              size="sm"
-              className="justify-start md:justify-end"
-            >
-              <ToggleGroupItem value="young_pro">Young pros</ToggleGroupItem>
-              <ToggleGroupItem value="expat">Expats</ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-            <div className="wealth-card">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="wealth-label">Focus plan</p>
-                  <h3 className="text-base font-semibold flex items-center gap-2">
-                    {focusMode === 'expat' ? (
-                      <Globe className="w-4 h-4 text-primary" />
-                    ) : (
-                      <Target className="w-4 h-4 text-primary" />
-                    )}
-                    {focusTitle}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">{focusDescription}</p>
-                </div>
-                <Badge variant="secondary" className="gap-1">
-                  AI guided
-                </Badge>
-              </div>
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Journey progress</span>
-                  <span className="text-foreground font-medium">{journeyProgress}%</span>
-                </div>
-                <Progress value={journeyProgress} className="h-1.5" />
-                <div className="space-y-2">
-                  {journeySteps.map(step => (
-                    <div key={step.label} className="flex items-center gap-2 text-sm">
-                      {step.done ? (
-                        <CheckCircle2 className="w-4 h-4 text-wealth-positive" />
-                      ) : (
-                        <Circle className="w-4 h-4 text-muted-foreground/60" />
-                      )}
-                      <span className={step.done ? 'text-foreground' : 'text-muted-foreground'}>
-                        {step.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-                  {focusSignal}
-                </div>
-              </div>
+            <div className="mt-3 space-y-2">
+              <p className="text-sm font-medium">{surpriseInsight}</p>
+              <p className="text-sm text-muted-foreground">{quickFix}</p>
             </div>
-
-            <div className="wealth-card">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="wealth-label">AI money map</p>
-                  <h3 className="text-base font-semibold flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    Signal highlights
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">Top signals from recent activity.</p>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={
-                    confidenceLevel === 'High'
-                      ? 'border-wealth-positive/40 text-wealth-positive'
-                      : confidenceLevel === 'Medium'
-                        ? 'border-accent/40 text-accent'
-                        : 'border-muted-foreground/40 text-muted-foreground'
-                  }
-                >
-                  {confidenceLevel} confidence
-                </Badge>
-              </div>
-              <div className="mt-4 space-y-3">
-                <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
-                  <p className="text-sm font-medium">Surprise insight</p>
-                  <p className="text-sm text-muted-foreground mt-1">{surpriseInsight}</p>
-                </div>
-                <div className="rounded-lg border border-border/60 bg-muted/10 px-3 py-2">
-                  <p className="text-sm font-medium">Quick fix</p>
-                  <p className="text-sm text-muted-foreground mt-1">{quickFix}</p>
-                </div>
-                {topCategories.length > 0 ? (
-                  <div className="space-y-2">
-                    {topCategories.map(category => (
-                      <div key={category.category} className="text-xs text-muted-foreground">
-                        <div className="flex items-center justify-between">
-                          <span>{category.category}</span>
-                          <span className="font-medium text-foreground">
-                            {formatAmount(category.amount)}
-                          </span>
-                        </div>
-                        <div className="mt-1 h-1 rounded-full bg-muted">
-                          <div
-                            className="h-1 rounded-full bg-primary/60"
-                            style={{ width: `${Math.min(category.share * 100, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Add a few transactions to reveal your top categories.
-                  </p>
-                )}
-              </div>
-              <div className="mt-4 flex items-center justify-between">
-                <Button size="sm" variant="outline" onClick={() => markAiMapReviewed('insight')}>
-                  Explore map
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link to={primaryAction.to}>
+                <Button size="sm" className="gap-2">
+                  {primaryAction.label}
+                  <ArrowRight className="w-4 h-4" />
                 </Button>
-                <Dialog
-                  onOpenChange={(open) => {
-                    if (open) {
-                      trackAppEvent('dashboard_ai_map_why_opened', { focus: focusMode });
-                      markAiMapReviewed('why');
-                    }
-                  }}
-                >
-                  <DialogTrigger asChild>
-                    <Button size="sm" variant="ghost" className="gap-1 text-muted-foreground">
-                      <Info className="w-4 h-4" />
-                      Why this?
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>How the AI money map works</DialogTitle>
-                      <DialogDescription>
-                        We analyze your last 30 days of transactions and linked accounts to surface top spending
-                        categories and potential savings moves. You stay in control: edit categories or adjust the plan
-                        anytime.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="mt-3 space-y-2 text-sm text-muted-foreground">
-                      <p>Data inputs: {dbTransactions.length} transactions, {linkedAccounts.length} accounts.</p>
-                      <p>Focus mode: {focusMode === 'expat' ? 'Expat' : 'Young professional'}.</p>
-                      <p>
-                        Want to refine this?{' '}
-                        <Link to="/expenses" className="text-primary hover:underline underline-offset-4">
-                          Edit categories
-                        </Link>
-                      </p>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-
-            <div className="wealth-card">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="wealth-label">Goal draft</p>
-                  <h3 className="text-base font-semibold flex items-center gap-2">
-                    <Target className="w-4 h-4 text-primary" />
-                    {focusMode === 'expat' ? '4-month base-currency buffer' : '3-month cash buffer'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Based on your current cash flow and spending pattern.
-                  </p>
-                </div>
-                <Badge variant="secondary">Auto plan</Badge>
-              </div>
-              <div className="mt-4 space-y-2">
-                {suggestedSave > 0 ? (
-                  <>
-                    <p className="text-xl font-semibold font-mono">
-                      {formatAmount(suggestedSave)} / month
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Reach {formatAmount(goalTarget)} in {monthsToGoal} months.
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Current savings rate: {savingsRate.toFixed(0)}%.
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Target savings rate: {savingsRateTarget}% of income.
-                    </p>
-                  </>
-                ) : !hasCashflowData ? (
-                  <>
-                    <p className="text-sm font-medium text-foreground">
-                      Add data to draft your plan
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Log income or expenses and we will build a personalized goal.
-                    </p>
-                  </>
-                ) : cashflowGap > 0 ? (
-                  <>
-                    <p className="text-sm font-medium text-foreground">
-                      Tight month detected
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Reduce expenses by {formatAmount(cashflowGap)} to unlock savings.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm font-medium text-foreground">
-                      Break-even month
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Trim 5% of spending to start a buffer this month.
-                    </p>
-                  </>
-                )}
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {suggestedSave > 0 ? (
-                  <>
-                    <Link to="/savings">
-                      <Button
-                        size="sm"
-                        className="gap-2"
-                        onClick={() => trackAppEvent('dashboard_goal_locked', {
-                          focus: focusMode,
-                          monthlyTarget: Math.round(suggestedSave),
-                          goalTarget: Math.round(goalTarget),
-                        })}
-                      >
-                        Lock this plan
-                      </Button>
-                    </Link>
-                    <Link to="/budget">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => trackAppEvent('dashboard_goal_adjusted', { focus: focusMode })}
-                      >
-                        Adjust numbers
-                      </Button>
-                    </Link>
-                  </>
-                ) : !hasCashflowData ? (
-                  <>
-                    <Link to="/income">
-                      <Button size="sm" className="gap-2">
-                        Add income
-                      </Button>
-                    </Link>
-                    <Link to="/expenses">
-                      <Button size="sm" variant="outline">
-                        Log expense
-                      </Button>
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link to="/expenses">
-                      <Button
-                        size="sm"
-                        className="gap-2"
-                        onClick={() => trackAppEvent('dashboard_goal_adjusted', { focus: focusMode })}
-                      >
-                        Review spending
-                      </Button>
-                    </Link>
-                    <Link to="/income">
-                      <Button size="sm" variant="outline">
-                        Add income
-                      </Button>
-                    </Link>
-                  </>
-                )}
-              </div>
+              </Link>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="gap-2 text-muted-foreground"
+                onClick={() => setAdvancedOpen(true)}
+              >
+                See full insights
+              </Button>
             </div>
           </div>
+        </div>
+
+        {/* Recent activity at a glance */}
+        <div className="mb-6">
+          <RecentTransactions transactions={transactions} period={selectedPeriod} />
         </div>
 
         {assets.length === 0 && transactions.length === 0 && (
@@ -831,187 +650,406 @@ const Index = () => {
             </div>
           </div>
         )}
-        
-        {/* Getting Started Checklist, Progress & Notifications */}
-        <div className="mb-6">
-          <Collapsible open={gettingStartedOpen} onOpenChange={setGettingStartedOpen}>
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <div>
-                <p className="wealth-label">Getting started</p>
-                <h2 className="text-base sm:text-lg font-semibold">Progress & alerts</h2>
-              </div>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
-                  <span>{gettingStartedOpen ? 'Hide' : 'Show'}</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${gettingStartedOpen ? 'rotate-180' : ''}`} />
-                </Button>
-              </CollapsibleTrigger>
+
+        {/* Everything else, behind one disclosure to keep Home simple */}
+        <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+          <div className="flex items-center justify-between mb-4 pt-2 border-t border-border/60">
+            <div className="pt-4">
+              <p className="wealth-label">More</p>
+              <h2 className="text-base sm:text-lg font-semibold">Insights &amp; tools</h2>
             </div>
-            <CollapsibleContent>
-              <div className="space-y-4 mb-4">
-                <FeatureDiscovery />
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2 mt-4">
+                <span>{advancedOpen ? 'Hide' : 'Show more'}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="space-y-6 sm:space-y-8">
+            {/* AI Momentum plan */}
+            <div>
+              <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between mb-4">
+                <div>
+                  <p className="wealth-label">AI focus</p>
+                  <h2 className="text-base sm:text-lg font-semibold">Momentum plan</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Personalized for {focusMode === 'expat' ? 'expats' : 'young professionals'}.
+                  </p>
+                </div>
+                <ToggleGroup
+                  type="single"
+                  value={focusMode}
+                  onValueChange={handleFocusChange}
+                  variant="outline"
+                  size="sm"
+                  className="justify-start md:justify-end"
+                >
+                  <ToggleGroupItem value="young_pro">Young pros</ToggleGroupItem>
+                  <ToggleGroupItem value="expat">Expats</ToggleGroupItem>
+                </ToggleGroup>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div className="lg:col-span-2 space-y-4">
-                  <GettingStartedChecklist />
-                  <ProgressDashboard compact />
-                </div>
-                <div>
-                  <NotificationWidget 
-                    notifications={notifications} 
-                    unreadCount={unreadCount} 
-                    onMarkRead={markAsRead} 
-                  />
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
-        
-        {/* Hero Section - Net Worth & Quick Actions */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex items-end justify-between mb-3 sm:mb-4">
-            <div>
-              <p className="wealth-label">Overview</p>
-              <h2 className="text-base sm:text-lg font-semibold">Net worth & quick actions</h2>
-            </div>
-          </div>
-          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-          <div className="flex-1 min-w-0" data-tour="net-worth">
-            <NetWorthCard 
-              assets={assets} 
-              linkedAccountsBalance={linkedAccountsBalance} 
-              cashPosition={cashPosition}
-              period={selectedPeriod} 
-              onPeriodChange={setSelectedPeriod} 
-            />
-          </div>
-          <div className="lg:w-80 flex flex-col gap-4">
-            <div className="wealth-card flex-1 relative overflow-hidden">
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-accent/60 to-primary/60" />
-              <p className="wealth-label mb-3">Quick Add</p>
-              <div className="space-y-3" data-tour="add-transaction">
-                <QuickTransactionInput />
-                <Collapsible open={showFullTransactionForm} onOpenChange={setShowFullTransactionForm}>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Need more details?</span>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        {showFullTransactionForm ? 'Hide details' : 'Expand details'}
-                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFullTransactionForm ? 'rotate-180' : ''}`} />
-                      </Button>
-                    </CollapsibleTrigger>
+                <div className="wealth-card">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="wealth-label">Focus plan</p>
+                      <h3 className="text-base font-semibold flex items-center gap-2">
+                        {focusMode === 'expat' ? (
+                          <Globe className="w-4 h-4 text-primary" />
+                        ) : (
+                          <Target className="w-4 h-4 text-primary" />
+                        )}
+                        {focusTitle}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">{focusDescription}</p>
+                    </div>
+                    <Badge variant="secondary" className="gap-1">
+                      AI guided
+                    </Badge>
                   </div>
-                  <CollapsibleContent className="pt-3">
-                    <TransactionForm onAddTransaction={handleAddTransaction} />
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
-              
-              {/* Quick Nav Grid */}
-              <div className="grid grid-cols-2 gap-2 mt-4" data-tour="quick-nav">
-                {quickNavItems.map(item => (
-                  <Link key={item.path} to={item.path}>
-                    <Button 
-                      variant="ghost" 
-                      className={`w-full h-auto flex flex-col items-center gap-1 py-3 ${item.color} hover:opacity-80`}
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span className="text-xs font-medium">{item.label}</span>
-                    </Button>
-                  </Link>
-                ))}
-              </div>
-            </div>
-            <Link to="/income" className="block">
-              <div className="wealth-card hover:border-primary/50 transition-colors cursor-pointer group">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="wealth-label mb-1">Combined Income</p>
-                    <p className="text-lg sm:text-xl font-bold font-mono text-wealth-positive">
-                      {combinedIncome > 0 ? `${formatAmount(combinedIncome)}/mo` : 'Add income'}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {combinedIncome > 0 ? 'Monthly total' : 'Track your earnings'}
-                    </p>
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Journey progress</span>
+                      <span className="text-foreground font-medium">{journeyProgress}%</span>
+                    </div>
+                    <Progress value={journeyProgress} className="h-1.5" />
+                    <div className="space-y-2">
+                      {journeySteps.map(step => (
+                        <div key={step.label} className="flex items-center gap-2 text-sm">
+                          {step.done ? (
+                            <CheckCircle2 className="w-4 h-4 text-wealth-positive" />
+                          ) : (
+                            <Circle className="w-4 h-4 text-muted-foreground/60" />
+                          )}
+                          <span className={step.done ? 'text-foreground' : 'text-muted-foreground'}>
+                            {step.label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                      {focusSignal}
+                    </div>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
-              </div>
-            </Link>
-          </div>
-          </div>
-          <div className="mt-6">
-            <QuickStats assets={assets} linkedAccountsBalance={linkedAccountsBalance} period={selectedPeriod} />
-          </div>
-        </div>
 
-        <div className="border-t border-border/60 my-6 sm:my-8" />
-        
-        {/* Connected Accounts Widget */}
-        {(connectedAccounts.length > 0 || isAuthenticated) && (
-          <div className="mb-6 sm:mb-8">
-            <DashboardConnectedAccounts 
-              accounts={connectedAccounts}
-              onAccountsConnected={handleAccountsConnected}
-              onTransactionsImported={handleTransactionsImported}
-            />
-          </div>
-        )}
-        
-        {/* Portfolio Aggregation - Connected Platforms */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex items-end justify-between mb-3 sm:mb-4">
-            <div>
-              <p className="wealth-label">Portfolio</p>
-              <h2 className="text-base sm:text-lg font-semibold">Investment overview</h2>
+                <div className="wealth-card">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="wealth-label">AI money map</p>
+                      <h3 className="text-base font-semibold flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-primary" />
+                        Signal highlights
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">Top signals from recent activity.</p>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={
+                        confidenceLevel === 'High'
+                          ? 'border-wealth-positive/40 text-wealth-positive'
+                          : confidenceLevel === 'Medium'
+                            ? 'border-accent/40 text-accent'
+                            : 'border-muted-foreground/40 text-muted-foreground'
+                      }
+                    >
+                      {confidenceLevel} confidence
+                    </Badge>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                      <p className="text-sm font-medium">Surprise insight</p>
+                      <p className="text-sm text-muted-foreground mt-1">{surpriseInsight}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/10 px-3 py-2">
+                      <p className="text-sm font-medium">Quick fix</p>
+                      <p className="text-sm text-muted-foreground mt-1">{quickFix}</p>
+                    </div>
+                    {topCategories.length > 0 ? (
+                      <div className="space-y-2">
+                        {topCategories.map(category => (
+                          <div key={category.category} className="text-xs text-muted-foreground">
+                            <div className="flex items-center justify-between">
+                              <span>{category.category}</span>
+                              <span className="font-medium text-foreground">
+                                {formatAmount(category.amount)}
+                              </span>
+                            </div>
+                            <div className="mt-1 h-1 rounded-full bg-muted">
+                              <div
+                                className="h-1 rounded-full bg-primary/60"
+                                style={{ width: `${Math.min(category.share * 100, 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Add a few transactions to reveal your top categories.
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <Button size="sm" variant="outline" onClick={() => markAiMapReviewed('insight')}>
+                      Explore map
+                    </Button>
+                    <Dialog
+                      onOpenChange={(open) => {
+                        if (open) {
+                          trackAppEvent('dashboard_ai_map_why_opened', { focus: focusMode });
+                          markAiMapReviewed('why');
+                        }
+                      }}
+                    >
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="ghost" className="gap-1 text-muted-foreground">
+                          <Info className="w-4 h-4" />
+                          Why this?
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>How the AI money map works</DialogTitle>
+                          <DialogDescription>
+                            We analyze your last 30 days of transactions and linked accounts to surface top spending
+                            categories and potential savings moves. You stay in control: edit categories or adjust the plan
+                            anytime.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="mt-3 space-y-2 text-sm text-muted-foreground">
+                          <p>Data inputs: {dbTransactions.length} transactions, {linkedAccounts.length} accounts.</p>
+                          <p>Focus mode: {focusMode === 'expat' ? 'Expat' : 'Young professional'}.</p>
+                          <p>
+                            Want to refine this?{' '}
+                            <Link to="/expenses" className="text-primary hover:underline underline-offset-4">
+                              Edit categories
+                            </Link>
+                          </p>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+
+                <div className="wealth-card">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="wealth-label">Goal draft</p>
+                      <h3 className="text-base font-semibold flex items-center gap-2">
+                        <Target className="w-4 h-4 text-primary" />
+                        {focusMode === 'expat' ? '4-month base-currency buffer' : '3-month cash buffer'}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Based on your current cash flow and spending pattern.
+                      </p>
+                    </div>
+                    <Badge variant="secondary">Auto plan</Badge>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {suggestedSave > 0 ? (
+                      <>
+                        <p className="text-xl font-semibold font-mono">
+                          {formatAmount(suggestedSave)} / month
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Reach {formatAmount(goalTarget)} in {monthsToGoal} months.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Current savings rate: {savingsRate.toFixed(0)}%.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Target savings rate: {savingsRateTarget}% of income.
+                        </p>
+                      </>
+                    ) : !hasCashflowData ? (
+                      <>
+                        <p className="text-sm font-medium text-foreground">
+                          Add data to draft your plan
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Log income or expenses and we will build a personalized goal.
+                        </p>
+                      </>
+                    ) : cashflowGap > 0 ? (
+                      <>
+                        <p className="text-sm font-medium text-foreground">
+                          Tight month detected
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Reduce expenses by {formatAmount(cashflowGap)} to unlock savings.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-medium text-foreground">
+                          Break-even month
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Trim 5% of spending to start a buffer this month.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {suggestedSave > 0 ? (
+                      <>
+                        <Link to="/savings">
+                          <Button
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => trackAppEvent('dashboard_goal_locked', {
+                              focus: focusMode,
+                              monthlyTarget: Math.round(suggestedSave),
+                              goalTarget: Math.round(goalTarget),
+                            })}
+                          >
+                            Lock this plan
+                          </Button>
+                        </Link>
+                        <Link to="/budget">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => trackAppEvent('dashboard_goal_adjusted', { focus: focusMode })}
+                          >
+                            Adjust numbers
+                          </Button>
+                        </Link>
+                      </>
+                    ) : !hasCashflowData ? (
+                      <>
+                        <Link to="/income">
+                          <Button size="sm" className="gap-2">
+                            Add income
+                          </Button>
+                        </Link>
+                        <Link to="/expenses">
+                          <Button size="sm" variant="outline">
+                            Log expense
+                          </Button>
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link to="/expenses">
+                          <Button
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => trackAppEvent('dashboard_goal_adjusted', { focus: focusMode })}
+                          >
+                            Review spending
+                          </Button>
+                        </Link>
+                        <Link to="/income">
+                          <Button size="sm" variant="outline">
+                            Add income
+                          </Button>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <PortfolioAggregation connectedAccounts={connectedAccounts} period={selectedPeriod} />
-        </div>
-        
-        {/* Income Liquidity & Emergency Fund */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex items-end justify-between mb-3 sm:mb-4">
+
+            {/* Getting Started Checklist, Progress & Notifications */}
             <div>
-              <p className="wealth-label">Plan ahead</p>
-              <h2 className="text-base sm:text-lg font-semibold">Liquidity, safety net & forecast</h2>
+              <Collapsible open={gettingStartedOpen} onOpenChange={setGettingStartedOpen}>
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div>
+                    <p className="wealth-label">Getting started</p>
+                    <h2 className="text-base sm:text-lg font-semibold">Progress &amp; alerts</h2>
+                  </div>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+                      <span>{gettingStartedOpen ? 'Hide' : 'Show'}</span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${gettingStartedOpen ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsibleContent>
+                  <div className="space-y-4 mb-4">
+                    <FeatureDiscovery />
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="lg:col-span-2 space-y-4">
+                      <GettingStartedChecklist />
+                      <ProgressDashboard compact />
+                    </div>
+                    <div>
+                      <NotificationWidget
+                        notifications={notifications}
+                        unreadCount={unreadCount}
+                        onMarkRead={markAsRead}
+                      />
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <IncomeLiquidityChart />
-            <EmergencyFundCalculator />
-          </div>
-          <div className="mt-4 sm:mt-6">
-            <CashFlowForecast />
-          </div>
-        </div>
-        
-        {/* Main Grid */}
-        <div className="mt-6 sm:mt-8">
-          <div className="flex items-end justify-between mb-3 sm:mb-4">
+
+            {/* Connected Accounts Widget */}
+            {(connectedAccounts.length > 0 || isAuthenticated) && (
+              <div>
+                <DashboardConnectedAccounts
+                  accounts={connectedAccounts}
+                  onAccountsConnected={handleAccountsConnected}
+                  onTransactionsImported={handleTransactionsImported}
+                />
+              </div>
+            )}
+
+            {/* Portfolio Aggregation - Connected Platforms */}
             <div>
-              <p className="wealth-label">Portfolio breakdown</p>
-              <h2 className="text-base sm:text-lg font-semibold">Allocation & recent activity</h2>
+              <div className="flex items-end justify-between mb-3 sm:mb-4">
+                <div>
+                  <p className="wealth-label">Portfolio</p>
+                  <h2 className="text-base sm:text-lg font-semibold">Investment overview</h2>
+                </div>
+              </div>
+              <PortfolioAggregation connectedAccounts={connectedAccounts} period={selectedPeriod} />
             </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Allocation Chart */}
-          <AllocationChart assets={assets} linkedAccountsBalance={linkedAccountsBalance} />
-          
-          {/* Liquidity Breakdown */}
-          <LiquidityBreakdown assets={assets} linkedAccountsBalance={linkedAccountsBalance} />
-          
-          {/* Recent Transactions */}
-          <RecentTransactions transactions={transactions} period={selectedPeriod} />
-          </div>
-        </div>
-        
-        {/* Asset List */}
-        <div className="mt-6 sm:mt-8">
-          <AssetList assets={assets} />
-        </div>
-        
+
+            {/* Income Liquidity & Emergency Fund */}
+            <div>
+              <div className="flex items-end justify-between mb-3 sm:mb-4">
+                <div>
+                  <p className="wealth-label">Plan ahead</p>
+                  <h2 className="text-base sm:text-lg font-semibold">Liquidity, safety net &amp; forecast</h2>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <IncomeLiquidityChart />
+                <EmergencyFundCalculator />
+              </div>
+              <div className="mt-4 sm:mt-6">
+                <CashFlowForecast />
+              </div>
+            </div>
+
+            {/* Allocation & recent activity */}
+            <div>
+              <div className="flex items-end justify-between mb-3 sm:mb-4">
+                <div>
+                  <p className="wealth-label">Portfolio breakdown</p>
+                  <h2 className="text-base sm:text-lg font-semibold">Allocation &amp; recent activity</h2>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <AllocationChart assets={assets} linkedAccountsBalance={linkedAccountsBalance} />
+                <LiquidityBreakdown assets={assets} linkedAccountsBalance={linkedAccountsBalance} />
+                <RecentTransactions transactions={transactions} period={selectedPeriod} />
+              </div>
+            </div>
+
+            {/* Asset List */}
+            <div>
+              <AssetList assets={assets} />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
         {/* Footer */}
         <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
