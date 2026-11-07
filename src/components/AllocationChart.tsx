@@ -1,5 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { Wallet } from 'lucide-react';
 import { Asset, AssetCategory, CATEGORY_COLORS } from '@/lib/portfolioData';
+import { EmptyState } from '@/components/EmptyState';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface AllocationChartProps {
@@ -45,15 +47,31 @@ export function AllocationChart({ assets, linkedAccountsBalance = 0 }: Allocatio
   }
   
   const totalValue = categoryTotals.reduce((sum, item) => sum + item.value, 0);
-  
+
   const chartData = categoryTotals
     .map((item, index) => ({
       name: item.category,
       value: item.value,
-      percentage: ((item.value / totalValue) * 100).toFixed(1),
+      percentage: totalValue > 0 ? ((item.value / totalValue) * 100).toFixed(1) : '0.0',
       color: CHART_COLORS[index % CHART_COLORS.length],
     }))
     .sort((a, b) => b.value - a.value);
+
+  if (totalValue <= 0) {
+    return (
+      <div className="wealth-card h-full">
+        <h3 className="text-lg font-semibold mb-4">Asset Allocation</h3>
+        <EmptyState
+          variant="inline"
+          icon={Wallet}
+          title="See your allocation"
+          description="Add your assets and we'll chart how your wealth is split across property, stocks, gold and cash."
+          actionLabel="Add an asset"
+          actionPath="/investments"
+        />
+      </div>
+    );
+  }
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {

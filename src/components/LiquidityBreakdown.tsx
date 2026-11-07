@@ -1,4 +1,6 @@
+import { Droplets } from 'lucide-react';
 import { Asset, LiquidityLevel, LIQUIDITY_LABELS } from '@/lib/portfolioData';
+import { EmptyState } from '@/components/EmptyState';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 
 interface LiquidityBreakdownProps {
@@ -26,13 +28,29 @@ export function LiquidityBreakdown({ assets, linkedAccountsBalance = 0 }: Liquid
   }
   
   const total = Object.values(liquidityTotals).reduce((sum, val) => sum + val, 0);
-  
+
   const levels: LiquidityLevel[] = ['L1', 'L2', 'L3', 'NL'];
-  
+
+  if (total <= 0) {
+    return (
+      <div className="wealth-card">
+        <h3 className="text-lg font-semibold mb-4">Liquidity Analysis</h3>
+        <EmptyState
+          variant="inline"
+          icon={Droplets}
+          title="See how liquid your wealth is"
+          description="Add assets or connect an account to break your wealth down by how quickly you can access it."
+          actionLabel="Add an asset"
+          actionPath="/investments"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="wealth-card">
       <h3 className="text-lg font-semibold mb-4">Liquidity Analysis</h3>
-      
+
       {/* Stacked bar */}
       <div className="h-4 rounded-full overflow-hidden flex mb-6">
         {levels.map(level => {

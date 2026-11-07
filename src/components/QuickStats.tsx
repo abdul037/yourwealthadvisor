@@ -1,7 +1,8 @@
-import { Building, TrendingUp, Coins, ExternalLink } from 'lucide-react';
+import { Building, TrendingUp, Coins, ExternalLink, Briefcase } from 'lucide-react';
 import { Asset } from '@/lib/portfolioData';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/EmptyState';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { Period, getSimulatedChange } from '@/lib/periodUtils';
 import { useMemo } from 'react';
@@ -29,7 +30,25 @@ export function QuickStats({ assets, linkedAccountsBalance = 0, period = '1W' }:
   const stocksValue = assets.filter(a => a.category === 'Stocks').reduce((sum, a) => sum + a.aedValue, 0);
   const landValue = assets.filter(a => a.category === 'Land Asset').reduce((sum, a) => sum + a.aedValue, 0);
   const goldValue = assets.filter(a => ['Gold', 'DigiGold'].includes(a.category)).reduce((sum, a) => sum + a.aedValue, 0);
-  
+
+  // No assets yet — show a single friendly prompt instead of three zero/NaN cards.
+  if (totalWealth <= 0) {
+    return (
+      <div className="wealth-card">
+        <EmptyState
+          variant="inline"
+          icon={Briefcase}
+          title="Track your assets"
+          description="Add property, stocks, gold or cash to see how your wealth breaks down."
+          actionLabel="Add an asset"
+          actionPath="/investments"
+        />
+      </div>
+    );
+  }
+
+  const pct = (value: number) => ((value / totalWealth) * 100).toFixed(1);
+
   const stats = [
     { 
       label: 'Real Estate', 
@@ -37,7 +56,7 @@ export function QuickStats({ assets, linkedAccountsBalance = 0, period = '1W' }:
       icon: Building, 
       color: 'text-asset-land',
       bg: 'bg-asset-land/20',
-      percentage: ((landValue / totalWealth) * 100).toFixed(1),
+      percentage: pct(landValue),
       change: categoryChanges.land,
       link: '/trends'
     },
@@ -47,7 +66,7 @@ export function QuickStats({ assets, linkedAccountsBalance = 0, period = '1W' }:
       icon: TrendingUp, 
       color: 'text-asset-stocks',
       bg: 'bg-asset-stocks/20',
-      percentage: ((stocksValue / totalWealth) * 100).toFixed(1),
+      percentage: pct(stocksValue),
       change: categoryChanges.stocks,
       link: '/trends'
     },
@@ -57,7 +76,7 @@ export function QuickStats({ assets, linkedAccountsBalance = 0, period = '1W' }:
       icon: Coins, 
       color: 'text-asset-gold',
       bg: 'bg-asset-gold/20',
-      percentage: ((goldValue / totalWealth) * 100).toFixed(1),
+      percentage: pct(goldValue),
       change: categoryChanges.gold,
       link: '/trends'
     },
@@ -80,9 +99,11 @@ export function QuickStats({ assets, linkedAccountsBalance = 0, period = '1W' }:
               <p className="text-lg font-bold font-mono">{formatAmount(stat.value)}</p>
               <div className="flex items-center gap-2">
                 <p className="text-xs text-muted-foreground">{stat.percentage}% of total</p>
-                <span className={`text-xs font-medium ${stat.change >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
-                  {stat.change >= 0 ? '+' : ''}{stat.change.toFixed(1)}%
-                </span>
+                {stat.value > 0 && (
+                  <span className={`text-xs font-medium ${stat.change >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
+                    {stat.change >= 0 ? '+' : ''}{stat.change.toFixed(1)}%
+                  </span>
+                )}
               </div>
             </div>
           </div>
