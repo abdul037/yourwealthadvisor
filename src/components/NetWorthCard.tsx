@@ -60,6 +60,7 @@ export function NetWorthCard({
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-mono tracking-tight">
               {formatAmount(totalWealth)}
             </h2>
+            {totalWealth !== 0 && (
             <div className="flex items-center gap-2">
               <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
                 isPositive ? 'bg-wealth-positive/20 text-wealth-positive' : 'bg-wealth-negative/20 text-wealth-negative'
@@ -69,6 +70,7 @@ export function NetWorthCard({
               </div>
               <span className="text-xs text-muted-foreground hidden sm:inline">{comparisonLabel}</span>
             </div>
+            )}
           </div>
           
           <Link to="/trends">

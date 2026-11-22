@@ -491,12 +491,18 @@ export function QuickTransactionInput({ onSwitchToAsset }: QuickTransactionInput
         </div>
 
         <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <Mic className="h-3 w-3" />
-            Tap mic to speak
-          </span>
-          <span className="text-border">•</span>
-          <span>or type & send</span>
+          {isVoiceSupported ? (
+            <>
+              <span className="flex items-center gap-1.5">
+                <Mic className="h-3 w-3" />
+                Tap mic to speak
+              </span>
+              <span className="text-border">•</span>
+              <span>or type & send</span>
+            </>
+          ) : (
+            <span>Type it the way you'd say it, then send</span>
+          )}
         </div>
         
         {error && (

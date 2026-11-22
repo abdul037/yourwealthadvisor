@@ -135,7 +135,7 @@ export function DashboardConnectedAccounts({
             <RefreshCw className={`w-4 h-4 mr-1 ${refreshingId === 'all' ? 'animate-spin' : ''}`} />
             Sync
           </Button>
-          <Link to="/admin?tab=connections">
+          <Link to="/admin?tab=banking">
             <Button variant="ghost" size="icon" className="w-8 h-8">
               <ExternalLink className="w-4 h-4" />
             </Button>
@@ -182,7 +182,7 @@ export function DashboardConnectedAccounts({
         ))}
         
         {accounts.length > 6 && (
-          <Link to="/admin?tab=connections" className="block">
+          <Link to="/admin?tab=banking" className="block">
             <Button variant="ghost" size="sm" className="w-full text-xs">
               View all {accounts.length} accounts
             </Button>

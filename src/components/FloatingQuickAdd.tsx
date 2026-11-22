@@ -95,7 +95,7 @@ export function FloatingQuickAdd({ defaultTab }: FloatingQuickAddProps) {
   return (
     <>
       {/* Floating Action Button - bottom right, above mobile nav */}
-      <div className="fixed bottom-20 right-4 z-50 md:bottom-6 md:right-6">
+      <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-50 md:bottom-6 md:right-6">
         {/* Pulse ring animation */}
         <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
         <div className="absolute inset-0 rounded-full bg-primary/20 animate-pulse" />

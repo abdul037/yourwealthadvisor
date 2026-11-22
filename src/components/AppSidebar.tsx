@@ -1,24 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  LayoutDashboard,
-  DollarSign,
-  Receipt,
-  Eye,
-  Wallet,
-  TrendingDown,
-  TrendingUp,
-  LineChart,
-  Settings,
-  Download,
-  Sparkles,
-  Target,
-  Split,
-  Users,
-  Handshake,
-  Crown,
-  Lock,
-  ChevronRight,
-} from 'lucide-react';
+import { Lock, ChevronRight } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { TharwaLogo } from '@/components/TharwaLogo';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -48,63 +29,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-
-type NavItem = {
-  path: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  module: string;
-};
-
-// The single primary destination, always visible at the top.
-const HOME_ITEM: NavItem = { path: '/', label: 'Home', icon: LayoutDashboard, module: 'dashboard' };
-
-// The long flat list is collapsed into a few clear sections so the sidebar
-// shows ~5 entries by default instead of 13.
-const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
-  {
-    label: 'Money',
-    items: [
-      { path: '/income', label: 'Income', icon: DollarSign, module: 'income' },
-      { path: '/expenses', label: 'Expenses', icon: Receipt, module: 'expenses' },
-      { path: '/budget', label: 'Budget', icon: Wallet, module: 'budget' },
-      { path: '/debt', label: 'Debt', icon: TrendingDown, module: 'debt' },
-    ],
-  },
-  {
-    label: 'Grow',
-    items: [
-      { path: '/savings', label: 'Savings Goals', icon: Target, module: 'savings' },
-      { path: '/investments', label: 'Investments', icon: TrendingUp, module: 'investments' },
-      { path: '/trends', label: 'Trends', icon: LineChart, module: 'trends' },
-    ],
-  },
-  {
-    label: 'Community',
-    items: [
-      { path: '/social', label: 'Social', icon: Users, module: 'social' },
-      { path: '/split', label: 'Split Expenses', icon: Split, module: 'split' },
-      { path: '/partners', label: 'Partners', icon: Handshake, module: 'partners' },
-    ],
-  },
-  {
-    label: 'More',
-    items: [
-      { path: '/ai-tools', label: 'AI Tools', icon: Sparkles, module: 'ai_tools' },
-      { path: '/membership', label: 'Membership', icon: Crown, module: 'membership' },
-    ],
-  },
-];
-
-const SETTINGS_NAV_ITEMS = [
-  { path: '/my-access', label: 'My Access', icon: Eye, module: 'my_access', adminOnly: false },
-  { path: '/users', label: 'User Management', icon: Users, module: 'users', adminOnly: true },
-  { path: '/admin', label: 'Settings', icon: Settings, module: 'admin', adminOnly: false },
-  { path: '/install', label: 'Install App', icon: Download, module: 'install', adminOnly: false },
-];
+import { HOME_ITEM, NAV_GROUPS, SETTINGS_NAV_ITEMS, NavItem } from '@/lib/navigation';
+import { isNativeApp } from '@/lib/native';
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const collapsed = state === 'collapsed';
@@ -140,6 +69,7 @@ export function AppSidebar() {
   const settingsNavItems = useMemo(() => {
     return SETTINGS_NAV_ITEMS.filter(item => {
       if (item.adminOnly && !isAdmin) return false;
+      if (item.webOnly && isNativeApp()) return false;
       return true;
     });
   }, [isAdmin]);
@@ -153,11 +83,17 @@ export function AppSidebar() {
     return initial;
   });
 
+  // On phones the sidebar is a sheet; close it once a destination is chosen.
+  const closeMobileSheet = () => {
+    if (isMobile) setOpenMobile(false);
+  };
+
   const handleNavClick = (e: React.MouseEvent, item: EnrichedItem) => {
     if (!item.hasAccess && !isAdmin) {
       e.preventDefault();
       navigate('/membership');
     }
+    closeMobileSheet();
   };
 
   const getTierBadge = (tier: string) => {
@@ -291,6 +227,7 @@ export function AppSidebar() {
                       className="flex items-center gap-3"
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       data-tour={item.path === '/admin' ? 'admin-portal' : undefined}
+                      onClick={closeMobileSheet}
                     >
                       <item.icon className="w-4 h-4" />
                       <span>{item.label}</span>

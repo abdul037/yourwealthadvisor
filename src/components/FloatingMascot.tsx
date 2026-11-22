@@ -387,7 +387,7 @@ export function FloatingMascot() {
 
       {/* ── Floating mascot button ──────────────────────────────────── */}
       <div
-        className="fixed z-50 bottom-20 right-16 md:bottom-20 md:right-6"
+        className="fixed z-50 bottom-[calc(5rem+env(safe-area-inset-bottom))] right-[5.5rem] md:bottom-20 md:right-6"
         onMouseEnter={() => { if (!chatOpen) setHovered(true); }}
         onMouseLeave={() => setHovered(false)}
       >
