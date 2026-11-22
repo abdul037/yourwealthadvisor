@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Lock, Mail, User, ArrowLeft, KeyRound } from 'lucide-react';
 import { TharwaLogo } from '@/components/TharwaLogo';
 import { z } from 'zod';
+import { Browser } from '@capacitor/browser';
+import { getAuthRedirectUrl, isNativeApp } from '@/lib/native';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -74,7 +76,7 @@ const Auth = () => {
     const type = hashParams.get('type');
     const accessToken = hashParams.get('access_token');
     
-    if (type === 'recovery' && accessToken) {
+    if ((type === 'recovery' && accessToken) || searchParams.get('recovery') === '1') {
       setIsRecoveryMode(true);
       return; // Don't set up redirect logic if in recovery mode
     }
@@ -101,6 +103,14 @@ const Auth = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate, isRecoveryMode]);
+
+  // In the native app a password-reset link arrives as a deep link while this
+  // screen may already be open; NativeAppBridge then adds ?recovery=1.
+  useEffect(() => {
+    if (searchParams.get('recovery') === '1') {
+      setIsRecoveryMode(true);
+    }
+  }, [searchParams]);
 
   const validateForm = (isSignUp: boolean) => {
     const newErrors: typeof errors = {};
@@ -144,16 +154,22 @@ const Auth = () => {
     try {
       // Preserve redirect param for OAuth
       const redirectPath = searchParams.get('redirect');
-      const finalRedirect = redirectPath 
-        ? `${window.location.origin}${redirectPath}` 
-        : `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signInWithOAuth({
+      const finalRedirect = getAuthRedirectUrl(redirectPath || '/');
+      const native = isNativeApp();
+
+      // Google refuses to run sign-in inside an embedded web view, so in the native
+      // app we open the system browser and come back through a deep link.
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: finalRedirect,
+          skipBrowserRedirect: native,
         },
       });
+
+      if (!error && native && data?.url) {
+        await Browser.open({ url: data.url });
+      }
 
       if (error) {
         toast({
@@ -227,7 +243,7 @@ const Auth = () => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: getAuthRedirectUrl('/auth'),
       });
 
       if (error) {
@@ -289,7 +305,7 @@ const Auth = () => {
     
     setIsLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = getAuthRedirectUrl('/');
       
       const { error } = await supabase.auth.signUp({
         email: email.trim(),
@@ -668,7 +684,10 @@ const Auth = () => {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          By continuing, you agree to our Terms of Service and Privacy Policy.
+          By continuing, you agree to our{' '}
+          <Link to="/terms" className="underline underline-offset-4 hover:text-foreground">Terms of Service</Link>
+          {' '}and{' '}
+          <Link to="/privacy" className="underline underline-offset-4 hover:text-foreground">Privacy Policy</Link>.
         </p>
       </div>
     </div>

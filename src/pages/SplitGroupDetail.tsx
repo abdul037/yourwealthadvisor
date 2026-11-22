@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { getShareOrigin } from '@/lib/native';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Users, Receipt, Share2, Copy, Check, 
@@ -164,7 +165,7 @@ export default function SplitGroupDetail() {
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .substring(0, 20);
-    const inviteUrl = `${window.location.origin}/s/${slug}-tharwanet-${group.invite_code}`;
+    const inviteUrl = `${getShareOrigin()}/s/${slug}-tharwanet-${group.invite_code}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
     toast({ title: 'Invite link copied!' });
@@ -173,7 +174,7 @@ export default function SplitGroupDetail() {
 
   const handleCopyEmailInvite = () => {
     if (!group) return;
-    const inviteUrl = `${window.location.origin}/split/join/${group.invite_code}`;
+    const inviteUrl = `${getShareOrigin()}/split/join/${group.invite_code}`;
     const subject = encodeURIComponent(`Join "${group.name}" on Tharwa Net`);
     const body = encodeURIComponent(`You've been invited to join the expense group "${group.name}".\n\nClick here to join: ${inviteUrl}`);
     window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');

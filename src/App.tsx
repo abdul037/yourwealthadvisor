@@ -32,6 +32,9 @@ import Social from "./pages/Social";
 import Partners from "./pages/Partners";
 import Membership from "./pages/Membership";
 import UserManagement from "./pages/UserManagement";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import { NativeAppBridge } from "@/components/NativeAppBridge";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
 // Protected route wrapper — redirects unauthenticated users to welcome,
@@ -76,11 +79,14 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <NativeAppBridge />
             <Routes>
               {/* Public pages without layout */}
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/install" element={<Install />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
 
               {/* Onboarding — protected but no app layout */}
               <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
@@ -101,7 +107,7 @@ const App = () => (
               <Route path="/split/join/:inviteCode" element={<JoinSplitGroup />} />
               <Route path="/split/:groupId" element={<ProtectedRoute><SplitGroupDetail /></ProtectedRoute>} />
               <Route path="/partners" element={<ProtectedRoute><Partners /></ProtectedRoute>} />
-              <Route path="/membership" element={<ProtectedRoute><AppLayout><Membership /></AppLayout></ProtectedRoute>} />
+              <Route path="/membership" element={<ProtectedRoute><Membership /></ProtectedRoute>} />
               <Route path="/my-access" element={<ProtectedRoute><AppLayout><MyAccess /></AppLayout></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute><AdminRoute><AppLayout><UserManagement /></AppLayout></AdminRoute></ProtectedRoute>} />
               <Route path="/s/:code" element={<ShortInvite />} />

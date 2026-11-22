@@ -307,7 +307,7 @@ export default function Welcome() {
                     Start Free <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
-                <Link to="/membership">
+                <Link to="/auth?mode=signup&redirect=/membership">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto">
                     View Plans
                   </Button>
@@ -325,7 +325,9 @@ export default function Welcome() {
             <TharwaLogo size="sm" variant="full" />
             <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
               <Link to="/auth" className="hover:text-foreground transition-colors">Dashboard</Link>
-              <Link to="/membership" className="hover:text-foreground transition-colors">Membership</Link>
+              <Link to="/auth?redirect=/membership" className="hover:text-foreground transition-colors">Membership</Link>
+              <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
               <Link to="/install" className="hover:text-foreground transition-colors flex items-center gap-1.5">
                 <Download className="w-3.5 h-3.5" /> Install App
               </Link>

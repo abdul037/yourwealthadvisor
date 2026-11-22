@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { getShareOrigin } from '@/lib/native';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useFriends, FriendWithProfile } from '@/hooks/useFriends';
@@ -75,7 +76,7 @@ export function FriendsTab() {
     },
   });
 
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const baseUrl = getShareOrigin();
   const inviteLink = `${baseUrl}/auth?mode=signup&redirect=/social${user?.id ? `&ref=${user.id}` : ''}`;
 
   const handleCopyInvite = async () => {

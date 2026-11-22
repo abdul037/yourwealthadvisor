@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getShareOrigin } from '@/lib/native';
 import { Circle } from '@/hooks/useCircles';
 import { usePosts, PostWithAuthor, useComments } from '@/hooks/usePosts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -71,7 +72,7 @@ export function CircleDetail({ circle, onBack, isMember, onJoin, onLeave }: Circ
     post_type: 'discussion' as const,
     is_anonymous: false,
   });
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const baseUrl = getShareOrigin();
   const inviteLink = `${baseUrl}/social?circle=${circle.slug}`;
 
   const handleSubmitPost = () => {

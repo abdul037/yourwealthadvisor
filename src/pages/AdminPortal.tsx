@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
-import { Plus, Trash2, Upload, Download, RefreshCw, Palette, Building2, Users, Droplets, FileSpreadsheet, Database } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Plus, Trash2, Upload, Download, RefreshCw, Palette, Building2, Users, Droplets, FileSpreadsheet, Database, UserX, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +19,7 @@ import { ComprehensiveBulkUpload } from '@/components/ComprehensiveBulkUpload';
 import { PageHeader } from '@/components/PageHeader';
 import { DemoDataSeeder } from '@/components/DemoDataSeeder';
 import { ClearDemoData } from '@/components/ClearDemoData';
+import { DeleteAccount } from '@/components/DeleteAccount';
 import { BankAccount, BankTransaction, DEMO_TRANSACTIONS } from '@/lib/mockBankingData';
 const AVAILABLE_ICONS = [
   'UtensilsCrossed', 'Car', 'Zap', 'Gamepad2', 'ShoppingBag', 'Heart', 'GraduationCap',
@@ -33,7 +35,19 @@ const AVAILABLE_COLORS = [
   'hsl(173, 80%, 40%)', 'hsl(215, 20%, 55%)'
 ];
 
+// Tabs on this page, plus older names other screens still link to.
+const SETTINGS_TABS = ['partners', 'liquidity', 'banking', 'categories', 'import', 'data'];
+const TAB_ALIASES: Record<string, string> = { connections: 'banking', accounts: 'banking', account: 'data' };
+
 const AdminPortal = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab') ?? '';
+  const resolvedTab = TAB_ALIASES[requestedTab] ?? requestedTab;
+  const activeTab = SETTINGS_TABS.includes(resolvedTab) ? resolvedTab : 'partners';
+  const handleTabChange = (tab: string) => {
+    setSearchParams(tab === 'partners' ? {} : { tab }, { replace: true });
+  };
+
   const [expenseCategories, setExpenseCategories] = useState<Category[]>(DEFAULT_EXPENSE_CATEGORIES);
   const [incomeCategories, setIncomeCategories] = useState<Category[]>(DEFAULT_INCOME_CATEGORIES);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -206,7 +220,7 @@ const AdminPortal = () => {
           breadcrumb={[{ label: 'Settings', path: '/admin' }]}
         />
         
-        <Tabs defaultValue="partners" className="space-y-4 sm:space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
           <TabsList className="w-full overflow-x-auto flex flex-nowrap">
             <TabsTrigger value="partners" className="gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0">
               <Users className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -489,6 +503,48 @@ const AdminPortal = () => {
                   Ready to add your real finances? Clear all demo data and start tracking your actual income, expenses, and investments.
                 </p>
                 <ClearDemoData />
+              </div>
+
+              {/* Legal */}
+              <div className="wealth-card">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Privacy &amp; Terms</h3>
+                    <p className="text-sm text-muted-foreground">
+                      How your data is handled and the terms of use
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link to="/privacy">
+                    <Button variant="outline" size="sm">Privacy Policy</Button>
+                  </Link>
+                  <Link to="/terms">
+                    <Button variant="outline" size="sm">Terms of Service</Button>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Delete account */}
+              <div className="wealth-card border-destructive/20">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-destructive/20 flex items-center justify-center">
+                    <UserX className="w-5 h-5 text-destructive" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Delete Account</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Permanently remove your account and data
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  This closes your account and deletes your financial records. It cannot be undone.
+                </p>
+                <DeleteAccount />
               </div>
             </div>
           </TabsContent>
