@@ -1,6 +1,33 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { DEMO_FLOWS } from '@/lib/buildFlags';
+
+/**
+ * Whether a paid plan can be bought in this build. The only checkout that exists
+ * today is the mock one, so this is true in demo builds only. Point it at the real
+ * billing integration (in-app purchase / payment provider) once there is one.
+ */
+export const PAID_PLANS_AVAILABLE: boolean = DEMO_FLOWS;
+
+type SubscribeInput = { tierId: string; billingCycle: 'monthly' | 'yearly' };
+
+// DEMO ONLY: activates a plan without taking any payment.
+const mockCheckout = async ({ tierId, billingCycle }: SubscribeInput) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const response = await supabase.functions.invoke('mock-checkout', {
+    body: { tierId, billingCycle },
+  });
+
+  if (response.error) throw response.error;
+  return response.data;
+};
+
+const checkoutUnavailable = async (_input: SubscribeInput): Promise<{ message: string }> => {
+  throw new Error('Paid plans are not available yet.');
+};
 
 export interface SubscriptionTier {
   id: string;
@@ -92,17 +119,7 @@ export function useSubscription() {
 
   // Subscribe mutation
   const subscribeMutation = useMutation({
-    mutationFn: async ({ tierId, billingCycle }: { tierId: string; billingCycle: 'monthly' | 'yearly' }) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const response = await supabase.functions.invoke('mock-checkout', {
-        body: { tierId, billingCycle },
-      });
-
-      if (response.error) throw response.error;
-      return response.data;
-    },
+    mutationFn: DEMO_FLOWS ? mockCheckout : checkoutUnavailable,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['user-subscription'] });
       toast({

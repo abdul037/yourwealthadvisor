@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { TharwaLogo } from '@/components/TharwaLogo';
+import { PAID_PLANS_AVAILABLE } from '@/hooks/useSubscription';
 
 // ─── Scroll-reveal hook ───
 function useScrollReveal() {
@@ -294,12 +295,18 @@ export default function Welcome() {
                 <Crown className="w-6 h-6 text-accent" />
               </div>
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                Free forever.{' '}
-                <span className="text-accent">Premium when you're ready.</span>
+                Free forever.
+                {PAID_PLANS_AVAILABLE && (
+                  <>
+                    {' '}
+                    <span className="text-accent">Premium when you're ready.</span>
+                  </>
+                )}
               </h2>
               <p className="text-muted-foreground">
-                All core features are free with no limits. Unlock AI insights, 
-                advanced reports, and priority support with Premium.
+                {PAID_PLANS_AVAILABLE
+                  ? 'All core features are free with no limits. Unlock AI insights, advanced reports, and priority support with Premium.'
+                  : 'All core features are free with no limits.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                 <Link to="/auth?mode=signup">
@@ -307,11 +314,13 @@ export default function Welcome() {
                     Start Free <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
-                <Link to="/auth?mode=signup&redirect=/membership">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                    View Plans
-                  </Button>
-                </Link>
+                {PAID_PLANS_AVAILABLE && (
+                  <Link to="/auth?mode=signup&redirect=/membership">
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                      View Plans
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </Section>
@@ -325,7 +334,9 @@ export default function Welcome() {
             <TharwaLogo size="sm" variant="full" />
             <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
               <Link to="/auth" className="hover:text-foreground transition-colors">Dashboard</Link>
-              <Link to="/auth?redirect=/membership" className="hover:text-foreground transition-colors">Membership</Link>
+              {PAID_PLANS_AVAILABLE && (
+                <Link to="/auth?redirect=/membership" className="hover:text-foreground transition-colors">Membership</Link>
+              )}
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
               <Link to="/install" className="hover:text-foreground transition-colors flex items-center gap-1.5">

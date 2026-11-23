@@ -1,11 +1,28 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
+// Demo flows = the pretend bank connection, the mock checkout and made-up
+// change figures. They are compiled out of the app unless switched on.
+//   npm run dev          -> on  (local development)
+//   npm run build        -> off, unless VITE_DEMO_FLOWS=true is set
+//   npm run build:store  -> always off (app-store builds)
+//   npm run build:demo   -> always on
+const resolveDemoFlows = (mode: string): boolean => {
+  if (mode === "store") return false;
+  if (mode === "demo") return true;
+  const raw = loadEnv(mode, process.cwd(), "VITE_").VITE_DEMO_FLOWS;
+  if (raw === undefined || raw === "") return mode === "development";
+  return raw === "true" || raw === "1";
+};
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  define: {
+    __DEMO_FLOWS__: JSON.stringify(resolveDemoFlows(mode)),
+  },
   server: {
     host: "::",
     port: 8080,

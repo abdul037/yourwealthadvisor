@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { Period, getPeriodComparisonLabel, getSimulatedChange } from '@/lib/periodUtils';
+import { DEMO_FLOWS } from '@/lib/buildFlags';
 import { DashboardPeriodSelector } from '@/components/DashboardPeriodSelector';
 import { useMemo } from 'react';
 
@@ -39,7 +40,8 @@ export function NetWorthCard({
   // Invested = assets that are not cash
   const investedAmount = assetsTotal - assetsCash;
   
-  // Simulated change based on period
+  // Simulated change based on period. Shown in demo builds only: there is no
+  // recorded history yet to work out a real change from.
   const changePercent = useMemo(() => getSimulatedChange(period), [period]);
   const isPositive = changePercent > 0;
   const comparisonLabel = getPeriodComparisonLabel(period);
@@ -60,7 +62,7 @@ export function NetWorthCard({
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-mono tracking-tight">
               {formatAmount(totalWealth)}
             </h2>
-            {totalWealth !== 0 && (
+            {DEMO_FLOWS && totalWealth !== 0 && (
             <div className="flex items-center gap-2">
               <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
                 isPositive ? 'bg-wealth-positive/20 text-wealth-positive' : 'bg-wealth-negative/20 text-wealth-negative'

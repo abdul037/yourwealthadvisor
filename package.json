@@ -7,6 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:demo": "vite build --mode demo",
+    "build:store": "vite build --mode store && node scripts/check-store-build.mjs",
+    "check:store": "node scripts/check-store-build.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

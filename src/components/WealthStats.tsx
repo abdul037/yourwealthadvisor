@@ -3,7 +3,8 @@ import { formatCurrency } from '@/lib/portfolioData';
 
 interface WealthStatsProps {
   currentNetWorth: number;
-  monthlyChange: number;
+  /** null when there is no history to compare with yet */
+  monthlyChange: number | null;
   yearlyChange: number;
   monthlySavings: number;
   projectedNetWorth: number;
@@ -25,9 +26,11 @@ export function WealthStats({
     },
     {
       label: 'Monthly Change',
-      value: `${monthlyChange >= 0 ? '+' : ''}${monthlyChange.toFixed(1)}%`,
+      value: monthlyChange === null ? '—' : `${monthlyChange >= 0 ? '+' : ''}${monthlyChange.toFixed(1)}%`,
       icon: TrendingUp,
-      color: monthlyChange >= 0 ? 'bg-wealth-positive/20 text-wealth-positive' : 'bg-wealth-negative/20 text-wealth-negative',
+      color: monthlyChange === null
+        ? 'bg-muted text-muted-foreground'
+        : monthlyChange >= 0 ? 'bg-wealth-positive/20 text-wealth-positive' : 'bg-wealth-negative/20 text-wealth-negative',
     },
     {
       label: 'Monthly Savings',

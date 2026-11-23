@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/EmptyState';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { Period, getSimulatedChange } from '@/lib/periodUtils';
+import { DEMO_FLOWS } from '@/lib/buildFlags';
 import { useMemo } from 'react';
 
 interface QuickStatsProps {
@@ -16,7 +17,7 @@ interface QuickStatsProps {
 export function QuickStats({ assets, linkedAccountsBalance = 0, period = '1W' }: QuickStatsProps) {
   const { formatAmount } = useFormattedCurrency();
   
-  // Generate period-based changes for each category
+  // Simulated period changes for each category (demo builds only)
   const categoryChanges = useMemo(() => ({
     land: getSimulatedChange(period, 1.2),
     stocks: getSimulatedChange(period, 3.5),
@@ -99,7 +100,7 @@ export function QuickStats({ assets, linkedAccountsBalance = 0, period = '1W' }:
               <p className="text-lg font-bold font-mono">{formatAmount(stat.value)}</p>
               <div className="flex items-center gap-2">
                 <p className="text-xs text-muted-foreground">{stat.percentage}% of total</p>
-                {stat.value > 0 && (
+                {DEMO_FLOWS && stat.value > 0 && (
                   <span className={`text-xs font-medium ${stat.change >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
                     {stat.change >= 0 ? '+' : ''}{stat.change.toFixed(1)}%
                   </span>

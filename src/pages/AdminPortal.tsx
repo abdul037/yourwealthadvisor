@@ -7,12 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Category, DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, parseCSVData, BulkUploadRow } from '@/lib/categoryData';
 import { toast } from '@/hooks/use-toast';
-import { BankConnection } from '@/components/BankConnection';
-import { ConnectedAccounts } from '@/components/ConnectedAccounts';
-import { ImportedTransactions } from '@/components/ImportedTransactions';
+import { BankingSettings } from '@/components/BankingSettings';
 import { PartnerManagement } from '@/components/PartnerManagement';
 import { LiquiditySettings } from '@/components/LiquiditySettings';
 import { ComprehensiveBulkUpload } from '@/components/ComprehensiveBulkUpload';
@@ -20,7 +17,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { DemoDataSeeder } from '@/components/DemoDataSeeder';
 import { ClearDemoData } from '@/components/ClearDemoData';
 import { DeleteAccount } from '@/components/DeleteAccount';
-import { BankAccount, BankTransaction, DEMO_TRANSACTIONS } from '@/lib/mockBankingData';
+import { DEMO_FLOWS } from '@/lib/buildFlags';
 const AVAILABLE_ICONS = [
   'UtensilsCrossed', 'Car', 'Zap', 'Gamepad2', 'ShoppingBag', 'Heart', 'GraduationCap',
   'CreditCard', 'Home', 'Baby', 'Briefcase', 'Gift', 'Laptop', 'TrendingUp', 'Coins',
@@ -36,7 +33,8 @@ const AVAILABLE_COLORS = [
 ];
 
 // Tabs on this page, plus older names other screens still link to.
-const SETTINGS_TABS = ['partners', 'liquidity', 'banking', 'categories', 'import', 'data'];
+// The Banking tab is a simulated connection, so it only exists in demo builds.
+const SETTINGS_TABS = ['partners', 'liquidity', ...(DEMO_FLOWS ? ['banking'] : []), 'categories', 'import', 'data'];
 const TAB_ALIASES: Record<string, string> = { connections: 'banking', accounts: 'banking', account: 'data' };
 
 const AdminPortal = () => {
@@ -56,46 +54,11 @@ const AdminPortal = () => {
   const [categoryType, setCategoryType] = useState<'income' | 'expense'>('expense');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Bank connection state
-  const [connectedAccounts, setConnectedAccounts] = useState<BankAccount[]>([]);
-  const [importedTransactions, setImportedTransactions] = useState<BankTransaction[]>([]);
-  
   const [newCategory, setNewCategory] = useState({
     name: '',
     icon: 'MoreHorizontal',
     color: 'hsl(215, 20%, 55%)',
   });
-
-  const handleBankConnectionSuccess = (accounts: BankAccount[]) => {
-    setConnectedAccounts(prev => [...prev, ...accounts]);
-    // Import transactions for the connected accounts
-    const newTransactions = DEMO_TRANSACTIONS.filter(t => 
-      accounts.some(acc => acc.id === t.accountId || acc.id.includes('acc-'))
-    );
-    setImportedTransactions(prev => [...prev, ...newTransactions]);
-  };
-
-  const handleAccountRefresh = (accountId: string) => {
-    setConnectedAccounts(prev => 
-      prev.map(acc => 
-        acc.id === accountId 
-          ? { ...acc, lastSynced: new Date().toISOString() }
-          : acc
-      )
-    );
-  };
-
-  const handleAccountRemove = (accountId: string) => {
-    setConnectedAccounts(prev => prev.filter(acc => acc.id !== accountId));
-  };
-
-  const handleTransactionsImported = (transactions: BankTransaction[]) => {
-    setImportedTransactions(prev => {
-      const existingIds = new Set(prev.map(t => t.id));
-      const newTxns = transactions.filter(t => !existingIds.has(t.id));
-      return [...prev, ...newTxns];
-    });
-  };
 
   const handleAddCategory = (type: 'income' | 'expense') => {
     const category: Category = {
@@ -216,7 +179,9 @@ const AdminPortal = () => {
         {/* Page Header */}
         <PageHeader 
           title="Settings"
-          description="Manage categories, bank connections, and customize your experience"
+          description={DEMO_FLOWS
+            ? 'Manage categories, bank connections, and customize your experience'
+            : 'Manage partners, categories and your data'}
           breadcrumb={[{ label: 'Settings', path: '/admin' }]}
         />
         
@@ -232,11 +197,13 @@ const AdminPortal = () => {
               <span className="hidden sm:inline">Liquidity</span>
               <span className="sm:hidden">Liquid</span>
             </TabsTrigger>
-            <TabsTrigger value="banking" className="gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0">
-              <Building2 className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Banking</span>
-              <span className="sm:hidden">Bank</span>
-            </TabsTrigger>
+            {DEMO_FLOWS && (
+              <TabsTrigger value="banking" className="gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0">
+                <Building2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Banking</span>
+                <span className="sm:hidden">Bank</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="categories" className="text-xs sm:text-sm flex-shrink-0">Categories</TabsTrigger>
             <TabsTrigger value="import" className="text-xs sm:text-sm flex-shrink-0">Import</TabsTrigger>
             <TabsTrigger value="data" className="gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0">
@@ -254,48 +221,11 @@ const AdminPortal = () => {
             <LiquiditySettings />
           </TabsContent>
           
-          <TabsContent value="banking" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Connected Banks */}
-              <div className="wealth-card">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold">Connected Bank Accounts</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Link your bank for automatic transaction imports
-                    </p>
-                  </div>
-                  <BankConnection 
-                    onConnectionSuccess={handleBankConnectionSuccess}
-                    connectedAccounts={connectedAccounts}
-                  />
-                </div>
-                <ConnectedAccounts />
-              </div>
-              
-              {/* Imported Transactions */}
-              <div className="wealth-card">
-                <div className="mb-4">
-                  <h3 className="font-semibold">Imported Transactions</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Transactions synced from your connected banks
-                  </p>
-                </div>
-                <ImportedTransactions 
-                  transactions={importedTransactions}
-                />
-              </div>
-            </div>
-            
-            <Alert className="bg-primary/5 border-primary/20">
-              <Building2 className="h-4 w-4 text-primary" />
-              <AlertDescription>
-                <strong>Demo Mode Active:</strong> This is a simulated Open Banking integration. 
-                Connect any bank and use any 6-digit OTP to test the flow. Real Lean Technologies 
-                integration requires API credentials.
-              </AlertDescription>
-            </Alert>
-          </TabsContent>
+          {DEMO_FLOWS && (
+            <TabsContent value="banking" className="space-y-6">
+              <BankingSettings />
+            </TabsContent>
+          )}
           
           <TabsContent value="categories" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

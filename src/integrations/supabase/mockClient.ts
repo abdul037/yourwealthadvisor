@@ -44,6 +44,45 @@ const SEED: Record<string, any[]> = {
   }],
 };
 
+// Optional preview scenarios, picked in the browser before loading the page:
+//   localStorage.setItem('mock-scenario', 'sample')      -> a few assets and plan tiers
+//   localStorage.setItem('mock-scenario', 'onboarding')  -> a brand-new user
+const scenarios = new Set(
+  (typeof localStorage !== 'undefined' ? localStorage.getItem('mock-scenario') ?? '' : '')
+    .split(',').map(v => v.trim()).filter(Boolean),
+);
+
+if (scenarios.has('onboarding')) {
+  SEED.profiles[0].onboarding_completed = false;
+}
+
+if (scenarios.has('sample')) {
+  const asset = (id: string, name: string, category: string, amount: number) => ({
+    id, user_id: USER_ID, name, category, subcategory: null, amount, currency: 'AED',
+    liquidity_level: 'L2', is_active: true, notes: null, purchase_date: null,
+    purchase_price: null, current_price: null, appreciation_rate: null,
+    last_price_update: null, created_at: now, updated_at: now,
+  });
+  SEED.assets = [
+    asset('asset-1', 'Apartment in JVC', 'Land Asset', 850000),
+    asset('asset-2', 'US index fund', 'Stocks', 120000),
+    asset('asset-3', 'Gold bars', 'Gold', 45000),
+  ];
+
+  const tier = (order: number, name: string, display: string, monthly: number, yearly: number, features: string[]) => ({
+    id: `tier-${name}`, name, display_name: display, description: `${display} plan`,
+    price_monthly: monthly, price_yearly: yearly, features,
+    max_circles: order === 0 ? 1 : -1, max_challenges: order === 0 ? 1 : -1,
+    ai_insights: order > 0, ad_free: order > 0, priority_support: order > 1,
+    badge_style: name, is_active: true, display_order: order,
+  });
+  SEED.subscription_tiers = [
+    tier(0, 'free', 'Free', 0, 0, ['Income and expense tracking', 'Budgets and goals']),
+    tier(1, 'plus', 'Plus', 4.99, 49.99, ['Everything in Free', 'AI insights']),
+    tier(2, 'premium', 'Premium', 9.99, 99.99, ['Everything in Plus', 'Priority support']),
+  ];
+}
+
 function resultFor(table: string, single: boolean) {
   const rows = SEED[table] ?? [];
   if (single) return { data: rows[0] ?? null, error: null, count: rows.length, status: 200, statusText: 'OK' };

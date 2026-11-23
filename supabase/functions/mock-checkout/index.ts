@@ -5,9 +5,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// DEMO ONLY. This activates a paid plan without taking any payment, so it is
+// switched off unless the ALLOW_MOCK_CHECKOUT secret is set to "true" on the
+// project. Leave it unset in production: hiding the button in the app is not
+// enough, because anyone signed in could otherwise call this function directly.
+const mockCheckoutAllowed = () => Deno.env.get('ALLOW_MOCK_CHECKOUT') === 'true';
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (!mockCheckoutAllowed()) {
+    return new Response(
+      JSON.stringify({ error: 'Paid plans are not available yet.' }),
+      { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 
   try {

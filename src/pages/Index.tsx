@@ -41,6 +41,7 @@ import { useBudgets } from '@/hooks/useBudgets';
 import { useSavingsGoals } from '@/hooks/useSavingsGoals';
 import { useNotifications } from '@/hooks/useNotifications';
 import { BankAccount, BankTransaction } from '@/lib/mockBankingData';
+import { DEMO_FLOWS } from '@/lib/buildFlags';
 import { convertToAED, isCashEquivalent } from '@/lib/currencyUtils';
 import { trackAppEvent } from '@/lib/appAnalytics';
 
@@ -623,7 +624,9 @@ const Index = () => {
                 <div>
                   <p className="text-sm font-semibold">Add your first data point</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Start with income or expenses, or connect accounts to sync automatically.
+                    {DEMO_FLOWS
+                      ? 'Start with income or expenses, or connect accounts to sync automatically.'
+                      : 'Start with your income, an expense, or something you own.'}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -642,7 +645,7 @@ const Index = () => {
                   <Link to="/investments">
                     <Button size="sm" variant="outline" className="gap-2">
                       <Link2 className="w-4 h-4" />
-                      Connect accounts
+                      {DEMO_FLOWS ? 'Connect accounts' : 'Add an asset'}
                     </Button>
                   </Link>
                 </div>
@@ -989,8 +992,8 @@ const Index = () => {
               </Collapsible>
             </div>
 
-            {/* Connected Accounts Widget */}
-            {(connectedAccounts.length > 0 || isAuthenticated) && (
+            {/* Connected Accounts Widget — simulated connection, demo builds only */}
+            {DEMO_FLOWS && (connectedAccounts.length > 0 || isAuthenticated) && (
               <div>
                 <DashboardConnectedAccounts
                   accounts={connectedAccounts}

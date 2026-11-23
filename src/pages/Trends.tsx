@@ -11,7 +11,8 @@ import { PageHeader } from '@/components/PageHeader';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { Leaderboard } from '@/components/Leaderboard';
 import { ModuleGate } from '@/components/ModuleGate';
-import { generateNetWorthHistory, calculateProjection, Milestone } from '@/lib/categoryData';
+import { generateNetWorthHistory, calculateProjection, Milestone, NetWorthSnapshot } from '@/lib/categoryData';
+import { DEMO_FLOWS } from '@/lib/buildFlags';
 import { IncomeSource } from '@/lib/incomeData';
 
 // Adapter to convert DB income to component format
@@ -52,8 +53,17 @@ const Trends = () => {
   // Use real net worth or fallback
   const currentNetWorth = totalNetWorth || 0;
   
-  // Generate historical data (simulated for now - would need historical snapshots table)
-  const history = generateNetWorthHistory(currentNetWorth);
+  // Past net worth is not recorded yet (it needs a snapshots table). Demo builds draw
+  // a made-up past year; real builds show only today's figure, which is real.
+  const history: NetWorthSnapshot[] = DEMO_FLOWS
+    ? generateNetWorthHistory(currentNetWorth)
+    : [{
+        date: new Date().toISOString().split('T')[0],
+        totalAssets: currentNetWorth,
+        totalLiabilities: 0,
+        netWorth: currentNetWorth,
+      }];
+  const hasHistory = history.length > 1;
   
   // Calculate monthly expenses from transactions
   const currentMonth = new Date().getMonth();
@@ -99,9 +109,12 @@ const Trends = () => {
   
   // Calculate stats
   const previousMonthNetWorth = history[history.length - 2]?.netWorth || currentNetWorth;
-  const monthlyChange = previousMonthNetWorth > 0 
-    ? ((currentNetWorth - previousMonthNetWorth) / previousMonthNetWorth) * 100 
-    : 0;
+  // null = not known yet (no history to compare with)
+  const monthlyChange = !hasHistory
+    ? null
+    : previousMonthNetWorth > 0 
+      ? ((currentNetWorth - previousMonthNetWorth) / previousMonthNetWorth) * 100 
+      : 0;
   const yearAgoNetWorth = history[0]?.netWorth || currentNetWorth;
   const yearlyChange = yearAgoNetWorth > 0 
     ? ((currentNetWorth - yearAgoNetWorth) / yearAgoNetWorth) * 100 

@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TierCard } from '@/components/subscription/TierCard';
 import { CurrentPlanCard } from '@/components/subscription/CurrentPlanCard';
 import { MockCheckoutModal } from '@/components/subscription/MockCheckoutModal';
-import { useSubscription, SubscriptionTier } from '@/hooks/useSubscription';
+import { useSubscription, SubscriptionTier, PAID_PLANS_AVAILABLE } from '@/hooks/useSubscription';
 
 export default function Membership() {
   const {
@@ -56,7 +56,9 @@ export default function Membership() {
       <div className="container max-w-6xl py-6 space-y-8">
         <PageHeader
           title="Membership"
-          description="Choose the plan that's right for your wealth building journey"
+          description={PAID_PLANS_AVAILABLE
+            ? "Choose the plan that's right for your wealth building journey"
+            : 'Your plan'}
         />
 
         {/* Current Plan */}
@@ -65,7 +67,22 @@ export default function Membership() {
           tier={currentTier}
           onCancel={() => cancelSubscription(false)}
           isCancelling={isCancelling}
+          upgradesAvailable={PAID_PLANS_AVAILABLE}
         />
+
+        {/* No real checkout exists in this build, so plans are not offered for sale. */}
+        {!PAID_PLANS_AVAILABLE && (
+          <div className="rounded-lg border bg-card p-5">
+            <h2 className="font-semibold">Paid plans are not available yet</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              You are not being charged for anything. We will let you know in the app when paid
+              plans open.
+            </p>
+          </div>
+        )}
+
+        {PAID_PLANS_AVAILABLE && (
+        <>
 
         {/* Billing Toggle */}
         <div className="flex items-center justify-center gap-4 py-4">
@@ -143,6 +160,8 @@ export default function Membership() {
           onConfirm={handleConfirmSubscription}
           isLoading={isSubscribing}
         />
+        </>
+        )}
       </div>
     </AppLayout>
   );

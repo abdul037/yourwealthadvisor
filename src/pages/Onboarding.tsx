@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { SetupWizardBankConnection } from '@/components/SetupWizardBankConnection';
 import { BankAccount } from '@/lib/mockBankingData';
+import { DEMO_FLOWS } from '@/lib/buildFlags';
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 const GOAL_OPTIONS = [
@@ -44,10 +45,13 @@ const INCOME_RANGES = [
 
 
 // ─── Steps rail ────────────────────────────────────────────────────────────────
+// The account-connection step is a simulated flow, so it only exists in demo builds.
 const STEPS = [
   { label: 'Your Goals',       sub: 'Preferences & income range' },
-  { label: 'Connect Accounts', sub: 'Banks, investments & more'  },
+  ...(DEMO_FLOWS ? [{ label: 'Connect Accounts', sub: 'Banks, investments & more' }] : []),
 ];
+// Uses the flag directly (not STEPS.length) so the build can drop the step's code.
+const HAS_CONNECT_STEP = DEMO_FLOWS;
 
 // ─── Demo seeder ───────────────────────────────────────────────────────────────
 async function runDemoSeed(userId: string) {
@@ -124,7 +128,11 @@ export default function Onboarding() {
     if (user) {
       await supabase.from('profiles').update({ preferences: preferences as any }).eq('id', user.id);
     }
-    setStep(1);
+    if (HAS_CONNECT_STEP) {
+      setStep(1);
+    } else {
+      await handleComplete(false);
+    }
   };
 
   const handleAccountsConnected = (accounts: BankAccount[]) =>
@@ -259,6 +267,7 @@ export default function Onboarding() {
           <TharwaLogo size="md" />
 
           {/* Steps rail */}
+          {HAS_CONNECT_STEP && (
           <nav className="space-y-1">
             {STEPS.map((s, i) => {
               const isDone   = i < step;
@@ -281,6 +290,7 @@ export default function Onboarding() {
               );
             })}
           </nav>
+          )}
         </div>
 
         {/* Mascot with speech bubble */}
@@ -330,16 +340,20 @@ export default function Onboarding() {
         {/* Mobile header */}
         <header className="lg:hidden flex items-center justify-between px-5 pt-5 pb-3">
           <TharwaLogo size="sm" />
-          <span className="text-xs text-muted-foreground">Step {step + 1} of {STEPS.length}</span>
+          {HAS_CONNECT_STEP && (
+            <span className="text-xs text-muted-foreground">Step {step + 1} of {STEPS.length}</span>
+          )}
         </header>
 
         {/* Mobile progress bar */}
-        <div className="lg:hidden h-1 bg-muted mx-5 rounded-full overflow-hidden mb-3">
-          <div
-            className="h-full bg-primary rounded-full transition-all duration-500"
-            style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
-          />
-        </div>
+        {HAS_CONNECT_STEP && (
+          <div className="lg:hidden h-1 bg-muted mx-5 rounded-full overflow-hidden mb-3">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-500"
+              style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+            />
+          </div>
+        )}
 
         {/* Mobile Nayla guide strip */}
         <div className="lg:hidden mx-5 mb-4 flex items-end gap-3 rounded-2xl border border-border/40 bg-muted/20 px-4 py-3">
@@ -449,15 +463,15 @@ export default function Onboarding() {
                   </div>
                 </div>
 
-                <Button onClick={handleStep1Next} className="w-full gap-2" size="lg">
-                  Continue
+                <Button onClick={handleStep1Next} className="w-full gap-2" size="lg" disabled={isSubmitting}>
+                  {isSubmitting ? 'Setting up...' : HAS_CONNECT_STEP ? 'Continue' : 'Go to Dashboard'}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
             )}
 
             {/* ── Step 2: Connect Accounts ─────────────────────────────── */}
-            {step === 1 && (
+            {DEMO_FLOWS && step === 1 && (
               <div className="space-y-6">
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight">Connect your accounts</h1>

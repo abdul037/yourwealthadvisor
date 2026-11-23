@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useFormattedCurrency } from '@/components/FormattedCurrency';
 import { Period, getPeriodLabel, getSimulatedChange } from '@/lib/periodUtils';
+import { DEMO_FLOWS } from '@/lib/buildFlags';
 import { useAssets } from '@/hooks/useAssets';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -45,7 +46,7 @@ export function PortfolioAggregation({ connectedAccounts = [], period = '1W' }: 
   const { formatAmount } = useFormattedCurrency();
   const { assets, isLoading, refetch } = useAssets();
   
-  // Get period-based change
+  // Simulated period change (demo builds only)
   const periodChange = useMemo(() => getSimulatedChange(period, 5.2), [period]);
   const periodLabel = getPeriodLabel(period);
 
@@ -129,7 +130,7 @@ export function PortfolioAggregation({ connectedAccounts = [], period = '1W' }: 
       value: asset.currency === 'USD' ? asset.amount * USD_TO_AED : asset.amount,
       currency: 'AED',
       type: 'investment' as const,
-      change: Math.random() * 10 - 3,
+      change: DEMO_FLOWS ? Math.random() * 10 - 3 : undefined,
     }));
 
     // Add connected investment accounts
@@ -140,7 +141,7 @@ export function PortfolioAggregation({ connectedAccounts = [], period = '1W' }: 
         value: acc.currency === 'USD' ? acc.balance * USD_TO_AED : acc.balance,
         currency: 'AED',
         type: 'investment' as const,
-        change: Math.random() * 10 - 3,
+        change: DEMO_FLOWS ? Math.random() * 10 - 3 : undefined,
       });
     });
 
@@ -213,7 +214,7 @@ export function PortfolioAggregation({ connectedAccounts = [], period = '1W' }: 
         </div>
         <div className="text-center py-8 text-muted-foreground">
           <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>Add investment assets or connect platforms to see your portfolio</p>
+          <p>{DEMO_FLOWS ? 'Add investment assets or connect platforms to see your portfolio' : 'Add investment assets to see your portfolio'}</p>
         </div>
       </div>
     );
@@ -233,7 +234,7 @@ export function PortfolioAggregation({ connectedAccounts = [], period = '1W' }: 
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Investment Portfolio</p>
-                <p className="text-xs text-muted-foreground">From your assets & connected platforms</p>
+                <p className="text-xs text-muted-foreground">{DEMO_FLOWS ? 'From your assets & connected platforms' : 'From the assets you have added'}</p>
               </div>
             </div>
             <Button 
@@ -243,17 +244,19 @@ export function PortfolioAggregation({ connectedAccounts = [], period = '1W' }: 
               disabled={isRefreshing}
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Sync All
+              {DEMO_FLOWS ? 'Sync All' : 'Refresh'}
             </Button>
           </div>
           
           <div className="flex items-end gap-4 flex-wrap">
             <p className="text-3xl sm:text-4xl font-bold font-mono">{formatAmount(totalPortfolioValue)}</p>
-            <div className={`flex items-center gap-1 mb-1 ${periodChange >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
-              {periodChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-              <span className="text-sm font-medium">{periodChange >= 0 ? '+' : ''}{periodChange.toFixed(1)}%</span>
-              <span className="text-xs text-muted-foreground">{periodLabel}</span>
-            </div>
+            {DEMO_FLOWS && (
+              <div className={`flex items-center gap-1 mb-1 ${periodChange >= 0 ? 'text-wealth-positive' : 'text-wealth-negative'}`}>
+                {periodChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                <span className="text-sm font-medium">{periodChange >= 0 ? '+' : ''}{periodChange.toFixed(1)}%</span>
+                <span className="text-xs text-muted-foreground">{periodLabel}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

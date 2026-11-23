@@ -31,6 +31,8 @@ export function NetWorthChart({ history, projections, milestones }: NetWorthChar
   }
   
   const combinedData = [...historicalData, ...projectionData];
+  // A single point is just "today"; there is no past trend to draw.
+  const hasHistory = history.length > 1;
   
   // Find milestones that fall within chart range
   const upcomingMilestones = milestones.filter(m => !m.achieved && m.targetDate);
@@ -71,14 +73,18 @@ export function NetWorthChart({ history, projections, milestones }: NetWorthChar
           </div>
           <div>
             <h3 className="font-semibold">Net Worth Trend</h3>
-            <p className="text-sm text-muted-foreground">12-month history + 12-month projection</p>
+            <p className="text-sm text-muted-foreground">
+              {hasHistory ? '12-month history + 12-month projection' : '12-month projection from today'}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-primary" />
-            <span className="text-muted-foreground">Actual</span>
-          </div>
+          {hasHistory && (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-primary" />
+              <span className="text-muted-foreground">Actual</span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-purple-500" />
             <span className="text-muted-foreground">Projected</span>

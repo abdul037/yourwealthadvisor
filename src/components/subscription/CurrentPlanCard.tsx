@@ -22,13 +22,16 @@ interface CurrentPlanCardProps {
   tier: SubscriptionTier | null;
   onCancel: () => void;
   isCancelling: boolean;
+  /** False when this build has no way to buy a paid plan. */
+  upgradesAvailable?: boolean;
 }
 
 export function CurrentPlanCard({ 
   subscription, 
   tier, 
   onCancel,
-  isCancelling 
+  isCancelling,
+  upgradesAvailable = true,
 }: CurrentPlanCardProps) {
   const isFreePlan = !subscription || tier?.name === 'free';
   const periodEnd = subscription?.current_period_end 
@@ -46,7 +49,7 @@ export function CurrentPlanCard({
             </CardTitle>
             <CardDescription>
               {isFreePlan 
-                ? 'Upgrade to unlock premium features' 
+                ? (upgradesAvailable ? 'Upgrade to unlock premium features' : 'The Free plan — nothing to pay')
                 : `Your subscription renews ${subscription?.billing_cycle}`}
             </CardDescription>
           </div>
