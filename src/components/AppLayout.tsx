@@ -22,7 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full">
           <AppSidebar />
-          <SidebarInset className="pb-44 md:pb-0">
+          <SidebarInset className="min-w-0 pb-44 md:pb-0">
             <AppHeader />
             <main className="flex-1">
               {children}
